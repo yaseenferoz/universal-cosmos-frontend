@@ -46,6 +46,45 @@ jobs:
         env:
           VITE_DATA_SOURCE: local
 
+      # Temporary diagnostic: shows identity claims only,
+      # never the OIDC token or AWS credentials.
+      - name: Diagnose GitHub OIDC claims
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import os
+          import json
+          import base64
+          import urllib.request
+
+          url = os.environ["ACTIONS_ID_TOKEN_REQUEST_URL"]
+          token = os.environ["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]
+
+          separator = "&" if "?" in url else "?"
+          request = urllib.request.Request(
+              url + separator + "audience=sts.amazonaws.com",
+              headers={"Authorization": f"Bearer {token}"}
+          )
+
+          with urllib.request.urlopen(request) as response:
+              jwt = json.load(response)["value"]
+
+          payload = jwt.split(".")[1]
+          payload += "=" * (-len(payload) % 4)
+          claims = json.loads(base64.urlsafe_b64decode(payload))
+
+          for key in [
+              "iss",
+              "aud",
+              "sub",
+              "repository",
+              "ref",
+              "event_name",
+              "job_workflow_ref"
+          ]:
+              print(f"{key}: {claims.get(key)}")
+          PY
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
