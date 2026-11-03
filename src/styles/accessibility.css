@@ -1,0 +1,345 @@
+/* Readable instrument labels and generous pointer targets over the dark viewport. */
+.top-center {
+  font-size: 9px;
+}
+.simulation-date > span {
+  font-size: 8px;
+}
+.clock-time {
+  color: #7287a3;
+  margin-left: 6px;
+}
+.viewport-heading > .eyebrow {
+  font-size: 8px !important;
+}
+.panel-eyebrow > span {
+  font-size: 8px;
+}
+.object-category {
+  font-size: 10px;
+}
+.object-description {
+  font-size: 12px;
+}
+.detail-divider {
+  font-size: 8px;
+}
+.physical-grid dt {
+  font-size: 10px;
+}
+.physical-grid dd {
+  font-size: 16px;
+}
+.physical-grid dd small {
+  font-size: 10px;
+}
+.distance-block > div {
+  font-size: 8px;
+  letter-spacing: 0.6px;
+}
+.science-note,
+.science-note p {
+  font-size: 9px;
+}
+.source-link {
+  font-size: 9px;
+}
+.travel-button {
+  font-size: 11px;
+}
+.dock-heading {
+  font-size: 9px;
+}
+.dock-heading > span:last-child {
+  font-size: 8px;
+}
+.dock-object {
+  font-size: 10px;
+}
+.speed-control > span {
+  font-size: 8px;
+}
+.speed-control select {
+  font-size: 11px;
+}
+.camera-mode,
+.reset-view {
+  font-size: 11px;
+}
+.interaction-hint {
+  font-size: 9px;
+}
+.render-status {
+  font-size: 8px;
+}
+.help-link {
+  font-size: 11px;
+}
+.rail-location div > span {
+  font-size: 8px;
+  letter-spacing: 0.4px;
+}
+.rail-location p {
+  font-size: 11px;
+}
+.modal-header .eyebrow {
+  font-size: 8px !important;
+}
+.search-result-heading {
+  font-size: 9px;
+}
+.search-result strong {
+  font-size: 13px;
+}
+.search-result small {
+  font-size: 11px;
+}
+.modal-footer {
+  font-size: 10px;
+}
+.setting-label h3 {
+  font-size: 13px;
+}
+.setting-label p {
+  font-size: 11px;
+}
+.quality-options button {
+  font-size: 12px;
+  height: 42px;
+}
+.setting-footnote,
+.range-labels {
+  font-size: 10px;
+}
+.settings-note {
+  font-size: 11px;
+}
+.help-section dl > div {
+  font-size: 12px;
+}
+.help-section h3 {
+  font-size: 13px;
+}
+.modal-intro {
+  font-size: 12px;
+}
+.coming-label {
+  font-size: 9px;
+}
+.collection-note {
+  font-size: 12px;
+}
+.toggle {
+  position: relative;
+}
+.toggle::before {
+  content: "";
+  position: absolute;
+  inset: -12px -5px;
+}
+.universe-viewport canvas:focus-visible {
+  outline: 1px solid #a7c9ef50;
+  outline-offset: -3px;
+}
+.modal .icon-button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.mobile-expand {
+  min-width: 40px;
+  min-height: 40px;
+}
+@media (max-width: 1150px) {
+  .object-description {
+    font-size: 11px;
+  }
+  .physical-grid dd {
+    font-size: 14px;
+  }
+  .science-note,
+  .science-note p,
+  .source-link {
+    font-size: 8px;
+  }
+  .render-status,
+  .interaction-hint {
+    font-size: 8px;
+  }
+  .viewport-heading > .eyebrow {
+    font-size: 7px !important;
+  }
+  .dock-object {
+    font-size: 9px;
+  }
+}
+@media (max-width: 850px) {
+  .interaction-hint,
+  .render-status {
+    bottom: 93px;
+  }
+  .simulation-date > span {
+    font-size: 7px;
+  }
+  .simulation-date time {
+    font-size: 10px;
+  }
+  .clock-time {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  .simulation-date {
+    display: flex;
+    position: absolute;
+    left: 20px;
+    top: 145px;
+    gap: 5px;
+    text-align: left;
+    pointer-events: none;
+  }
+  .simulation-date > span {
+    font-size: 6.5px;
+    letter-spacing: 0.9px;
+  }
+  .simulation-date time {
+    font-size: 8px;
+    letter-spacing: 0.6px;
+  }
+  .clock-time {
+    display: inline;
+    margin-left: 5px;
+  }
+  .panel-eyebrow > span {
+    font-size: 7px;
+    letter-spacing: 0.8px;
+  }
+  .object-category {
+    font-size: 8px;
+  }
+  .object-information .travel-button {
+    font-size: 10px;
+    height: 38px;
+  }
+  .dock-heading {
+    font-size: 8px;
+  }
+  .dock-heading > span:last-child {
+    font-size: 7px;
+  }
+  .dock-object {
+    font-size: 9px;
+    min-width: 54px;
+    flex-basis: 54px;
+    gap: 11px;
+  }
+  .bottom-controls {
+    gap: 6px;
+  }
+  .camera-mode {
+    font-size: 10px;
+  }
+  .speed-control > span {
+    font-size: 7px;
+  }
+  .speed-control select {
+    font-size: 10px;
+  }
+  .render-status {
+    font-size: 6.5px;
+  }
+  .interaction-hint {
+    font-size: 8px;
+  }
+  .viewport-heading > .eyebrow {
+    font-size: 7px !important;
+    letter-spacing: 0.8px;
+  }
+  .modal-footer {
+    font-size: 9px;
+  }
+  .search-result small {
+    font-size: 10px;
+  }
+  .help-section dl > div {
+    font-size: 10px;
+  }
+  .help-section dd {
+    max-width: 145px;
+  }
+  .setting-label p {
+    font-size: 10px;
+  }
+  .setting-label h3 {
+    font-size: 12px;
+  }
+  .settings-note {
+    font-size: 10px;
+  }
+}
+@media (max-width: 360px) {
+  .camera-mode > span {
+    display: none;
+  }
+  .camera-mode {
+    min-width: 28px;
+  }
+  .bottom-controls {
+    gap: 5px;
+  }
+  .render-status {
+    display: none;
+  }
+  .interaction-hint {
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+  .brand-type strong {
+    font-size: 14px;
+  }
+  .brand-type > span {
+    font-size: 6px;
+  }
+  .brand-mark svg {
+    width: 24px;
+  }
+  .top-bar {
+    padding-left: 13px;
+    padding-right: 12px;
+  }
+  .viewport-heading > .eyebrow {
+    max-width: 250px;
+    display: block;
+    line-height: 1.5;
+  }
+  .object-information {
+    bottom: 221px;
+    width: 195px;
+  }
+  .reopen-information {
+    bottom: 221px;
+  }
+  .simulation-date {
+    top: 151px;
+  }
+}
+@media (max-height: 540px) {
+  .simulation-date {
+    display: none;
+  }
+  .object-information .travel-button {
+    height: 34px;
+  }
+  .object-category {
+    font-size: 8px;
+  }
+  .panel-eyebrow > span {
+    font-size: 7px;
+  }
+  .object-information {
+    max-height: calc(100dvh - 180px);
+  }
+  .dock-object {
+    font-size: 8px;
+  }
+}

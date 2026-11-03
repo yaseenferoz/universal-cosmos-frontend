@@ -1,0 +1,160 @@
+{
+  "landingSampleM": -2627.088623046875,
+  "localFiniteFraction": 1.0,
+  "contextFiniteFraction": 0.9963521539391038,
+  "sourceRowRange": [
+    4699,
+    8795
+  ],
+  "sourceColumnRange": [
+    2887,
+    6983
+  ],
+  "sourceHeaderSha256": "3c893079cb0ef3f280cb640dc58b432e09ed5547febcbf43f15305538d8faaa7",
+  "sources": {
+    "dem": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/DATA/SDP/NAC_DTM/APOLLO17/NAC_DTM_APOLLO17.TIF",
+    "orthophoto": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/EXTRAS/BROWSE/NAC_DTM/APOLLO17/NAC_DTM_APOLLO17_MOSAIC_5M.TIF"
+  },
+  "files": {
+    "apollo17-context-0-0.f32": {
+      "bytes": 66564,
+      "sha256": "e62846252dd8995c27bf2ba0dcb5f4a5096b10c478e7be983c136fc2bea6bd22"
+    },
+    "apollo17-context-0-1.f32": {
+      "bytes": 66564,
+      "sha256": "1460f7d0982c970875bbabb166d562bb2984b3276e62ce283e6a6d28ac23e340"
+    },
+    "apollo17-context-0-2.f32": {
+      "bytes": 66564,
+      "sha256": "6dae07d204c652c36c3643837d2d23bb94338d8bfe8f4c1550b5d65773a2f295"
+    },
+    "apollo17-context-0-3.f32": {
+      "bytes": 66564,
+      "sha256": "a01b13be8fdfa33f711a03c92dd45e5afd8f4db09804ca3d5c70f8b2c50c1d1e"
+    },
+    "apollo17-context-1-0.f32": {
+      "bytes": 66564,
+      "sha256": "d95023d27eec4f4d23f2b464cb56850792a28757ed8187efaeed272c72ee634e"
+    },
+    "apollo17-context-1-1.f32": {
+      "bytes": 66564,
+      "sha256": "3a8d05d7e0de1c933fe59a976120c48c2a89e7519b841f20ca8468882ff667cb"
+    },
+    "apollo17-context-1-2.f32": {
+      "bytes": 66564,
+      "sha256": "8ec7923a0f815ced38deac5af4706690e67240487b802f713beff1e39d2016b0"
+    },
+    "apollo17-context-1-3.f32": {
+      "bytes": 66564,
+      "sha256": "5276892c5683768089a08056c34a6509639b264d56c7051ee75c2f14d256081b"
+    },
+    "apollo17-context-2-0.f32": {
+      "bytes": 66564,
+      "sha256": "e0845b6bba3ae54094951311a89428da98eca6adcf92c504547d7e620666a612"
+    },
+    "apollo17-context-2-1.f32": {
+      "bytes": 66564,
+      "sha256": "0e751e3e4a4b965484daaa39448dcfa46a97cc737c146db478588a776e7ffbf9"
+    },
+    "apollo17-context-2-2.f32": {
+      "bytes": 66564,
+      "sha256": "868ba28ba0d14cc784e0eeb7b033898fecee2bd5c6e421aa8dd35defce11f9b0"
+    },
+    "apollo17-context-2-3.f32": {
+      "bytes": 66564,
+      "sha256": "c419fd48f08384066757443048df72eea57b74dce6afa2313bc381082a0db0ad"
+    },
+    "apollo17-context-3-0.f32": {
+      "bytes": 66564,
+      "sha256": "5456f5e0fadcc6aa58f59346f9c4d165ef740a11423e6b0c21d449aebda18c96"
+    },
+    "apollo17-context-3-1.f32": {
+      "bytes": 66564,
+      "sha256": "5251d15d347cbcb6914b996a3e71e459b596d3f37ced19cbe479a719dad4e088"
+    },
+    "apollo17-context-3-2.f32": {
+      "bytes": 66564,
+      "sha256": "ec8f02b1b7f769ab26c56392b635329ea4d1010c90e043ea10fece7271eabcf0"
+    },
+    "apollo17-context-3-3.f32": {
+      "bytes": 66564,
+      "sha256": "f975b562615fcfea859f3775012213a106cb0aa31a9a4612407624e6f270b41c"
+    },
+    "apollo17-context-orthophoto.webp": {
+      "bytes": 107644,
+      "sha256": "c23e36220a898b54ccb0ee0b713be7f078bcbbc6500cc803a1c18cb9c1377c5e"
+    },
+    "apollo17-local-0-0.f32": {
+      "bytes": 66564,
+      "sha256": "e303ec56d58fa3ba6cf0a21d547123f2d22f019c6f7e8cb775d040181ecb635a"
+    },
+    "apollo17-local-0-1.f32": {
+      "bytes": 66564,
+      "sha256": "cc814366b0b810b1fc883da84cc43ff6b4fea57f9ece5ee1d64629886f09f46b"
+    },
+    "apollo17-local-0-2.f32": {
+      "bytes": 66564,
+      "sha256": "cebc8367d62bdedea4d3ba3258a3bdaad28dff70d27051c97181280c6a3803d2"
+    },
+    "apollo17-local-0-3.f32": {
+      "bytes": 66564,
+      "sha256": "09f0bd7f6778e4baff1a7548466040b53201a2118a5304568dfcdba7877c8840"
+    },
+    "apollo17-local-1-0.f32": {
+      "bytes": 66564,
+      "sha256": "ba096668546ae0ba3ca600a345614d32e3142b742004ca013a988de2772893af"
+    },
+    "apollo17-local-1-1.f32": {
+      "bytes": 66564,
+      "sha256": "f747582dcc09581a03e7657cc5b565d6b11f259c994e1df37f9587785c9055e3"
+    },
+    "apollo17-local-1-2.f32": {
+      "bytes": 66564,
+      "sha256": "cc4d064f5c9e1c1ed6ce19017d28f623d9d5aec78b8774ca18bfe7f50b069538"
+    },
+    "apollo17-local-1-3.f32": {
+      "bytes": 66564,
+      "sha256": "1d77db1a9537c3a922b017a0e66c1803468f055a384a0f2b81ecef001c8e0524"
+    },
+    "apollo17-local-2-0.f32": {
+      "bytes": 66564,
+      "sha256": "4ce86babd78bb00c19815059ab5411ddeffd263496f32896568bd2b7554d15b4"
+    },
+    "apollo17-local-2-1.f32": {
+      "bytes": 66564,
+      "sha256": "a36ca84620d0428137285dafa2a800917068d0792a7c26c2be9a8bf726f263e4"
+    },
+    "apollo17-local-2-2.f32": {
+      "bytes": 66564,
+      "sha256": "61ec33263b36644f8cf6bbe3be27821983eedf9416979fd88f8f83517e7385d0"
+    },
+    "apollo17-local-2-3.f32": {
+      "bytes": 66564,
+      "sha256": "7a2dcce7b15217a32061bab0d673f25e8957e0234ea2be64f1fd2ee6bdec4f42"
+    },
+    "apollo17-local-3-0.f32": {
+      "bytes": 66564,
+      "sha256": "cf68a798e7f50215b850671cbcbe8942b73167f7173c3d007be781aabef42b7b"
+    },
+    "apollo17-local-3-1.f32": {
+      "bytes": 66564,
+      "sha256": "ef649cee8902d7996f33940141d957d71caf0d3cdbf33f021dc547b2b0cdaca0"
+    },
+    "apollo17-local-3-2.f32": {
+      "bytes": 66564,
+      "sha256": "e4d8d4e4d2497198da7e247501942bebcf60810d0c1aae75f1f42a2ccf81d189"
+    },
+    "apollo17-local-3-3.f32": {
+      "bytes": 66564,
+      "sha256": "2b33df1e07faaba57359e033edf7e45223642ac06d32b7579298a2eee9cc274c"
+    },
+    "apollo17-local-orthophoto.webp": {
+      "bytes": 98106,
+      "sha256": "78f3d4aa0d8e85bdfca73ad3cc1ffcf552b1fd7ba738cd5362f9546b7d4c86f1"
+    },
+    "lola-global-4ppd.f32": {
+      "bytes": 4147200,
+      "sha256": "2724eb919e9dff40b2bd0ebb7fe0ee88959aee91375478ef84e6f122250b5302"
+    }
+  }
+}
