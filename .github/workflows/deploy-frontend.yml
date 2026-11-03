@@ -17,87 +17,81 @@ concurrency:
 
 jobs:
   deploy:
+    name: Build, Test and Deploy Frontend
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
+      # 1. Checkout frontend repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2. Install Node.js 24
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '24'
           cache: npm
 
+      # 3. Install dependencies
       - name: Install dependencies
         run: npm ci
 
+      # 4. TypeScript validation
       - name: Run typecheck
         run: npm run typecheck
 
+      # 5. ESLint validation
       - name: Run lint
         run: npm run lint
 
+      # 6. Run automated tests
       - name: Run tests
         run: npm test -- --run
 
+      # 7. Build frontend with live backend API
       - name: Build frontend
         run: npm run build
         env:
-          VITE_DATA_SOURCE: local
+          VITE_DATA_SOURCE: http
+          VITE_API_BASE_URL: /
 
-      # Temporary diagnostic: shows identity claims only,
-      # never the OIDC token or AWS credentials.
-      - name: Diagnose GitHub OIDC claims
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          import os
-          import json
-          import base64
-          import urllib.request
-
-          url = os.environ["ACTIONS_ID_TOKEN_REQUEST_URL"]
-          token = os.environ["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]
-
-          separator = "&" if "?" in url else "?"
-          request = urllib.request.Request(
-              url + separator + "audience=sts.amazonaws.com",
-              headers={"Authorization": f"Bearer {token}"}
-          )
-
-          with urllib.request.urlopen(request) as response:
-              jwt = json.load(response)["value"]
-
-          payload = jwt.split(".")[1]
-          payload += "=" * (-len(payload) % 4)
-          claims = json.loads(base64.urlsafe_b64decode(payload))
-
-          for key in [
-              "iss",
-              "aud",
-              "sub",
-              "repository",
-              "ref",
-              "event_name",
-              "job_workflow_ref"
-          ]:
-              print(f"{key}: {claims.get(key)}")
-          PY
-
+      # 8. Authenticate to AWS using GitHub OIDC
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::831926610457:role/UniversalCosmosFrontendDeploy
           aws-region: ap-south-1
+          role-session-name: UniversalCosmosFrontendDeploy
 
+      # 9. Verify AWS authentication
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
+
+      # 10. Upload production frontend to S3
       - name: Upload frontend to S3
         run: |
           aws s3 sync dist/ s3://universal-cosmos-web-engine/ \
             --delete
 
+      # 11. Invalidate CloudFront cache
       - name: Invalidate CloudFront cache
         run: |
           aws cloudfront create-invalidation \
             --distribution-id E294OHDBEEQ0XC \
             --paths "/*"
+
+      # 12. Deployment summary
+      - name: Deployment summary
+        if: success()
+        run: |
+          echo "## Universal Cosmos Frontend Deployment" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Frontend deployment completed successfully." >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Environment: Production" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Data source: Live backend API" >> "$GITHUB_STEP_SUMMARY"
+          echo "- API base URL: /" >> "$GITHUB_STEP_SUMMARY"
+          echo "- S3 bucket: universal-cosmos-web-engine" >> "$GITHUB_STEP_SUMMARY"
+          echo "- CloudFront: E294OHDBEEQ0XC" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Commit: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
