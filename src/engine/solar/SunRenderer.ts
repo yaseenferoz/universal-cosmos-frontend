@@ -128,7 +128,7 @@ export class SunRenderer {
     this.point = new Points(pointGeometry, this.pointMaterial);
     this.point.name = "Flux-weighted unresolved Sun optical sample";
     this.point.visible = false;
-    this.corona.add(this.coronaMesh, this.point, this.glare.mesh);
+    this.corona.add(this.coronaMesh, this.point, this.glare.mesh, this.glare.ghosts.points);
     this.replaceGranulation(this.budget.granulationTextureSize);
     this.setRenderRadius(baseRadius);
   }
@@ -163,7 +163,10 @@ export class SunRenderer {
 
   setGlareStrength(strength: number): void {
     this.glareStrength = Number.isFinite(strength) ? Math.max(0, Math.min(1, strength)) : 0;
-    if (this.glareStrength === 0) this.glare.mesh.visible = false;
+    if (this.glareStrength === 0) {
+      this.glare.mesh.visible = false;
+      this.glare.ghosts.points.visible = false;
+    }
   }
 
   private replaceGranulation(size: number): void {

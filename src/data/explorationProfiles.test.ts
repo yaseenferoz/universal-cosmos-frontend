@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { explorationProfile, explorationProfiles } from "./explorationProfiles";
+import { celestialObjects } from "./catalog";
 
 describe("planetary exploration profiles", () => {
   it("covers every bundled catalog object", () => {
-    expect(Object.keys(explorationProfiles).sort()).toEqual([
-      "earth", "jupiter", "mars", "mercury", "moon", "neptune", "saturn", "sun", "uranus", "venus",
-    ]);
+    expect(Object.keys(explorationProfiles).sort()).toEqual(celestialObjects.map(({ id }) => id).sort());
   });
 
   it("permits only the measured Moon surface package today", () => {

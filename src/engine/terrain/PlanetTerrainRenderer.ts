@@ -1,5 +1,5 @@
 import {
-  ClampToEdgeWrapping, Frustum, Group, Matrix4, Mesh, MeshStandardMaterial,
+  ClampToEdgeWrapping, Frustum, Group, Matrix4, Mesh, MeshStandardMaterial, RepeatWrapping,
   PerspectiveCamera, Ray, SRGBColorSpace, Texture, Vector3, Vector4,
 } from "three";
 import { imageryById } from "../../data/imagery";
@@ -46,6 +46,8 @@ export class PlanetTerrainRenderer {
   private readonly regionUniform = { value: null as Texture | null };
   private readonly regionBounds = { value: new Vector4() };
   private readonly regionEnabled = { value: 0 };
+  private readonly detailUniform = { value: null as Texture | null };
+  private readonly detailEnabled = { value: 0 };
   private selection: TerrainSelection = { tiles: [], splitIds: new Set() };
   private required = new Map<string, TerrainTileKey>();
   private budget: TerrainBudget;
@@ -56,6 +58,7 @@ export class PlanetTerrainRenderer {
   private preparing: Promise<void> | null = null;
   private baseLease: TextureLease | null = null;
   private regionalTexture: Texture | null = null;
+  private detailTexture: Texture | null = null;
   private regionalUrl = "";
   private regionRequest = false;
   private requestedResolution = Infinity;
@@ -73,7 +76,9 @@ export class PlanetTerrainRenderer {
     if (provider.manifest.reconstruction)
       this.material.color.set(planetaryEnvironments[provider.manifest.bodyId]?.groundColor ?? "#999999");
     this.configureRegionalImagery();
-    if (provider.manifest.reconstruction) configureReconstructedGround(this.material, this.materialOriginKm);
+    if (provider.manifest.reconstruction) configureReconstructedGround(
+      this.material, this.materialOriginKm, provider.manifest.bodyId, this.detailUniform, this.detailEnabled,
+    );
   }
 
   prepare(): Promise<void> {
@@ -83,6 +88,7 @@ export class PlanetTerrainRenderer {
       CUBE_ROOTS.forEach((key) => this.build(key));
       this.initialized = true;
       void this.loadBaseImagery();
+      void this.loadReconstructedDetail();
     });
     return this.preparing;
   }
@@ -129,6 +135,24 @@ uniform float terrainRegionalEnabled;`);
       this.material.needsUpdate = true;
     } catch (error) {
       if (!this.disposed) this.error = `Lunar imagery: ${error instanceof Error ? error.message : "unavailable"}`;
+    }
+  }
+
+  private async loadReconstructedDetail(): Promise<void> {
+    const bodyId = this.provider.manifest.bodyId;
+    if (!this.provider.manifest.reconstruction || (bodyId !== "earth" && bodyId !== "mars")) return;
+    try {
+      const texture = await fetchImageTexture(`/textures/${bodyId}-ground-illustrative.webp`);
+      if (this.disposed) { this.disposeTexture(texture); return; }
+      texture.colorSpace = SRGBColorSpace;
+      texture.wrapS = texture.wrapT = RepeatWrapping;
+      texture.anisotropy = this.quality === "low" || this.mobile ? 2 : 4;
+      texture.needsUpdate = true;
+      this.detailTexture = texture;
+      this.detailUniform.value = texture;
+      this.detailEnabled.value = 1;
+    } catch (error) {
+      if (!this.disposed) this.error = `Ground detail: ${error instanceof Error ? error.message : "unavailable"}`;
     }
   }
 
@@ -357,5 +381,7 @@ uniform float terrainRegionalEnabled;`);
     this.baseLease = null;
     if (this.regionalTexture) this.disposeTexture(this.regionalTexture);
     this.regionalTexture = null;
+    if (this.detailTexture) this.disposeTexture(this.detailTexture);
+    this.detailTexture = null;
   }
 }

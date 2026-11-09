@@ -14,12 +14,17 @@ describe("bounded optical glare distinct from the solar corona", () => {
   });
 
   it("bounds halo width per quality and preserves the physical disk parameter", () => {
-    for (const [quality, limit] of [["low", 12], ["medium", 24], ["high", 40]] as const) {
-      const parameters = solarGlareParameters(800, 1, 1, 0.35, quality);
+    for (const [quality, limit, rayLimit] of [["low", 12, 150], ["medium", 24, 650], ["high", 40, 900]] as const) {
+      const parameters = solarGlareParameters(800, 1, 1, 0.35, quality, false, 800);
       expect(parameters.diskRadiusPixels).toBe(400);
       expect(parameters.haloWidthPixels).toBe(limit);
+      expect(parameters.rayReachPixels).toBeLessThanOrEqual(rayLimit);
     }
     expect(solarGlareParameters(800, 1, 1, 0.35, "auto", true).haloWidthPixels).toBe(12);
+    const distant = solarGlareParameters(8, 1, 1, 0.35, "high", false, 800);
+    const close = solarGlareParameters(800, 1, 1, 0.35, "high", false, 800);
+    expect(distant.rayReachPixels).toBe(600);
+    expect(close.rayReachPixels).toBeLessThan(distant.rayReachPixels);
   });
 
   it("vanishes for total occultation/disabled optics and dims under solar filtering", () => {
@@ -45,14 +50,26 @@ describe("bounded optical glare distinct from the solar corona", () => {
     expect(glare.mesh.visible).toBe(true);
     expect(glare.mesh.material.depthTest).toBe(true);
     expect(glare.mesh.material.depthWrite).toBe(false);
+    expect(glare.ghosts.points.material.depthTest).toBe(true);
+    expect(glare.ghosts.points.material.depthWrite).toBe(false);
     expect(glare.mesh.material.uniforms.glareOccluderCount.value).toBe(1);
     expect(glare.mesh.material.uniforms.glareViewport.value.x).toBe(900);
+    expect(glare.mesh.material.uniforms.glareRayReach.value).toBe(450);
+    expect(glare.ghosts.points.visible).toBe(true);
+    expect(glare.ghosts.points.material.uniforms.ghostSunDepthNdc.value).toBeGreaterThan(-1);
     glare.update({ ...frame, visibleSolarFraction: 0 }, 8, 0.35, "medium", false);
     expect(glare.mesh.visible).toBe(false);
+    expect(glare.ghosts.points.visible).toBe(false);
+    glare.update(frame, 8, 0.35, "low", true);
+    expect(glare.ghosts.points.visible).toBe(false);
     const geometry = vi.spyOn(glare.mesh.geometry, "dispose");
     const material = vi.spyOn(glare.mesh.material, "dispose");
+    const ghostGeometry = vi.spyOn(glare.ghosts.points.geometry, "dispose");
+    const ghostMaterial = vi.spyOn(glare.ghosts.points.material, "dispose");
     glare.dispose(); glare.dispose();
     expect(geometry).toHaveBeenCalledOnce();
     expect(material).toHaveBeenCalledOnce();
+    expect(ghostGeometry).toHaveBeenCalledOnce();
+    expect(ghostMaterial).toHaveBeenCalledOnce();
   });
 });

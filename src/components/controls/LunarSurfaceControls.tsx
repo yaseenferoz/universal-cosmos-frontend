@@ -62,7 +62,7 @@ export function MovementButton({
 }
 
 export function LunarSurfaceControls() {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => matchMedia("(max-width: 720px)").matches);
   const selected = useExplorationStore((state) => state.selectedId);
   const viewMode = useExplorationStore((state) => state.viewMode);
   const ready = useExplorationStore((state) => state.status === "ready");
@@ -74,13 +74,11 @@ export function LunarSurfaceControls() {
   return (
     <>
       <section
-        className={`lunar-controls glass ${active ? "is-active" : ""}`}
+        className={`lunar-controls glass ${active ? "is-active" : ""} ${collapsed ? "is-collapsed" : "is-expanded"}`}
         aria-label="Lunar surface exploration"
       >
         <span className="eyebrow">{phaseLabels[telemetry.phase]}</span>
         <h2>
-          <MapPin size={15} />
-          Taurus–Littrow
           <button
             type="button"
             className="lunar-collapse"
@@ -91,7 +89,9 @@ export function LunarSurfaceControls() {
             aria-controls="lunar-control-details"
             onClick={() => setCollapsed((value) => !value)}
           >
-            {collapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+            <MapPin size={16} />
+            <span>Taurus–Littrow</span>
+            {collapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
           </button>
         </h2>
         <div id="lunar-control-details" hidden={collapsed}>
@@ -210,7 +210,8 @@ export function LunarSurfaceControls() {
             </p>
             <p>
               Orbital orientation and solar geometry follow the illustrative
-              model, not ephemerides. Moon sky is airless and black.
+              model, not ephemerides. The airless sky is black; the local
+              background uses a <a href="https://svs.gsfc.nasa.gov/4851/" target="_blank" rel="noreferrer">NASA SVS Milky Way map</a>, source-derived stars, and enhanced <a href="https://lambda.gsfc.nasa.gov/product/foreground/fg_halpha_info.html" target="_blank" rel="noreferrer">H-alpha emission</a> whose alignment to this modeled Moon frame is approximate.
             </p>
             {moonTerrainManifest.sources.map((source) => (
               <p key={source.id}>

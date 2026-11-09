@@ -17,6 +17,7 @@ describe("display formatting", () => {
   });
   it("uses the configured visualization epoch for the clock", () => {
     expect(formatSimulationClock(0.5)).toBe("12:00");
+    expect(formatSimulationClock(0.5, "2026-01-01T00:00:00.000Z", true)).toBe("12:00:00");
     expect(formatSimulationClock(1, "2026-05-04T18:30:00.000Z")).toBe("18:30");
   });
 });

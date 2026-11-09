@@ -4,10 +4,13 @@ import {
   formatSimulationClock,
   formatSimulationDate,
 } from "../../utils/format";
+import { REAL_TIME_DAYS_PER_SECOND } from "../../utils/simulationTime";
 
 export function TopBar() {
   const days = useExplorationStore((s) => s.simulationDays);
   const epoch = useExplorationStore((s) => s.simulationEpoch);
+  const speed = useExplorationStore((s) => s.speed);
+  const playing = useExplorationStore((s) => s.playing);
   const openDialog = useExplorationStore((s) => s.openDialog);
   const mobileOpen = useExplorationStore((s) => s.mobileNavigationOpen);
   const viewMode = useExplorationStore((s) => s.viewMode);
@@ -19,9 +22,9 @@ export function TopBar() {
         href="#"
         onClick={(event) => {
           event.preventDefault();
-          useExplorationStore.getState().selectObject("moon");
+          useExplorationStore.getState().selectObject("earth");
         }}
-        aria-label="Universal Cosmos — Lunar orbit"
+        aria-label="Universal Cosmos — Earth orbit"
       >
         <span className="brand-mark">
           <Orbit size={33} strokeWidth={1.15} />
@@ -54,12 +57,12 @@ export function TopBar() {
       </div>
       <div className="top-actions">
         <div className="simulation-date">
-          <span>ILLUSTRATIVE TIME · UTC</span>
+          <span>{playing && speed === REAL_TIME_DAYS_PER_SECOND ? "CURRENT UTC · MODELED ORBITS" : "SIMULATED UTC · MODELED ORBITS"}</span>
           <time>
             {formatSimulationDate(days, epoch)}
             <span className="clock-time">
               {" "}
-              {formatSimulationClock(days, epoch)}
+              {formatSimulationClock(days, epoch, playing && speed === REAL_TIME_DAYS_PER_SECOND)}
             </span>
           </time>
         </div>

@@ -41,7 +41,12 @@ export class ReconstructedTerrainProvider implements TerrainDataProvider {
     // Crater-like bowls are a generated relief field, not named/observed craters.
     const cell = Math.cos(p.x) * Math.cos(p.y) * Math.cos(p.z);
     const crater = -Math.pow(Math.max(0, cell), 12) + 0.18 * Math.exp(-Math.pow((cell - 0.76) * 12, 2));
-    const heightM = this.environment.reliefM * (this.manifest.bodyId === "mercury" ? 0.7 * crater + 0.15 * hills : 0.7 * hills + 0.16 * detail);
+    const broadHeight = this.environment.reliefM * (this.manifest.bodyId === "mercury" ? 0.7 * crater + 0.15 * hills : 0.7 * hills + 0.16 * detail);
+    // Meter-scale undulations improve the eye-level silhouette. They remain
+    // generated relief and are never assigned measured DEM resolution.
+    const ripple = Math.sin(p.x * 260 + 0.7 * Math.sin(p.z * 170)) * Math.cos(p.z * 220 - p.y * 90);
+    const groundReliefM = this.manifest.bodyId === "mars" ? 0.75 : this.manifest.bodyId === "earth" ? 0.35 : 0;
+    const heightM = broadHeight + ripple * groundReliefM;
     return { heightM, available: true, resolutionM: this.environment.featureScaleM, sourceId: this.manifest.id };
   }
   async loadTile(_key: TerrainTileKey, signal?: AbortSignal): Promise<TerrainTileData> {

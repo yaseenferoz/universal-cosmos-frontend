@@ -1,5 +1,7 @@
 # Solar System expansion: audit and implementation roadmap
 
+**Status update, 9 November 2026:** The baseline below records the 2 November audit. The local catalog now includes ten additional moons and three named asteroids/dwarf planets, with nine historical moon maps. This is an initial catalog expansion; scientific ephemerides, comprehensive satellite/asteroid ingestion, shape models, and surface terrain remain open work.
+
 Audit date: 2026-11-02. This is the **pre-Milestone 1 baseline and a proposal**, not a statement that the full Solar System upgrade has been implemented. This implementation turn is limited to the audit and Milestone 1 (Sun rendering, apparent size, illumination and exposure). Milestones 2–9 require subsequent implementation and validation. Preserve the working application, backend contracts and lunar slice.
 
 ## 1. Repository audit

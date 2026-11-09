@@ -97,9 +97,53 @@ Remaining limits: the GPU eclipse check uses controlled synthetic alignments, no
 
 ## Verification limits (all milestones)
 
+The 9 November 2026 clock correction starts playback at current UTC, adds a Real time speed that resynchronizes after a hidden tab resumes, and makes Reset time return to current UTC. It also labels the date as current or simulated UTC while retaining the explicit modeled-orbit warning; a compact UTC time remains visible in the narrow-screen toolbar. Pure clock tests cover UTC conversion, real-time resynchronization, pausing, and accelerated playback. Nebulae and galaxies remain planned because no observed catalog or volume data is installed; the navigation now says "planned" directly. This clock change does not turn modeled circular paths into ephemerides. `npm run typecheck`, `npm run lint`, `npm test` (217 tests in 38 files), and `npm run build` passed.
+
+A further user screenshot on 9 November 2026 exposed overstrong radial streaks, lens reflections drawn over Earth's opaque disk, and a large default planetary-descent panel. The correction reduces ray and veil intensity, depth-tests the reflections at the Sun's projected distance, and starts the planetary panel collapsed. The dark Earth in that image is a night-side view with visible city lights; a front-lit globe and an in-frame Sun cannot be obtained from the same exterior camera position without changing viewing geometry. The updated optical result still needs a fresh GPU screenshot.
+
+The SpaceEngine side-by-side screenshot supplied on 9 November 2026 showed a wider blue optical glow, numerous soft rays, lens reflections, and a denser star field than the local view. In response, the analytic solar glare now has a broader quality-bounded screen footprint and mixed angular lobes; one small screen-space point cloud adds colored lens reflections at Medium and High only. The illustrative star draw range increased within the existing fixed geometry allocation. `npm run typecheck`, `npm run lint`, `npm test` (215 tests in 37 files), and `npm run build` passed. The browser access host remained unavailable, so the revised GPU image and mobile frame time still need direct inspection; no observational fidelity claim is made for these optics.
+
+On 9 November 2026, a follow-up visual pass changed the opening focus from the Moon to Earth, raised the visibility of the illustrative background stars, softened the solar glare spokes into low-contrast directional scatter, and reorganized narrow-screen controls. Lunar and solar detail panels start collapsed at widths up to 720 px; their controls remain available when expanded. The gate passed `npm run typecheck`, `npm run lint`, `npm test` (215 tests in 37 files), and `npm run build`. The browser access host remained unavailable, so the user's supplied screenshot guided the changes and new desktop/mobile GPU screenshots remain to be inspected.
+
+The 9 November 2026 solar optics refinement added bounded eight-direction glare streaks and a faint wide veil to the existing analytic halo. The optical effect remains separate from the physical solar disk and the approximate corona. `npm run typecheck`, `npm run lint`, `npm test` (215 tests in 37 files), and `npm run build` passed. The connected browser host was unavailable during this session, so a new GPU screenshot comparison with the supplied SpaceEngine reference remains outstanding.
+
 Responsive emulation runs on the desktop GPU; it is not a physical phone benchmark. Physical multi-touch gestures, low-end mobile thermals, sustained memory/frame-time profiling, and GPU context loss were not exercised on real devices. Automated math/lifecycle tests do not replace those checks. Frame rate is available in Settings as sampled telemetry, not a performance guarantee.
 
 Source maps contain historical observations and documented processing; they are not live spacecraft views. The coordinate phases, lighting/exposure, constant roughness, atmospheric limb, cloud opacity and ring transparency remain approximations. Ring/cloud shadow maps are approximate and are disabled at Low quality. Backend ephemeris integration and catalogs beyond the Solar System remain explicitly deferred.
+
+## 9 November 2026: local moons and asteroid catalog
+
+The local service now exposes 23 named bodies: the baseline ten, ten additional moons, and Ceres, Vesta, and Bennu. Nine added moons use downloaded JPL/USGS historical maps; Io, Titania, and Triton mask black no-data pixels. Source alpha coverage at 1440 x 720 is approximately 93.8%, 37.8%, and 20.3% respectively. The latter two remain visibly incomplete. Titan and the three asteroid/dwarf-planet bodies use explicitly labeled plain-color markers. Saturn's missing Hubble regions now use a warm uniform placeholder instead of a stark gray one; no observed data were invented. The Overview asteroid-belt points are illustrative, not individual catalog records or measured positions. The opt-in HTTP adapter retains its ten supported backend identities.
+
+`npm run typecheck`, `npm run lint`, `npm test` (217 tests in 38 files), and `npm run build` passed. Vite returned HTTP 200 for a new local moon texture. The browser GPU view was not available for a new screenshot in this pass, so final rendered appearance and mobile frame time still need direct inspection.
+
+## 9 November 2026: landing sky repair
+
+The analytic atmospheric sphere now follows the meter-scale landing camera; previously it stayed at the planet center and could not cover the viewport. A NASA SVS J2000 celestial star map is stored locally in 2048 and 4096 WebP tiers. The engine centers it on the global camera during landing so physical Sun and planet renderers remain in front, then overlays analytic haze and local terrain. Daylight reduces the background; dense cloud-level haze obscures it. The source map is catalog-derived celestial sky data, while its alignment to modeled planetary axes and the day/night extinction are approximations. No individual three-dimensional nebula field is installed.
+
+Both local texture URLs returned HTTP 200. A headless Chrome smoke run loaded the application UI without page errors, but its WebGL canvas was black, so that run cannot verify final GPU appearance. `npm run typecheck`, `npm run lint`, `npm test` (220 tests in 40 files), and `npm run build` passed.
+
+## 9 November 2026: night-sky sharpness
+
+The user's Earth surface screenshot and a live desktop inspection showed that individual stars in the stretched SVS sky texture appeared as soft blobs. The landing sky now draws 24,000 bright peaks extracted from the same NASA map as bounded screen-space points. A median-filtered copy of that map supplies broad Milky Way structure without enlarged star disks. This is a visual reconstruction from map pixels, not calibrated apparent magnitudes or local celestial coordinates. The binary source layer is 672,000 bytes; all point directions are finite and normalized. The local asset URL returned HTTP 200.
+
+`npm run typecheck`, `npm run lint`, `npm test` (222 tests in 41 files), and `npm run build` passed. A second live screenshot after the final asset regeneration could not be captured because Windows Computer Use stopped when it could not verify the browser URL; final visual appearance still needs a browser refresh and inspection.
+
+## 9 November 2026: visible Milky Way structure
+
+The median-filtered 2012 star map did not retain enough diffuse structure to resemble the user's SpaceEngine reference. The orbit and landing background now uses NASA SVS's separate 2020 Milky Way layer in the same J2000 celestial projection, converted from its linear EXR to sRGB WebP. Its dark lanes and broad galactic light remain visible while bright stars use the existing small point layer. This is a static sky image with illustrative exposure, not volumetric nebula gas or calibrated local sky timing. The source asset is kept in ignored `.local/asset-source` and the shipped WebP tiers are 365 KB and 2.34 MB.
+
+The background also blends a restrained red layer from NASA LAMBDA's measured Finkbeiner H-alpha survey (version 1.1, nested HEALPix Nside 512). The asset preparation reprojects Galactic survey coordinates to the J2000 celestial image, thresholds the faint signal, and softly scales it for visibility. The final 2048 WebP was inspected as a whole-sky image: gas regions follow the galactic band and the dust lanes remain distinguishable. H-alpha visibility is enhanced and is not a naked-eye or photometric prediction. Browser-based WebGL capture was unavailable because the browser access host did not connect; the live camera composition still needs direct visual inspection.
+
+The local 2048 texture URL returned HTTP 200 (360,066 bytes). The point layer still contains 24,000 finite unit directions. `npm run typecheck`, `npm run lint`, `npm test` (222 tests in 41 files), and `npm run build` passed after the final sky changes.
+
+The star-point layer now renders at far depth with depth testing, so opaque planet and moon disks occlude it. The same four required checks passed after this occlusion fix.
+
+## 9 November 2026: overbright soft sky correction
+
+The user's Moon-orbit screenshot showed the 2020 diffuse map filling the viewport as an overbright, enlarged soft texture. The default desktop view had been selecting the 2048-pixel tier even though a 4096-pixel tier existed. Desktop automatic, medium, and high quality now use the 4096-pixel tier; mobile and low quality keep the bounded 2048-pixel tier. The diffuse shader compresses bright source values and lowers its strength so the dark sky and sharp point stars remain dominant. The prepared H-alpha layer also uses less spatial smoothing. A native browser inspection after the shader change showed a darker, less intrusive background around the Moon, although a direct match to the user's exact camera orientation was unavailable.
+
+The new 4096 asset URL returned HTTP 200. `npm run typecheck`, `npm run lint`, `npm test` (223 tests in 41 files), and `npm run build` passed.
 
 ## Dependency review
 

@@ -457,7 +457,7 @@ export const imageryById: Record<ObjectId, ObjectImagery> = {
   },
   "neptune": {
     "missing": [
-      "Unobserved northern atmosphere and registration artifacts blend into a uniform blue-green reconstruction. Native mosaic resolution is only 721 x 361; this is not calibrated natural color."
+      "Unobserved north polar atmosphere and source registration edges are shown as a neutral placeholder; source imagery is only 721 x 361."
     ],
     "surface": {
       "id": "neptune-surface",
@@ -465,7 +465,7 @@ export const imageryById: Record<ObjectId, ObjectImagery> = {
       "assetUrl": "https://archive.stsci.edu/hlsps/opal/cycle22/neptune/hlsp_opal_hst_wfc3-uvis_neptune-2015a_f467m-f547m-f657n_v1_globalmap.tif",
       "sourceUrl": "https://archive.stsci.edu/hlsp/opal/opal-neptune-cycle-22",
       "attribution": "NASA / ESA / STScI / OPAL program (PI: Amy Simon)",
-      "notes": "Historical Hubble F467M/F547M/F657N preview composite; native resolution only 721 x 361. The shader fades northern registration artifacts between 30.6 and 41.4 degrees latitude into a uniform blue-green reconstruction, also used for missing pixels. Original raster retained unchanged. No invented cloud features or upscaling; not calibrated natural color.",
+      "notes": "Historical Hubble F467M/F547M/F657N preview composite; native resolution only 721 x 361. Unobserved north polar area and a 12-pixel registration-edge margin are transparent over a neutral placeholder. No invented features or upscaling; not calibrated natural color.",
       "kind": "observational",
       "colorSpace": "srgb",
       "license": "NASA/ESA Hubble public data; MAST data-use policy. Credit NASA, ESA, STScI and OPAL team; no endorsement.",
@@ -494,5 +494,382 @@ export const imageryById: Record<ObjectId, ObjectImagery> = {
         ]
       }
     }
+  },
+  "phobos": {
+    "missing": [
+      "Historical cartographic mosaic with source gap processing and baked illumination. True irregular shape and measured relief are not represented."
+    ],
+    "surface": {
+      "id": "phobos-surface",
+      "title": "Phobos Viking cartographic mosaic",
+      "assetUrl": "https://maps.jpl.nasa.gov/tmaps/pix/mar1kuu2.jpg",
+      "sourceUrl": "https://maps.jpl.nasa.gov/tmaps/mars.html",
+      "attribution": "NASA/JPL-Caltech/USGS",
+      "notes": "Historical Viking cartographic mosaic published by JPL/USGS. At most 1440 x 720 source detail. Source gap processing and baked illumination remain; not a current observation or calibrated albedo. Spherical geometry is approximate.",
+      "kind": "derived",
+      "colorSpace": "srgb",
+      "license": "JPL image use policy: reuse permitted with attribution; no endorsement.",
+      "sourceResolution": [
+        1440,
+        720
+      ],
+      "variants": {
+        "low": "/textures/phobos-surface-1024.webp",
+        "medium": "/textures/phobos-surface-1440.webp",
+        "high": "/textures/phobos-surface-1440.webp"
+      },
+      "resolutions": {
+        "low": [
+          1024,
+          512
+        ],
+        "medium": [
+          1440,
+          720
+        ],
+        "high": [
+          1440,
+          720
+        ]
+      }
+    }
+  },
+  "deimos": {
+    "missing": [
+      "NASA/JPL Deimos shape and atlas are a visualization model with baked source illumination, not a calibrated current observation or measured relief map. Rotation orientation is approximate."
+    ],
+    "surface": {
+      "id": "deimos-surface",
+      "title": "Deimos Viking cartographic mosaic",
+      "assetUrl": "https://maps.jpl.nasa.gov/tmaps/pix/mar2kuu2.jpg",
+      "sourceUrl": "https://maps.jpl.nasa.gov/tmaps/mars.html",
+      "attribution": "NASA/JPL-Caltech/USGS",
+      "notes": "Historical Viking cartographic mosaic published by JPL/USGS. At most 1440 x 720 source detail. Used only if the NASA/JPL Deimos shape model cannot load; its spherical fallback has baked illumination and approximate geometry.",
+      "kind": "derived",
+      "colorSpace": "srgb",
+      "license": "JPL image use policy: reuse permitted with attribution; no endorsement.",
+      "sourceResolution": [
+        1440,
+        720
+      ],
+      "variants": {
+        "low": "/textures/deimos-surface-1024.webp",
+        "medium": "/textures/deimos-surface-1440.webp",
+        "high": "/textures/deimos-surface-1440.webp"
+      },
+      "resolutions": {
+        "low": [
+          1024,
+          512
+        ],
+        "medium": [
+          1440,
+          720
+        ],
+        "high": [
+          1440,
+          720
+        ]
+      }
+    }
+  },
+  "io": {
+    "missing": [
+      "Historical cartographic mosaic with source gap processing and baked illumination. True irregular shape and measured relief are not represented.",
+      "Small no-data regions in the historical map use a uniform placeholder."
+    ],
+    "surface": {
+      "id": "io-surface",
+      "title": "Io Voyager/Galileo color-derived mosaic",
+      "assetUrl": "https://maps.jpl.nasa.gov/tmaps/pix/jup1vss2.jpg",
+      "sourceUrl": "https://maps.jpl.nasa.gov/tmaps/jupiter.html",
+      "attribution": "NASA/JPL-Caltech/USGS",
+      "notes": "Historical Voyager/Galileo color-derived mosaic published by JPL/USGS. At most 1440 x 720 source detail. Source gap processing and baked illumination remain; not a current observation or calibrated albedo. Spherical geometry is approximate.",
+      "kind": "derived",
+      "colorSpace": "srgb",
+      "license": "JPL image use policy: reuse permitted with attribution; no endorsement.",
+      "sourceResolution": [
+        1440,
+        720
+      ],
+      "partialCoverage": true,
+      "variants": {
+        "low": "/textures/io-surface-1024.webp",
+        "medium": "/textures/io-surface-1440.webp",
+        "high": "/textures/io-surface-1440.webp"
+      },
+      "resolutions": {
+        "low": [
+          1024,
+          512
+        ],
+        "medium": [
+          1440,
+          720
+        ],
+        "high": [
+          1440,
+          720
+        ]
+      }
+    }
+  },
+  "europa": {
+    "missing": [
+      "Historical cartographic mosaic with source gap processing and baked illumination. True irregular shape and measured relief are not represented."
+    ],
+    "surface": {
+      "id": "europa-surface",
+      "title": "Europa cleaned Voyager monochrome mosaic",
+      "assetUrl": "https://maps.jpl.nasa.gov/tmaps/pix/jup2vss2.jpg",
+      "sourceUrl": "https://maps.jpl.nasa.gov/tmaps/jupiter.html",
+      "attribution": "NASA/JPL-Caltech/USGS",
+      "notes": "Historical cleaned Voyager monochrome mosaic published by JPL/USGS. At most 1440 x 720 source detail. Source gap processing and baked illumination remain; not a current observation or calibrated albedo. Spherical geometry is approximate.",
+      "kind": "derived",
+      "colorSpace": "srgb",
+      "license": "JPL image use policy: reuse permitted with attribution; no endorsement.",
+      "sourceResolution": [
+        1440,
+        720
+      ],
+      "variants": {
+        "low": "/textures/europa-surface-1024.webp",
+        "medium": "/textures/europa-surface-1440.webp",
+        "high": "/textures/europa-surface-1440.webp"
+      },
+      "resolutions": {
+        "low": [
+          1024,
+          512
+        ],
+        "medium": [
+          1440,
+          720
+        ],
+        "high": [
+          1440,
+          720
+        ]
+      }
+    }
+  },
+  "ganymede": {
+    "missing": [
+      "Historical cartographic mosaic with source gap processing and baked illumination. True irregular shape and measured relief are not represented."
+    ],
+    "surface": {
+      "id": "ganymede-surface",
+      "title": "Ganymede cleaned Voyager monochrome mosaic",
+      "assetUrl": "https://maps.jpl.nasa.gov/tmaps/pix/jup3vss2.jpg",
+      "sourceUrl": "https://maps.jpl.nasa.gov/tmaps/jupiter.html",
+      "attribution": "NASA/JPL-Caltech/USGS",
+      "notes": "Historical cleaned Voyager monochrome mosaic published by JPL/USGS. At most 1440 x 720 source detail. Source gap processing and baked illumination remain; not a current observation or calibrated albedo. Spherical geometry is approximate.",
+      "kind": "derived",
+      "colorSpace": "srgb",
+      "license": "JPL image use policy: reuse permitted with attribution; no endorsement.",
+      "sourceResolution": [
+        1440,
+        720
+      ],
+      "variants": {
+        "low": "/textures/ganymede-surface-1024.webp",
+        "medium": "/textures/ganymede-surface-1440.webp",
+        "high": "/textures/ganymede-surface-1440.webp"
+      },
+      "resolutions": {
+        "low": [
+          1024,
+          512
+        ],
+        "medium": [
+          1440,
+          720
+        ],
+        "high": [
+          1440,
+          720
+        ]
+      }
+    }
+  },
+  "callisto": {
+    "missing": [
+      "Historical cartographic mosaic with source gap processing and baked illumination. True irregular shape and measured relief are not represented."
+    ],
+    "surface": {
+      "id": "callisto-surface",
+      "title": "Callisto cleaned Voyager monochrome mosaic",
+      "assetUrl": "https://maps.jpl.nasa.gov/tmaps/pix/jup4vss2.jpg",
+      "sourceUrl": "https://maps.jpl.nasa.gov/tmaps/jupiter.html",
+      "attribution": "NASA/JPL-Caltech/USGS",
+      "notes": "Historical cleaned Voyager monochrome mosaic published by JPL/USGS. At most 1440 x 720 source detail. Source gap processing and baked illumination remain; not a current observation or calibrated albedo. Spherical geometry is approximate.",
+      "kind": "derived",
+      "colorSpace": "srgb",
+      "license": "JPL image use policy: reuse permitted with attribution; no endorsement.",
+      "sourceResolution": [
+        1440,
+        720
+      ],
+      "variants": {
+        "low": "/textures/callisto-surface-1024.webp",
+        "medium": "/textures/callisto-surface-1440.webp",
+        "high": "/textures/callisto-surface-1440.webp"
+      },
+      "resolutions": {
+        "low": [
+          1024,
+          512
+        ],
+        "medium": [
+          1440,
+          720
+        ],
+        "high": [
+          1440,
+          720
+        ]
+      }
+    }
+  },
+  "enceladus": {
+    "missing": [
+      "Historical cartographic mosaic with source gap processing and baked illumination. True irregular shape and measured relief are not represented."
+    ],
+    "surface": {
+      "id": "enceladus-surface",
+      "title": "Enceladus cleaned Voyager monochrome mosaic",
+      "assetUrl": "https://maps.jpl.nasa.gov/tmaps/pix/sat2vss2.jpg",
+      "sourceUrl": "https://maps.jpl.nasa.gov/tmaps/saturn.html",
+      "attribution": "NASA/JPL-Caltech/USGS",
+      "notes": "Historical cleaned Voyager monochrome mosaic published by JPL/USGS. At most 1440 x 720 source detail. Source gap processing and baked illumination remain; not a current observation or calibrated albedo. Spherical geometry is approximate.",
+      "kind": "derived",
+      "colorSpace": "srgb",
+      "license": "JPL image use policy: reuse permitted with attribution; no endorsement.",
+      "sourceResolution": [
+        1440,
+        720
+      ],
+      "variants": {
+        "low": "/textures/enceladus-surface-1024.webp",
+        "medium": "/textures/enceladus-surface-1440.webp",
+        "high": "/textures/enceladus-surface-1440.webp"
+      },
+      "resolutions": {
+        "low": [
+          1024,
+          512
+        ],
+        "medium": [
+          1440,
+          720
+        ],
+        "high": [
+          1440,
+          720
+        ]
+      }
+    }
+  },
+  "titan": {
+    "missing": [
+      "Dense orange atmosphere is a plain color approximation; no verified global visible-light cloud texture is installed. Surface is obscured in visible light."
+    ]
+  },
+  "titania": {
+    "missing": [
+      "Historical cartographic mosaic with source gap processing and baked illumination. True irregular shape and measured relief are not represented.",
+      "Most of the globe was not covered by the selected Voyager mosaic and uses a uniform placeholder."
+    ],
+    "surface": {
+      "id": "titania-surface",
+      "title": "Titania Voyager monochrome mosaic",
+      "assetUrl": "https://maps.jpl.nasa.gov/tmaps/pix/ura3vuu2.jpg",
+      "sourceUrl": "https://maps.jpl.nasa.gov/tmaps/uranus.html",
+      "attribution": "NASA/JPL-Caltech/USGS",
+      "notes": "Historical Voyager monochrome mosaic published by JPL/USGS. At most 1440 x 720 source detail. Source gap processing and baked illumination remain; not a current observation or calibrated albedo. Spherical geometry is approximate.",
+      "kind": "observational",
+      "colorSpace": "srgb",
+      "license": "JPL image use policy: reuse permitted with attribution; no endorsement.",
+      "sourceResolution": [
+        1440,
+        720
+      ],
+      "partialCoverage": true,
+      "variants": {
+        "low": "/textures/titania-surface-1024.webp",
+        "medium": "/textures/titania-surface-1440.webp",
+        "high": "/textures/titania-surface-1440.webp"
+      },
+      "resolutions": {
+        "low": [
+          1024,
+          512
+        ],
+        "medium": [
+          1440,
+          720
+        ],
+        "high": [
+          1440,
+          720
+        ]
+      }
+    }
+  },
+  "triton": {
+    "missing": [
+      "Historical cartographic mosaic with source gap processing and baked illumination. True irregular shape and measured relief are not represented.",
+      "Most of the globe was not covered by the selected Voyager mosaic and uses a uniform placeholder."
+    ],
+    "surface": {
+      "id": "triton-surface",
+      "title": "Triton limited Voyager monochrome mosaic",
+      "assetUrl": "https://maps.jpl.nasa.gov/tmaps/pix/nep1vuu2.jpg",
+      "sourceUrl": "https://maps.jpl.nasa.gov/tmaps/neptune.html",
+      "attribution": "NASA/JPL-Caltech/USGS",
+      "notes": "Historical limited Voyager monochrome mosaic published by JPL/USGS. At most 1440 x 720 source detail. Source gap processing and baked illumination remain; not a current observation or calibrated albedo. Spherical geometry is approximate.",
+      "kind": "observational",
+      "colorSpace": "srgb",
+      "license": "JPL image use policy: reuse permitted with attribution; no endorsement.",
+      "sourceResolution": [
+        1440,
+        720
+      ],
+      "partialCoverage": true,
+      "variants": {
+        "low": "/textures/triton-surface-1024.webp",
+        "medium": "/textures/triton-surface-1440.webp",
+        "high": "/textures/triton-surface-1440.webp"
+      },
+      "resolutions": {
+        "low": [
+          1024,
+          512
+        ],
+        "medium": [
+          1440,
+          720
+        ],
+        "high": [
+          1440,
+          720
+        ]
+      }
+    }
+  },
+  "ceres": {
+    "missing": [
+      "No verified global map or shape model is installed; the plain-color sphere is a navigable marker, not the observed appearance."
+    ]
+  },
+  "vesta": {
+    "missing": [
+      "No verified global map or shape model is installed; the plain-color sphere is a navigable marker, not the observed appearance."
+    ]
+  },
+  "bennu": {
+    "missing": [
+      "No verified global map or shape model is installed; the plain-color sphere is a navigable marker, not the observed appearance."
+    ]
   }
 };

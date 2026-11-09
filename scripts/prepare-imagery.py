@@ -110,6 +110,29 @@ ASSETS = [
          kind='derived', colorSpace='srgb', maximum=2048, radialRangeKm=[74658,136780]),
 ]
 
+# Voyager/Galileo cartographic maps hosted by JPL. The "cleaned" variants are
+# source-derived visualization products; their gap processing is disclosed.
+for body, system, filename, source_note, kind in [
+    ('phobos', 'mars', 'mar1kuu2.jpg', 'Viking cartographic mosaic', 'derived'),
+    ('deimos', 'mars', 'mar2kuu2.jpg', 'Viking cartographic mosaic', 'derived'),
+    ('io', 'jupiter', 'jup1vss2.jpg', 'Voyager/Galileo color-derived mosaic', 'derived'),
+    ('europa', 'jupiter', 'jup2vss2.jpg', 'cleaned Voyager monochrome mosaic', 'derived'),
+    ('ganymede', 'jupiter', 'jup3vss2.jpg', 'cleaned Voyager monochrome mosaic', 'derived'),
+    ('callisto', 'jupiter', 'jup4vss2.jpg', 'cleaned Voyager monochrome mosaic', 'derived'),
+    ('enceladus', 'saturn', 'sat2vss2.jpg', 'cleaned Voyager monochrome mosaic', 'derived'),
+    ('titania', 'uranus', 'ura3vuu2.jpg', 'Voyager monochrome mosaic', 'observational'),
+    ('triton', 'neptune', 'nep1vuu2.jpg', 'limited Voyager monochrome mosaic', 'observational'),
+]:
+    ASSETS.append(dict(body=body, slot='surface', id=f'{body}-surface', filename=filename,
+        title=f'{body.title()} {source_note}',
+        assetUrl=f'https://maps.jpl.nasa.gov/tmaps/pix/{filename}',
+        sourceUrl=f'https://maps.jpl.nasa.gov/tmaps/{system}.html',
+        attribution='NASA/JPL-Caltech/USGS',
+        license='JPL image use policy: reuse permitted with attribution; no endorsement.',
+        notes=f'Historical {source_note} published by JPL/USGS. At most 1440 x 720 source detail. Source gap processing and baked illumination remain; not a current observation or calibrated albedo. Spherical geometry is approximate.',
+        kind=kind, colorSpace='srgb', maximum=1440,
+        partialCoverage=body in ('io', 'titania', 'triton')))
+
 def prepare(asset):
     source = CACHE / asset['filename']
     if not source.exists() or source.stat().st_size == 0:
@@ -169,13 +192,13 @@ def prepare(asset):
     print(asset['id'], original.size, record['variants'], flush=True)
     return record
 
-catalog = {body: {'missing': ['Verified global surface map not yet available.']} for body in ['sun','mercury','venus','earth','moon','mars','jupiter','saturn','uranus','neptune']}
+catalog = {body: {'missing': ['No verified global surface map is installed; color and shape are illustrative.']} for body in ['sun','mercury','venus','earth','moon','mars','jupiter','saturn','uranus','neptune','phobos','deimos','io','europa','ganymede','callisto','enceladus','titan','titania','triton','ceres','vesta','bennu']}
 for asset in ASSETS:
     catalog[asset['body']][asset['slot']] = prepare(asset)
     if asset['slot'] == 'surface': catalog[asset['body']]['missing'] = []
 
 catalog['sun']['missing'] = ['The white-light photosphere, granulation and corona are modeled approximations, not an observed solar activity map. No prominence dataset is installed.']
-catalog['venus']['missing'] = ['No verified global visible-light Venus cloud mosaic is installed; the plain cloud color is a visual approximation. Magellan radar is not a visible-light cloud map.']
+catalog['venus']['missing'] = ['Cream-colored, low-contrast visible-light clouds are a procedural reconstruction. No verified global visible-light Venus cloud mosaic is installed; Magellan radar is not a visible-light cloud map.']
 catalog['earth']['missing'] = ['No measured normal or surface-roughness map is installed; surface roughness is a constant approximation.']
 catalog['moon']['missing'] = ['No measured roughness map is installed. The normal map resolves only LOLA elevation at 1440 x 720.']
 catalog['mercury']['missing'] = ['Natural-color, normal and measured roughness maps are not installed; the observed monochrome preview is limited to 1024 x 512.']
@@ -184,6 +207,14 @@ catalog['jupiter']['missing'] = ['Polar coverage is absent from the Hubble map a
 catalog['saturn']['missing'] = ['Ring-obscured and south polar atmospheric coverage is absent and shown as a neutral placeholder.', 'Ring opacity is derived from image brightness, not a calibrated optical-depth profile; D/F/G/E rings are omitted.']
 catalog['uranus']['missing'] = ['Unobserved south polar atmosphere and source registration edges are shown as a neutral placeholder; source imagery is only 721 x 361.']
 catalog['neptune']['missing'] = ['Unobserved north polar atmosphere and source registration edges are shown as a neutral placeholder; source imagery is only 721 x 361.']
+for body in ['phobos','deimos','io','europa','ganymede','callisto','enceladus','titania','triton']:
+    catalog[body]['missing'] = ['Historical cartographic mosaic with source gap processing and baked illumination. True irregular shape and measured relief are not represented.']
+catalog['io']['missing'].append('Small no-data regions in the historical map use a uniform placeholder.')
+catalog['titania']['missing'].append('Most of the globe was not covered by the selected Voyager mosaic and uses a uniform placeholder.')
+catalog['triton']['missing'].append('Most of the globe was not covered by the selected Voyager mosaic and uses a uniform placeholder.')
+catalog['titan']['missing'] = ['Dense orange atmosphere is a plain color approximation; no verified global visible-light cloud texture is installed. Surface is obscured in visible light.']
+for body in ['ceres','vesta','bennu']:
+    catalog[body]['missing'] = ['No verified global map or shape model is installed; the plain-color sphere is a navigable marker, not the observed appearance.']
 
 type_header = '''import type { ObjectId } from "../types/celestial";
 

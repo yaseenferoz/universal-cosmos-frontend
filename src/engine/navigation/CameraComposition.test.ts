@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MathUtils, Vector3 } from "three";
 import {
+  irregularBodyCameraOffset,
   orbitalCameraDistance,
   orbitalCameraOffset,
 } from "./CameraComposition";
@@ -50,5 +51,14 @@ describe("orbital camera composition", () => {
     ).normalize();
     expect(direction.toArray().every(Number.isFinite)).toBe(true);
     expect(direction.dot(pole)).toBeCloseTo(Math.sin(MathUtils.degToRad(25)));
+  });
+  it("shows an irregular moon's long axis in the initial view", () => {
+    const longAxis = new Vector3(1, 0, 0);
+    const sun = new Vector3(1, 0, 0);
+    const offset = irregularBodyCameraOffset(1.3, 16 / 9, sun, longAxis);
+    const direction = offset.clone().normalize();
+    expect(Math.abs(direction.dot(longAxis))).toBeLessThan(0.5);
+    expect(direction.dot(sun)).toBeGreaterThan(0.3);
+    expect(offset.length()).toBeCloseTo(orbitalCameraDistance(1.3, 16 / 9));
   });
 });

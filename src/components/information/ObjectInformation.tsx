@@ -15,6 +15,7 @@ export function ObjectInformation() {
     return (
       <button
         className="reopen-information glass"
+        aria-label={`Open ${object.name} information`}
         onClick={() => {
           useRenderingStore.getState().setDiagnosticsEnabled(false);
           useExplorationStore.getState().setInformationOpen(true);

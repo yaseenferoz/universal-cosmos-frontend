@@ -3,6 +3,7 @@ import type {
   ObjectId,
   SolarSystem,
 } from "../types/celestial";
+import { additionalBodies } from "./additionalBodies";
 
 /** Chosen visualization origin. Initial phases are NOT observed positions on this date. */
 export const SIMULATION_EPOCH = "2026-01-01T00:00:00.000Z";
@@ -289,6 +290,7 @@ export const celestialObjects: CelestialObject[] = [
       { label: "Mean density", value: "1,638 kg/m³" },
     ],
   },
+  ...additionalBodies,
 ];
 
 export const objectById = Object.fromEntries(
@@ -303,5 +305,5 @@ export const solarSystem: SolarSystem = {
   visualizationEpoch: SIMULATION_EPOCH,
   model: "illustrative-circular",
   notice:
-    "Circular orbits, chosen initial phases, compressed distances, and exaggerated radii are illustrative. The clock does not represent observed celestial positions. Background stars and surfaces are procedural.",
+    "The UTC clock can show the current time, but circular orbits and chosen phases do not represent observed celestial positions. Overview compresses distances and exaggerates radii. Background stars and reconstructed surfaces are illustrative.",
 };

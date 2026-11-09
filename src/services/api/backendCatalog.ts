@@ -8,6 +8,10 @@ import type {
 import { CelestialApiError } from "./errors";
 import { record } from "./validation";
 
+const backendIds = new Set<ObjectId>([
+  "sun", "mercury", "venus", "earth", "moon", "mars", "jupiter", "saturn", "uranus", "neptune",
+]);
+
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -24,7 +28,7 @@ function uuid(value: unknown, field: string): string {
   return valueText.toLowerCase();
 }
 export function isSupportedSlug(value: string): value is ObjectId {
-  return Object.hasOwn(objectById, value);
+  return backendIds.has(value as ObjectId);
 }
 export function parseBackendIdentity(value: unknown): BackendObjectSummary {
   const data = record(value, "object identity");
@@ -116,7 +120,7 @@ export function parseBackendCatalog(value: unknown): BackendCatalog {
   for (const identity of identities) {
     if (isSupportedSlug(identity.slug)) supported.set(identity.slug, identity);
   }
-  if (supported.size !== celestialObjects.length)
+  if (supported.size !== backendIds.size)
     invalid("incomplete Solar System catalog");
   if (uuid(data.rootObjectId, "system root UUID") !== supported.get("sun")?.id)
     invalid("Solar System root");
@@ -126,10 +130,11 @@ export function parseBackendCatalog(value: unknown): BackendCatalog {
     system: {
       ...structuredClone(solarSystem),
       name,
-      notice: `${solarSystem.notice} This scene includes the ten supported Solar System bodies. Identities are connected to the backend; physical values remain bundled NASA references.`,
+      objectIds: [...backendIds],
+      notice: `${solarSystem.notice} HTTP mode currently provides ten bodies. Additional moons and asteroids are available in local mode. Identities are connected to the backend; physical values remain bundled references.`,
     },
   };
-  catalog.objects = celestialObjects.map(({ id }) => {
+  catalog.objects = celestialObjects.filter(({ id }) => backendIds.has(id)).map(({ id }) => {
     const identity = supported.get(id);
     if (!identity) invalid("incomplete Solar System catalog");
     return mapBackendIdentity(identity, catalog);

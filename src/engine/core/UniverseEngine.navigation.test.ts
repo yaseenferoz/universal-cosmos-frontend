@@ -238,8 +238,8 @@ describe("guided solar navigation commands", () => {
       lunar: null,
       lastFollowPosition: center.clone(),
       bodies: new Map([
-        ["earth", { renderRadius: 0.6378 }],
-        ["sun", { renderRadius: 69.57 }],
+        ["earth", { renderRadius: 0.6378, outerRenderRadius: 0.6378 }],
+        ["sun", { renderRadius: 69.57, outerRenderRadius: 69.57 }],
       ]),
       globalPositions: new Map([
         ["earth", center],

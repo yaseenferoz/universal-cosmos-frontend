@@ -32,6 +32,7 @@ import {
 import { SunRenderer } from "../solar/SunRenderer";
 import { SolarMaterialLighting } from "../solar/PlanetSolarLighting";
 import { configureVenusClouds } from "./VenusClouds";
+import { loadDeimosModel, type DeimosModel } from "./DeimosModel";
 
 type Layer = "surface" | "clouds" | "night" | "normal" | "roughness" | "rings";
 export interface BodyTextureStatus {
@@ -51,7 +52,8 @@ export class CelestialBody {
   readonly solarLighting = new SolarMaterialLighting(this.towardSun);
   readonly sunRenderer: SunRenderer | null;
   private readonly leases = new Map<Layer, TextureLease>();
-  private readonly failures = new Map<Layer, string>();
+  private readonly failures = new Map<Layer | "shape", string>();
+  private deimosModel: DeimosModel | null = null;
   private clouds: Mesh<SphereGeometry, MeshStandardMaterial> | null = null;
   private rings: Mesh<RingGeometry, MeshStandardMaterial> | null = null;
   private cloudDepth: MeshDepthMaterial | null = null;
@@ -82,7 +84,7 @@ export class CelestialBody {
     }
     // Missing measurements remain disclosed; Venus has an explicit cloud reconstruction.
     this.material = new MeshStandardMaterial({
-      color: "#777b80",
+      color: data.color,
       roughness: 1,
       metalness: 0,
     });
@@ -92,12 +94,17 @@ export class CelestialBody {
       surfaceAsset?.partialCoverage &&
       this.material instanceof MeshStandardMaterial
     ) {
-      configurePartialCoverage(this.material, data.id === "neptune" ? "#82b9b8" : data.id === "uranus" ? "#b5d5d3" : "#777b80", data.id === "neptune" ? 0.73 : 1);
+      const placeholder = data.id === "neptune" ? "#82b9b8"
+        : data.id === "uranus" ? "#b5d5d3"
+        : data.id === "saturn" ? "#c3b395"
+        : data.id === "jupiter" ? "#b4ada2" : data.color;
+      configurePartialCoverage(this.material, placeholder, data.id === "neptune" ? 0.73 : 1);
     }
+    const detailed = data.category.includes("planet") || ["sun", "moon", "titan"].includes(data.id);
     for (const [segments, multiple] of [
-      [128, 0],
-      [48, 20],
-      [20, 60],
+      [detailed ? 128 : 48, 0],
+      [detailed ? 48 : 24, 20],
+      [detailed ? 20 : 12, 60],
     ]) {
       const mesh = new Mesh(
         new SphereGeometry(data.display.radius, segments, segments / 2),
@@ -159,6 +166,10 @@ export class CelestialBody {
   get renderRadius(): number {
     return this.radius;
   }
+  /** Enclosing radius for camera clearance; Deimos's modeled long axis exceeds its mean radius. */
+  get outerRenderRadius(): number {
+    return this.radius * (this.data.id === "deimos" ? 1.3 : 1);
+  }
   setRenderRadius(radius: number): void {
     if (!Number.isFinite(radius) || radius <= 0) return;
     this.radius = radius;
@@ -180,6 +191,8 @@ export class CelestialBody {
     if (!imageryById[this.data.id].surface)
       return { state: "missing", messages };
     if (this.textureSize === 0) return { state: "unloaded", messages };
+    if (this.data.id === "deimos" && !this.deimosModel && !this.leases.has("surface"))
+      return { state: "missing", messages };
     if (this.failures.size > 0 || missing.length > 0)
       return { state: "partial", messages };
     return { state: "ready", messages };
@@ -257,15 +270,41 @@ export class CelestialBody {
     const tasks = (
       ["surface", "clouds", "night", "normal", "roughness", "rings"] as Layer[]
     ).flatMap((layer) =>
-      imagery[layer]
+      imagery[layer] && !(this.data.id === "deimos" && layer === "surface")
         ? [this.loadLayer(layer, imagery[layer], tier, generation)]
         : [],
     );
+    if (this.data.id === "deimos" && !this.deimosModel)
+      tasks.push(this.loadDeimos(generation, tier));
     this.textureRequest = Promise.all(tasks).then(() => {
       if (!this.disposed && generation === this.requestGeneration)
         this.loading = false;
     });
     return this.textureRequest;
+  }
+  private async loadDeimos(generation: number, tier: TextureTier): Promise<void> {
+    try {
+      const model = await loadDeimosModel(this.data.display.radius, this.data.radiusKm);
+      if (this.disposed || generation !== this.requestGeneration) {
+        model.dispose();
+        return;
+      }
+      this.solarLighting.attach(model.material);
+      for (const level of this.surface.levels) {
+        const mesh = level.object;
+        if (!(mesh instanceof Mesh)) continue;
+        mesh.geometry.dispose();
+        mesh.geometry = model.geometry;
+        mesh.material = model.material;
+      }
+      this.deimosModel = model;
+      this.failures.delete("shape");
+    } catch {
+      if (this.disposed || generation !== this.requestGeneration) return;
+      this.failures.set("shape", "NASA Deimos shape model could not be loaded; spherical fallback shown.");
+      const fallback = imageryById.deimos.surface;
+      if (fallback) await this.loadLayer("surface", fallback, tier, generation);
+    }
   }
   private async loadLayer(
     layer: Layer,
@@ -359,16 +398,23 @@ export class CelestialBody {
       this.sunRenderer.dispose();
     }
     const materials = new Set<Material>();
+    const geometries = new Set<BufferGeometry>();
     this.tilted.traverse((node) => {
       if (!(node instanceof Mesh)) return;
-      node.geometry.dispose();
+      if (node.geometry !== this.deimosModel?.geometry)
+        geometries.add(node.geometry);
       (Array.isArray(node.material) ? node.material : [node.material]).forEach(
-        (material) => materials.add(material),
+        (material) => {
+          if (material !== this.deimosModel?.material) materials.add(material);
+        },
       );
     });
+    geometries.forEach((geometry) => geometry.dispose());
     this.cloudDepth?.dispose();
     this.ringDepth?.dispose();
     materials.forEach((material) => material.dispose());
+    if (this.material && !materials.has(this.material)) this.material.dispose();
+    this.deimosModel?.dispose();
     this.leases.forEach((lease) => lease.release());
     this.leases.clear();
     this.orbit?.geometry.dispose();

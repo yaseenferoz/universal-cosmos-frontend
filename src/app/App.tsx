@@ -19,6 +19,7 @@ import { useExplorationStore } from "../stores/explorationStore";
 import { useRenderingStore } from "../stores/renderingStore";
 import { ViewingActions } from "../components/controls/ViewingActions";
 import { RenderingDiagnostics } from "../components/panels/RenderingDiagnostics";
+import { planetaryEnvironments } from "../data/planetaryEnvironments";
 
 export function App() {
   const dialog = useExplorationStore((s) => s.dialog);
@@ -27,10 +28,12 @@ export function App() {
   const lunarPhase = useLunarStore((s) => s.telemetry.phase);
   const lunarActive = !["orbit", "error"].includes(lunarPhase);
   const diagnostics = useRenderingStore((s) => s.diagnosticsEnabled);
+  const hasExplorationControls = viewMode === "exploration" && selectedId !== null &&
+    (selectedId === "moon" || planetaryEnvironments[selectedId] !== undefined);
   useExplorationShortcuts();
   return (
     <main
-      className={`universe-app view-${viewMode} ${lunarActive ? "is-lunar-active" : ""} ${selectedId === "sun" && viewMode === "exploration" ? "is-solar-observation" : ""} ${diagnostics ? "has-diagnostics" : ""}`}
+      className={`universe-app view-${viewMode} ${lunarActive ? "is-lunar-active" : ""} ${hasExplorationControls ? "has-exploration-controls" : ""} ${selectedId === "sun" && viewMode === "exploration" ? "is-solar-observation" : ""} ${diagnostics ? "has-diagnostics" : ""}`}
     >
       <UniverseViewport />
       <div className="viewport-vignette" />

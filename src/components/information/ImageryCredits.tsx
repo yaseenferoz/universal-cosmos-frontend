@@ -23,6 +23,16 @@ export function ImageryCredits({ id }: { id: ObjectId }) {
         Images are historical composites or maps, not live observations.
         Lighting and atmosphere are rendering approximations.
       </p>
+      {id === "deimos" && (
+        <div className="imagery-credit">
+          <span>SHAPE + ATLAS · NASA MODEL</span>
+          <a href="https://science.nasa.gov/resource/deimos-mars-moon-3d-model/" target="_blank" rel="noreferrer">
+            NASA/JPL-Caltech Deimos 3D model
+            <ArrowUpRight size={12} />
+          </a>
+          <p>Local 1.6 MB GLB with a 1024 px texture atlas. Its irregular outline is scaled to the catalog mean radius; orientation and baked lighting are approximate.</p>
+        </div>
+      )}
       {layers.map(({ layer, asset }) => (
         <div className="imagery-credit" key={layer}>
           <span>
@@ -32,7 +42,7 @@ export function ImageryCredits({ id }: { id: ObjectId }) {
               : "DERIVED MAP"}
           </span>
           <a href={asset.sourceUrl} target="_blank" rel="noreferrer">
-            {asset.title}
+            {asset.title}{id === "deimos" && layer === "surface" ? " (fallback only)" : ""}
             <ArrowUpRight size={12} />
           </a>
           <p>

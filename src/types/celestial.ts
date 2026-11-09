@@ -9,7 +9,20 @@ export type ObjectId =
   | "jupiter"
   | "saturn"
   | "uranus"
-  | "neptune";
+  | "neptune"
+  | "phobos"
+  | "deimos"
+  | "io"
+  | "europa"
+  | "ganymede"
+  | "callisto"
+  | "enceladus"
+  | "titan"
+  | "titania"
+  | "triton"
+  | "ceres"
+  | "vesta"
+  | "bennu";
 
 export type Quality = "auto" | "low" | "medium" | "high";
 

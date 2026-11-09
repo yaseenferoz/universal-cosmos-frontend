@@ -1,7 +1,9 @@
 import { create } from "zustand";
 import type { CelestialObject, ObjectId, Quality } from "../types/celestial";
+import { SIMULATION_EPOCH } from "../data/catalog";
+import { daysSinceModelEpoch, REAL_TIME_DAYS_PER_SECOND } from "../utils/simulationTime";
 
-export const TIME_SPEEDS = [0.01, 0.1, 1, 10, 100] as const;
+export const TIME_SPEEDS = [REAL_TIME_DAYS_PER_SECOND, 0.01, 0.1, 1, 10, 100] as const;
 export type CameraMode = "orbit" | "free";
 export type ViewMode = "exploration" | "overview";
 export type DialogName = "search" | "settings" | "help" | "collection" | null;
@@ -56,13 +58,13 @@ interface ExplorationState {
 
 export const useExplorationStore = create<ExplorationState>((set) => ({
   objects: [],
-  selectedId: "moon",
-  lastTargetId: "moon",
+  selectedId: "earth",
+  lastTargetId: "earth",
   informationOpen: false,
   playing: true,
-  speed: 0.01,
-  simulationDays: 0,
-  simulationEpoch: "2026-01-01T00:00:00.000Z",
+  speed: REAL_TIME_DAYS_PER_SECOND,
+  simulationDays: daysSinceModelEpoch(Date.now()),
+  simulationEpoch: SIMULATION_EPOCH,
   quality: "auto",
   starDensity: 1,
   showOrbits: true,
@@ -99,8 +101,8 @@ export const useExplorationStore = create<ExplorationState>((set) => ({
   setSpeed: (speed) =>
     set({
       speed: Number.isFinite(speed)
-        ? Math.max(0.01, Math.min(100, speed))
-        : 0.01,
+        ? Math.max(REAL_TIME_DAYS_PER_SECOND, Math.min(100, speed))
+        : REAL_TIME_DAYS_PER_SECOND,
     }),
   setQuality: (quality) => set({ quality }),
   setStarDensity: (density) =>
@@ -146,7 +148,7 @@ export const useExplorationStore = create<ExplorationState>((set) => ({
     })),
   resetTime: () =>
     set((state) => ({
-      simulationDays: 0,
+      simulationDays: daysSinceModelEpoch(Date.now(), state.simulationEpoch),
       resetTimeRequest: state.resetTimeRequest + 1,
     })),
 }));

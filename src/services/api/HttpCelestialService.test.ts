@@ -9,13 +9,16 @@ import { HttpCelestialService } from "./HttpCelestialService";
 import { parseBackendCatalog } from "./backendCatalog";
 
 // Explicit test identities, not provider records or scientific measurements.
+const backendObjects = celestialObjects.filter((object) =>
+  ["sun", "mercury", "venus", "earth", "moon", "mars", "jupiter", "saturn", "uranus", "neptune"].includes(object.id),
+);
 const ids = new Map(
-  celestialObjects.map((object, index) => [
+  backendObjects.map((object, index) => [
     object.id,
     `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
   ]),
 );
-const identities: BackendObjectSummary[] = celestialObjects.map((object) => ({
+const identities: BackendObjectSummary[] = backendObjects.map((object) => ({
   id: ids.get(object.id)!,
   slug: object.id,
   name: object.name,

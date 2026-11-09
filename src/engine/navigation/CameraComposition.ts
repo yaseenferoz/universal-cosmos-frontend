@@ -63,3 +63,21 @@ export function orbitalCameraOffset(
     .normalize()
     .multiplyScalar(orbitalCameraDistance(radius, aspect));
 }
+
+/** Favor a side view of an irregular body's long axis while retaining sunlit detail. */
+export function irregularBodyCameraOffset(
+  radius: number,
+  aspect: number,
+  towardSun: Vector3,
+  longAxis: Vector3,
+): Vector3 {
+  const axis = longAxis.clone().normalize();
+  const side = new Vector3().crossVectors(axis, new Vector3(0, 1, 0));
+  if (side.lengthSq() < 0.01)
+    side.crossVectors(axis, new Vector3(0, 0, 1));
+  side.normalize();
+  const sun = towardSun.clone().normalize();
+  if (side.dot(sun) < 0) side.negate();
+  return sun.multiplyScalar(0.35).addScaledVector(side, 0.94)
+    .normalize().multiplyScalar(orbitalCameraDistance(radius, aspect));
+}

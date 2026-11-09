@@ -1,6 +1,7 @@
 import type { ObjectId } from "../types/celestial";
 import type { PlanetaryExplorationProfile } from "../types/planetaryExploration";
 import { planetaryEnvironments } from "./planetaryEnvironments";
+import { additionalBodies } from "./additionalBodies";
 
 const nasaFacts = {
   sourceLabel: "NASA / NSSDCA Planetary Fact Sheets",
@@ -16,7 +17,18 @@ const unsupported = {
   reconstruction: "unavailable",
 } as const;
 
-/** Current capabilities for the bundled ten-object catalog. */
+type CoreObjectId = "sun" | "mercury" | "venus" | "earth" | "moon" | "mars" | "jupiter" | "saturn" | "uranus" | "neptune";
+type AdditionalObjectId = Exclude<ObjectId, CoreObjectId>;
+const additionalProfiles = Object.fromEntries(additionalBodies.map((body) => [body.id, {
+  objectId: body.id,
+  classification: body.id === "titan" ? "ATMOSPHERIC_SOLID" : body.parentId === "sun" ? "SMALL_BODY" : "AIRLESS_SOLID",
+  modes: { orbital: "available", surface: "planned", atmospheric: "not-supported" },
+  terrain: { ...unsupported, coverage: "No verified landing terrain package is installed." },
+  sky: { ...unsupported, coverage: "No measured local sky package is installed." },
+  notice: `${body.name} can be explored from orbit; surface descent is not available.`,
+} satisfies PlanetaryExplorationProfile])) as Record<AdditionalObjectId, PlanetaryExplorationProfile>;
+
+/** Current capabilities for the bundled catalog. */
 export const explorationProfiles: Record<ObjectId, PlanetaryExplorationProfile> = {
   sun: {
     objectId: "sun", classification: "STAR",
@@ -93,6 +105,7 @@ export const explorationProfiles: Record<ObjectId, PlanetaryExplorationProfile> 
     sky: { ...nasaFacts, coverage: "No altitude-dependent atmosphere profile is installed.", reconstruction: "unavailable" },
     notice: "Neptune has no solid-surface landing mode; future exploration is atmospheric only.",
   },
+  ...additionalProfiles,
 };
 
 // Generated environments expose an explicit demonstration capability. Measured

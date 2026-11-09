@@ -4,6 +4,7 @@ import { celestialService } from "../../services/api";
 import { useExplorationStore } from "../../stores/explorationStore";
 import { useLunarStore } from "../../stores/lunarStore";
 import { useRenderingStore } from "../../stores/renderingStore";
+import { daysSinceModelEpoch } from "../../utils/simulationTime";
 
 /** The engine, not React, owns frame-by-frame state. This bridge only sends commands. */
 export function UniverseViewport() {
@@ -44,9 +45,11 @@ export function UniverseViewport() {
         useExplorationStore.setState({
           objects,
           simulationEpoch: system.visualizationEpoch,
+          simulationDays: daysSinceModelEpoch(Date.now(), system.visualizationEpoch),
         });
         engine = new module.UniverseEngine(element, {
           objects,
+          simulationEpoch: system.visualizationEpoch,
           onSelect: (id) => useExplorationStore.getState().selectObject(id),
           onTelemetry: (telemetry) =>
             useExplorationStore.setState({
@@ -170,7 +173,7 @@ export function UniverseViewport() {
           if (state.resetViewRequest !== previous.resetViewRequest)
             engine.resetView();
           if (state.resetTimeRequest !== previous.resetTimeRequest)
-            engine.setTime(0);
+            engine.setTime(state.simulationDays);
         });
       })
       .catch(fail);

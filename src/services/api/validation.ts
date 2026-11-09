@@ -5,8 +5,9 @@ import type {
   SolarSystem,
 } from "../../types/celestial";
 import { CelestialApiError } from "./errors";
+import { celestialObjects } from "../../data/catalog";
 
-const objectIds = new Set<string>([
+const requiredObjectIds = new Set<ObjectId>([
   "sun",
   "mercury",
   "venus",
@@ -18,6 +19,7 @@ const objectIds = new Set<string>([
   "uranus",
   "neptune",
 ]);
+const objectIds = new Set<string>(celestialObjects.map(({ id }) => id));
 
 function invalid(field: string): never {
   throw new CelestialApiError(`The celestial API returned invalid ${field}.`);
@@ -150,10 +152,11 @@ export function parseSystem(value: unknown): SolarSystem {
     id(object, "system object ID"),
   );
   const uniqueIds = new Set(ids);
-  // This renderer's initial catalog promises all ten bodies, including Earth's Moon.
-  // A self-consistent subset would otherwise make default focus/search silently fail.
+  // Both local and opt-in HTTP catalogs must contain the ten baseline bodies.
   if (uniqueIds.size !== ids.length) invalid("duplicate system object IDs");
-  if (uniqueIds.size !== objectIds.size)
+  if ([...requiredObjectIds].some((requiredId) => !uniqueIds.has(requiredId)))
+    invalid("incomplete Solar System catalog");
+  if (uniqueIds.size !== requiredObjectIds.size && uniqueIds.size !== objectIds.size)
     invalid("incomplete Solar System catalog");
   const epoch = string(data.visualizationEpoch, "visualization epoch");
   if (!Number.isFinite(Date.parse(epoch))) invalid("visualization epoch");

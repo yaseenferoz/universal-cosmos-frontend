@@ -11,7 +11,7 @@ import type { TerrainDataProvider } from "../../types/terrain";
 import { ReconstructedTerrainProvider } from "../../services/terrain/ReconstructedTerrainProvider";
 import { planetaryEnvironments } from "../../data/planetaryEnvironments";
 import { cartesianToGeodetic } from "../terrain/coordinates";
-import { PlanetarySky } from "../effects/PlanetarySky";
+import { PlanetarySky, localStarVisibility } from "../effects/PlanetarySky";
 import { initialLunarTelemetry, type LunarTelemetry } from "../../types/lunar";
 import { LunarTerrainProvider } from "../../services/terrain/LunarTerrainProvider";
 import {
@@ -19,6 +19,7 @@ import {
   type LunarPose,
 } from "../navigation/LunarNavigationController";
 import { PlanetTerrainRenderer } from "../terrain/PlanetTerrainRenderer";
+import { SurfaceScatter } from "../terrain/SurfaceScatter";
 import { relativeSolarIrradiance } from "../coordinates/LunarFrame";
 import { qualityConfig } from "./quality";
 
@@ -42,6 +43,7 @@ export class PlanetaryExploration {
   private readonly skyScene = new Scene();
   private readonly ambient = new AmbientLight("#ffffff", 0.008);
   private terrain: PlanetTerrainRenderer | null = null;
+  private scatter: SurfaceScatter | null = null;
   private readonly sunlight = new DirectionalLight("#ffffff", 3.1);
   private solarVisibility = 1;
   private baseSolarIntensity = 3.1;
@@ -55,6 +57,8 @@ export class PlanetaryExploration {
   private quality: Quality;
   private aspect = 1;
   private viewportHeight = 1;
+  private starVisibility = 1;
+  private skyAdaptation = 1;
 
   constructor(
     element: HTMLElement,
@@ -126,6 +130,10 @@ export class PlanetaryExploration {
       if (this.terrain) {
         this.scene.add(this.terrain.group);
         await this.terrain.prepare();
+        if (!this.disposed && ["moon", "earth", "mars"].includes(this.bodyId)) {
+          this.scatter = new SurfaceScatter(this.provider, this.quality, this.options.mobile);
+          this.scene.add(this.scatter.group);
+        }
       }
       if (this.disposed) return;
       this.loading = false;
@@ -147,6 +155,12 @@ export class PlanetaryExploration {
   }
   get complete(): boolean {
     return this.entered && !this.navigation.active;
+  }
+  get backgroundVisibility(): number {
+    return this.starVisibility;
+  }
+  get backgroundAdaptation(): number {
+    return this.skyAdaptation;
   }
   get pose(): LunarPose {
     return this.entered ? this.navigation.getPose() : this.startPose!;
@@ -199,10 +213,15 @@ export class PlanetaryExploration {
     this.terrain?.updateOrigin(this.navigation.positionM);
     const observer = this.navigation.positionM;
     const altitude = Math.max(0, this.navigation.getTelemetry().altitudeM);
+    this.scatter?.update(observer, altitude);
     const environment = planetaryEnvironments[this.bodyId];
     const irradiance = relativeSolarIrradiance(distanceAu);
     this.sky?.update(observer, sunDirection, altitude, irradiance);
-    const daylight = Math.max(0, observer.clone().normalize().dot(sunDirection));
+    const solarCosine = observer.clone().normalize().dot(sunDirection);
+    const daylight = Math.max(0, solarCosine);
+    this.starVisibility = localStarVisibility(solarCosine, environment);
+    const dayFraction = MathUtils.smoothstep(solarCosine, -0.12, 0.18);
+    this.skyAdaptation = 1 + ((environment?.nightSkyAdaptation ?? 1) - 1) * (1 - dayFraction);
     const haze = environment ? Math.max(0, 1 - altitude / Math.max(1, environment.hazeHeightM)) : 0;
     this.ambient.intensity = irradiance * (0.008 + haze * daylight * 0.6);
     if (environment) this.ambient.color.set(environment.horizonColor);
@@ -247,7 +266,10 @@ export class PlanetaryExploration {
     const autoClear = renderer.autoClear;
     renderer.autoClear = false;
     renderer.clearDepth();
-    if (this.sky) renderer.render(this.skyScene, this.navigation.camera);
+    if (this.sky) {
+      this.sky.mesh.position.copy(this.navigation.camera.position);
+      renderer.render(this.skyScene, this.navigation.camera);
+    }
     renderer.render(this.scene, this.navigation.camera);
     renderer.autoClear = autoClear;
   }
@@ -255,6 +277,7 @@ export class PlanetaryExploration {
   setQuality(quality: Quality): void {
     this.quality = quality;
     this.terrain?.setQuality(quality, this.options.mobile);
+    this.scatter?.setQuality(quality, this.options.mobile);
     const size = qualityConfig(quality, 1, this.options.mobile).shadowMapSize;
     this.sunlight.castShadow = size > 0;
     if (size > 0 && this.sunlight.shadow.mapSize.x !== size) {
@@ -327,6 +350,7 @@ export class PlanetaryExploration {
     this.abort.abort();
     this.navigation.dispose();
     this.terrain?.dispose();
+    this.scatter?.dispose();
     this.sky?.dispose();
     this.skyScene.clear();
     this.provider.dispose();

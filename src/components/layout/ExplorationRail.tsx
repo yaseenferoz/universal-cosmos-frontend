@@ -46,7 +46,7 @@ export function ExplorationRail() {
             onClick={() => openCollection(name)}
           >
             <Icon size={18} />
-            <span>{name}</span>
+            <span>{name} · planned</span>
             <ArrowUpRight size={12} className="future-arrow" />
           </button>
         ))}

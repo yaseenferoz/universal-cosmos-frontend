@@ -21,12 +21,16 @@ import {
 } from "../coordinates/CoordinateSystem";
 import { FloatingOrigin } from "../coordinates/FloatingOrigin";
 import { Starfield } from "../effects/Starfield";
+import { DeepSky } from "../effects/DeepSky";
+import { BrightStarField } from "../effects/BrightStarField";
+import { AsteroidBelt } from "../effects/AsteroidBelt";
 import { CameraController } from "../navigation/CameraController";
 import { FlightController } from "../navigation/FlightController";
 import { CameraLookController } from "../navigation/CameraLookController";
 import { sampleSceneDiagnostics } from "../navigation/SceneDiagnostics";
 import type { DiagnosticTelemetry } from "../../types/diagnostics";
 import {
+  irregularBodyCameraOffset,
   orbitalCameraDistance,
   orbitalCameraOffset,
 } from "../navigation/CameraComposition";
@@ -34,6 +38,7 @@ import { CelestialBody } from "../objects/CelestialBody";
 import { RendererManager } from "./RendererManager";
 import { qualityConfig } from "./quality";
 import { SolarScene } from "../solar/SolarScene";
+import { advanceSimulationDays } from "../../utils/simulationTime";
 import type { SolarTelemetry } from "../../types/solar";
 import { LunarExploration } from "./LunarExploration";
 import { explorationProfile } from "../../data/explorationProfiles";
@@ -56,6 +61,7 @@ export interface EngineTelemetry {
 }
 export interface EngineOptions {
   objects: CelestialObject[];
+  simulationEpoch: string;
   onSelect: (id: ObjectId) => void;
   onTelemetry: (telemetry: EngineTelemetry) => void;
   onReady: () => void;
@@ -83,6 +89,9 @@ export class UniverseEngine {
   private readonly renderManager: RendererManager;
   private readonly controller: CameraController;
   private readonly stars = new Starfield();
+  private readonly deepSky = new DeepSky();
+  private readonly brightStars = new BrightStarField();
+  private readonly asteroidBelt = new AsteroidBelt();
   private readonly bodies = new Map<ObjectId, CelestialBody>();
   private readonly labels = new Map<ObjectId, HTMLButtonElement>();
   private readonly labelRoot = document.createElement("div");
@@ -90,8 +99,8 @@ export class UniverseEngine {
   private readonly abort = new AbortController();
   private readonly raycaster = new Raycaster();
   private followed: ObjectId | null = null;
-  private selected: ObjectId | null = "moon";
-  private referenceId: ObjectId = "moon";
+  private selected: ObjectId | null = "earth";
+  private referenceId: ObjectId = "earth";
   private lunar: LunarExploration | null = null;
   private observerEyeHeightM = 1.7;
   private viewMode: ViewMode = "exploration";
@@ -146,11 +155,14 @@ export class UniverseEngine {
     );
     this.scene.add(
       this.solarRoot,
+      this.deepSky.mesh,
+      this.brightStars.points,
       this.stars.points,
       new AmbientLight("#ffffff", 0.015),
       this.sunlight,
       this.sunlight.target,
     );
+    this.solarRoot.add(this.asteroidBelt.points);
     this.sunlight.castShadow = true;
     this.sunlight.shadow.mapSize.set(1024, 1024);
     this.sunlight.shadow.bias = -0.00008;
@@ -180,7 +192,7 @@ export class UniverseEngine {
     this.observer = new ResizeObserver(() => this.resize());
     this.observer.observe(container);
     this.resize();
-    this.focusObject("moon", true);
+    this.focusObject("earth", true);
     this.installPicking();
     document.addEventListener("visibilitychange", this.visibilityChanged, {
       signal: this.abort.signal,
@@ -198,7 +210,7 @@ export class UniverseEngine {
     this.lastTelemetry = performance.now();
     this.lastAdapt = this.lastTelemetry;
     this.frame = requestAnimationFrame(this.animate);
-    const startupBody = this.bodies.get("moon");
+    const startupBody = this.bodies.get("earth");
     void startupBody?.ensureTexture(this.currentTextureSize()).finally(() => {
       if (!this.disposed && !this.failed) {
         this.reportAssetStatus();
@@ -263,7 +275,8 @@ export class UniverseEngine {
           ? this.globalPositions.get(body.data.parentId)
           : undefined;
         this.origin.toLocal(parent ?? new Vector3(), body.orbit.position);
-        body.orbit.visible = this.viewMode === "overview" && this.orbitsVisible;
+        body.orbit.visible = this.viewMode === "overview" && this.orbitsVisible &&
+          (body.data.parentId === "sun" || body.data.id === this.selected);
       }
     }
     this.solarRoot.updateMatrixWorld(true);
@@ -303,12 +316,7 @@ export class UniverseEngine {
       ? Math.min((now - this.lastFrame) / 1000, 0.1)
       : 0;
     this.lastFrame = now;
-    if (this.playing)
-      this.days = MathUtils.clamp(
-        this.days + delta * this.speed,
-        -365250,
-        365250,
-      );
+    this.days = advanceSimulationDays(this.days, delta, this.playing, this.speed, Date.now(), this.options.simulationEpoch);
     this.updateBodies();
     if (this.followed && !this.lunar) {
       const destination = this.getGlobalPosition(this.followed);
@@ -396,6 +404,23 @@ export class UniverseEngine {
       this.renderManager.renderer.getPixelRatio(),
       this.renderManager.renderer.toneMappingExposure,
     );
+    this.deepSky.setQuality(this.quality, this.renderManager.mobile);
+    this.brightStars.load();
+    const skyVisibility = this.lunar?.ready ? this.lunar.backgroundVisibility : 1;
+    const skyAdaptation = this.lunar?.ready ? this.lunar.backgroundAdaptation : 1;
+    const skyExposure = this.renderManager.renderer.toneMappingExposure;
+    this.deepSky.update(this.camera.position, skyVisibility, skyExposure, skyAdaptation);
+    this.deepSky.mesh.visible = this.deepSky.ready;
+    this.brightStars.update(
+      this.camera.position,
+      this.deepSky.ready ? skyVisibility : 0,
+      this.renderManager.renderer.getPixelRatio(),
+      skyExposure,
+      skyAdaptation,
+    );
+    this.stars.points.visible = !this.deepSky.ready || !this.brightStars.ready;
+    if (this.lunar?.ready && this.stars.points.visible)
+      this.stars.points.material.uniforms.exposureVisibility.value *= this.lunar.backgroundVisibility * skyAdaptation;
     for (const body of this.bodies.values())
       body.anchor.visible = !(this.lunar?.ready && !this.lunar.atmospheric && body.data.id === this.lunar.bodyId);
     this.renderManager.beginFrame();
@@ -462,7 +487,7 @@ export class UniverseEngine {
       for (const body of this.bodies.values()) {
         const center = this.getGlobalPosition(body.data.id);
         const displacement = global.clone().sub(center);
-        const minimum = body.renderRadius * 1.025;
+        const minimum = body.outerRenderRadius * 1.025;
         if (displacement.lengthSq() >= minimum * minimum) continue;
         if (displacement.lengthSq() < 1e-12) displacement.set(1, 0, 0);
         const correction = center
@@ -565,7 +590,7 @@ export class UniverseEngine {
         Math.abs(this.projected.x) < 1.1 &&
         Math.abs(this.projected.y) < 1.1 &&
         (this.viewMode === "overview"
-          ? id !== "moon" || distance < 25
+          ? body.data.parentId === "sun" || id === this.selected || distance < 25
           : radiusPixels > 2 && radiusPixels < 65);
       label.hidden = !show;
       if (show)
@@ -756,6 +781,7 @@ export class UniverseEngine {
     this.quality = quality;
     this.renderManager.setQuality(quality);
     this.lunar?.setQuality(quality);
+    if (this.lunar) this.deepSky.setQuality(quality, this.renderManager.mobile);
     this.bodies
       .get("sun")
       ?.sunRenderer?.setQuality(quality, this.renderManager.mobile);
@@ -817,7 +843,7 @@ export class UniverseEngine {
       void previous.ensureTexture(512);
     this.selected = id;
     this.referenceId = id;
-    this.controller.setReferenceRadius(body.renderRadius);
+    this.controller.setReferenceRadius(body.outerRenderRadius);
     this.controller.setMode("orbit");
     this.followed = id;
     this.bodies.forEach((candidate) =>
@@ -835,16 +861,27 @@ export class UniverseEngine {
         ? sunPosition.sub(destination).normalize()
         : new Vector3(0.8, 0, 1);
     const offset = orbitalCameraOffset(
-      body.renderRadius,
+      body.outerRenderRadius,
       this.camera.aspect,
       towardSun,
       id === "saturn",
       new Vector3(0, 1, 0).applyQuaternion(body.tilted.quaternion),
     );
+    if (id === "deimos") {
+      // The visual model has an uncalibrated prime meridian. Start beside its
+      // long axis so its modeled non-spherical outline is actually visible.
+      const longAxis = new Vector3(1, 0, 0).applyQuaternion(
+        body.surface.getWorldQuaternion(new Quaternion()),
+      );
+      offset.copy(irregularBodyCameraOffset(
+        body.outerRenderRadius, this.camera.aspect, towardSun, longAxis,
+      ));
+    }
     this.controller.controls.minDistance = 0.00001;
     this.controller.controls.maxDistance = 1_000_000;
-    this.pendingMinimum = body.renderRadius * (id === "saturn" ? 2.5 : 1.07);
-    this.camera.near = Math.max(body.renderRadius * 0.005, 0.0001);
+    this.pendingMinimum = body.outerRenderRadius * (id === "saturn" ? 2.5 : 1.07);
+    // Sub-kilometer bodies need a near plane closer than the default 1 km.
+    this.camera.near = Math.max(body.renderRadius * 0.005, 1e-7);
     this.camera.far = 1_200_000;
     this.camera.updateProjectionMatrix();
     const instantaneous =
@@ -890,6 +927,7 @@ export class UniverseEngine {
     this.followed = null;
     this.pendingMinimum = null;
     this.viewMode = mode;
+    this.asteroidBelt.points.visible = mode === "overview";
     this.origin.offset.set(0, 0, 0);
     this.camera.position.set(0, 0, 1);
     this.controller.controls.target.set(0, 0, 0);
@@ -941,6 +979,9 @@ export class UniverseEngine {
     this.look.cancel();
     this.bodies.forEach((body) => body.dispose());
     this.stars.dispose();
+    this.deepSky.dispose();
+    this.brightStars.dispose();
+    this.asteroidBelt.dispose();
     this.sunlight.shadow.dispose();
     this.labelRoot.remove();
     this.renderManager.dispose();
@@ -1109,15 +1150,15 @@ export class UniverseEngine {
     if (direction.lengthSq() === 0) return false;
     this.look.cancel();
     this.controller.setMode("orbit");
-    this.controller.setReferenceRadius(body.renderRadius);
+    this.controller.setReferenceRadius(body.outerRenderRadius);
     this.followed = this.selected;
     this.lastFollowPosition.copy(center);
     this.controller.controls.minDistance = 0.00001;
     this.controller.controls.maxDistance = 1_000_000;
     this.pendingMinimum =
-      body.renderRadius * (this.selected === "saturn" ? 2.5 : 1.07);
+      body.outerRenderRadius * (this.selected === "saturn" ? 2.5 : 1.07);
     const fitRadius =
-      body.renderRadius * (this.selected === "saturn" ? 2.4 : 1);
+      body.outerRenderRadius * (this.selected === "saturn" ? 2.4 : 1);
     const offset = direction.setLength(
       orbitalCameraDistance(fitRadius, this.camera.aspect),
     );

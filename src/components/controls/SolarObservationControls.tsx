@@ -11,7 +11,7 @@ export function SolarObservationControls() {
   const telemetry = useRenderingStore((state) => state.telemetry);
   const solarFilter = useRenderingStore((state) => state.solarFilter);
   const automatic = useRenderingStore((state) => state.automaticExposure);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => matchMedia("(max-width: 720px)").matches);
   if (selected !== "sun" || viewMode !== "exploration") return null;
   return (
     <section className="solar-controls glass" aria-label="Solar observation">

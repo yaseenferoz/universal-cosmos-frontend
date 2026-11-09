@@ -19,12 +19,14 @@ describe("local celestial service", () => {
   it("finds real objects with case, whitespace, and accent-insensitive search", async () => {
     expect(
       (await service.search("  \u00c9ARTH  ")).map((object) => object.id),
-    ).toEqual(["earth"]);
+    ).toEqual(["earth", "bennu"]);
     expect(
       (await service.search("gas giant")).map((object) => object.id),
     ).toEqual(["jupiter", "saturn"]);
     expect(await service.search("not a catalog object")).toEqual([]);
-    expect(await service.search("")).toHaveLength(10);
+    expect(await service.search("")).toHaveLength(23);
+    expect((await service.search("Europa")).map(({ id }) => id)).toEqual(["europa"]);
+    expect((await service.search("asteroid")).map(({ id }) => id)).toEqual(["ceres", "vesta", "bennu"]);
   });
 
   it("does not expose mutable catalog objects to consumers", async () => {
@@ -53,7 +55,7 @@ describe("local celestial service", () => {
     );
     const system = await service.getSystem("solar");
     expect(system.model).toBe("illustrative-circular");
-    expect(system.objectIds).toHaveLength(10);
+    expect(system.objectIds).toHaveLength(23);
   });
 
   it("honors already aborted requests without performing work", async () => {
@@ -78,6 +80,9 @@ describe("scientific catalog integrity", () => {
     expect(() => parseSystem({ ...solarSystem, objectIds: [] })).toThrow(
       "incomplete Solar System",
     );
+    expect(() => parseSystem({ ...solarSystem, objectIds: solarSystem.objectIds.slice(0, 11) })).toThrow(
+      "incomplete Solar System",
+    );
     expect(() =>
       parseSystem({
         ...solarSystem,
@@ -91,6 +96,11 @@ describe("scientific catalog integrity", () => {
     expect(objectById.venus.rotationPeriodHours).toBeLessThan(0);
     expect(objectById.moon.parentId).toBe("earth");
     expect(objectById.moon.semiMajorAxisKm).toBe(384_000);
+    expect(objectById.europa.parentId).toBe("jupiter");
+    expect(objectById.enceladus.parentId).toBe("saturn");
+    expect(objectById.titania.parentId).toBe("uranus");
+    expect(objectById.triton.parentId).toBe("neptune");
+    expect(objectById.ceres.category).toContain("asteroid belt");
     expect(objectById.sun.orbitalPeriodDays).toBe(0);
     expect(() =>
       parseObjects([

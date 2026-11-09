@@ -1,0 +1,113 @@
+.mobile-control-label { display: none; }
+
+@media (max-width: 720px) {
+  .top-actions .icon-button { width: 44px; min-width: 44px; height: 44px; }
+  .has-exploration-controls .scene-caption { display: none; }
+
+  /* An orbit view starts with only a small, reachable exploration launcher. */
+  .lunar-controls.is-collapsed:not(.is-active) {
+    top: auto;
+    bottom: calc(146px + env(safe-area-inset-bottom));
+    left: 16px;
+    right: auto;
+    width: min(218px, calc(100% - 32px));
+    max-height: none;
+    padding: 2px 12px;
+    border-radius: 9px;
+    background: #080c13e8;
+  }
+  .lunar-controls.is-collapsed > .eyebrow { display: none; }
+  .lunar-controls.is-collapsed h2 { margin: 0; font-size: 14px; }
+  .lunar-controls.is-collapsed .lunar-collapse { min-height: 46px; }
+  .lunar-controls.is-collapsed .lunar-collapse::before {
+    content: "Explore";
+    font-size: 10px;
+    color: #92a7bf;
+    margin-right: 2px;
+  }
+  .lunar-controls.is-active.is-collapsed {
+    top: 124px;
+    bottom: auto;
+    left: 16px;
+    right: auto;
+    width: min(218px, calc(100% - 32px));
+    max-height: none;
+    padding: 2px 12px;
+  }
+  .lunar-controls.is-active.is-collapsed .lunar-collapse::before { content: "Surface"; }
+  .lunar-controls.is-expanded {
+    top: auto;
+    bottom: calc(146px + env(safe-area-inset-bottom));
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-height: min(58dvh, calc(100dvh - 250px));
+    padding: 15px 18px 18px;
+    overflow-y: auto;
+    z-index: 20;
+    background: #080c13f5;
+    box-shadow: 0 16px 44px #000a;
+  }
+  .lunar-controls.is-expanded h2 { margin: 4px 0 10px; }
+  .lunar-controls.is-expanded .lunar-collapse { min-height: 44px; }
+  .lunar-controls.is-expanded ~ .surface-movement { display: none; }
+
+  .viewing-actions {
+    top: auto;
+    bottom: calc(88px + env(safe-area-inset-bottom));
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+  .viewing-action-row button { min-height: 44px; font-size: 11px; }
+
+  .bottom-controls {
+    bottom: max(12px, env(safe-area-inset-bottom));
+    width: calc(100% - 24px);
+    max-width: 430px;
+    height: 64px;
+    padding: 5px 7px;
+    gap: 3px;
+    grid-template-columns: 48px minmax(80px, 1fr) 48px 48px 48px;
+  }
+  .bottom-controls .play-button,
+  .bottom-controls .time-reset,
+  .bottom-controls .camera-mode,
+  .bottom-controls .reset-view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    width: 48px;
+    min-width: 48px;
+    height: 52px;
+    min-height: 52px;
+  }
+  .bottom-controls .speed-control select { min-height: 32px; font-size: 12px; }
+  .bottom-controls .mobile-control-label {
+    display: block;
+    font-size: 9px;
+    line-height: 1;
+    color: #aebed0;
+    font-weight: 400;
+  }
+  .bottom-controls .camera-mode > span:not(.mobile-control-label),
+  .bottom-controls .reset-view > span:not(.mobile-control-label) { display: none; }
+  .bottom-controls .speed-label-mobile { font-size: 9px; }
+}
+
+@media (max-width: 720px) and (max-height: 540px) {
+  .lunar-controls.is-collapsed:not(.is-active) { bottom: 126px; }
+  .lunar-controls.is-active.is-collapsed { top: 100px; }
+  .lunar-controls.is-expanded {
+    bottom: 126px;
+    max-height: calc(100dvh - 220px);
+  }
+  .viewing-actions { bottom: 66px; }
+  .bottom-controls { bottom: 8px; height: 52px; }
+  .bottom-controls .play-button,
+  .bottom-controls .time-reset,
+  .bottom-controls .camera-mode,
+  .bottom-controls .reset-view { height: 44px; min-height: 44px; }
+}

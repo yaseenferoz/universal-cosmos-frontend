@@ -28,14 +28,14 @@ export class Starfield {
         [r * Math.cos(azimuth) * 700, y * 700, r * Math.sin(azimuth) * 700],
         i * 3,
       );
-      const brightness = 0.008 + random() ** 9 * 0.24;
+      const brightness = 0.16 + random() ** 5 * 1.4;
       const hue = random();
       color
         .set(hue < 0.1 ? "#d5e2f7" : hue > 0.92 ? "#eadccb" : "#e6e9ed")
         .multiplyScalar(brightness);
       colors.set([color.r, color.g, color.b], i * 3);
       sizes[i] =
-        random() < 0.015 ? 1.3 + random() * 0.35 : 0.6 + random() * 0.45;
+        random() < 0.02 ? 1.5 + random() * 0.5 : 0.9 + random() * 0.5;
     }
     const geometry = new BufferGeometry();
     geometry.setAttribute("position", new BufferAttribute(positions, 3));
@@ -46,7 +46,7 @@ export class Starfield {
       vertexShader: `attribute vec3 color; attribute float size; varying vec3 vColor; uniform float pixelRatio;
         void main(){ vColor=color; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); gl_PointSize=size*pixelRatio; }`,
       fragmentShader: `varying vec3 vColor; uniform float exposureVisibility; void main(){ float d=length(gl_PointCoord-.5)*2.; if(d>1.) discard;
-        gl_FragColor=vec4(vColor * exp(-d*d*3.)*.65*exposureVisibility, 1.0);
+        gl_FragColor=vec4(vColor * exp(-d*d*3.)*.8*exposureVisibility, 1.0);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }`,

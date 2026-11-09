@@ -6,7 +6,7 @@ import { useLunarStore } from "../../stores/lunarStore";
 import { MovementButton } from "./LunarSurfaceControls";
 
 export function PlanetaryDescentControls() {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const selected = useExplorationStore(s => s.selectedId);
   const objects = useExplorationStore(s => s.objects);
   const mode = useExplorationStore(s => s.viewMode);
@@ -21,9 +21,9 @@ export function PlanetaryDescentControls() {
   const phase = t.phase === "surface" ? atmospheric ? "EXPLORING ATMOSPHERE" : "ON THE SURFACE"
     : t.phase === "ascending" ? "RETURNING TO ORBIT" : active ? "DESCENDING" : "PLANETARY EXPLORATION";
   return <>
-    <section className={`lunar-controls glass ${active ? "is-active" : ""}`} aria-label={`${body.name} exploration`}>
+    <section className={`lunar-controls glass ${active ? "is-active" : ""} ${collapsed ? "is-collapsed" : "is-expanded"}`} aria-label={`${body.name} exploration`}>
       <span className="eyebrow">{phase}</span>
-      <h2>{body.name}<button className="lunar-collapse" aria-label={collapsed ? "Expand descent controls" : "Collapse descent controls"} aria-expanded={!collapsed} aria-controls="planetary-descent-details" onClick={() => setCollapsed(!collapsed)}>{collapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}</button></h2>
+      <h2><button className="lunar-collapse" aria-label={collapsed ? `Open ${body.name} exploration controls` : `Close ${body.name} exploration controls`} aria-expanded={!collapsed} aria-controls="planetary-descent-details" onClick={() => setCollapsed(!collapsed)}><span>{body.name}</span>{collapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}</button></h2>
       <div hidden={collapsed} id="planetary-descent-details">
         <p className="lunar-coverage">Demonstration · reconstructed environment</p>
         <p>{environment.description}</p>
@@ -37,7 +37,7 @@ export function PlanetaryDescentControls() {
           {active ? <RotateCcw size={14} /> : <ArrowDown size={14} />}
           {active ? t.phase === "loading" ? "Cancel descent" : "Return to orbit" : atmospheric ? "Descend into atmosphere" : "Descend to surface"}
         </button>
-        <details className="lunar-source-details"><summary>Environment & limits</summary><p>Generated terrain/haze are illustrative. Positions, lighting and rotation follow the current circular-orbit model. This is not a measured landing site, weather simulation or ephemeris. Use Go to Day Side before entry for a daylight view.</p></details>
+        <details className="lunar-source-details"><summary>Environment & limits</summary><p>Generated terrain/haze are illustrative. Positions, lighting and rotation follow the current circular-orbit model. This is not a measured landing site, weather simulation or ephemeris. Use Go to Day Side before entry for a daylight view.</p><p>The night background uses a <a href="https://svs.gsfc.nasa.gov/4851/" target="_blank" rel="noreferrer">NASA SVS Milky Way map</a>, source-derived stars, and enhanced <a href="https://lambda.gsfc.nasa.gov/product/foreground/fg_halpha_info.html" target="_blank" rel="noreferrer">H-alpha gas emission</a>. Local sky alignment and atmospheric extinction are approximate. Dense Venus and giant-planet haze obscures it.</p></details>
       </div>
     </section>
     {exploring && <div className="surface-movement" role="group" aria-label={atmospheric ? "Atmospheric movement" : "Surface movement"}>

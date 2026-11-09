@@ -38,6 +38,7 @@
 .bloom-control input { width: 100%; margin: 15px 0 0; accent-color: #b6ccec; }
 .reset-exposure-button { color: #d4dfeb; text-decoration: underline; font-size: 11px; min-height: 34px; }
 .is-solar-observation .simulation-date { background: #080c13ed; border-radius: 4px; padding: 4px; }
+.speed-label-mobile { display: none; }
 @media (max-width: 720px) {
   .viewing-actions { top: auto; bottom: 136px; left: 16px; right: 16px; width: auto; }
   .viewing-action-row { justify-content: center; }
@@ -55,4 +56,81 @@
   .viewing-actions { top: 73px; bottom: auto; right: 16px; left: auto; }
   .rendering-diagnostics { top: 130px; left: auto; right: 16px; max-height: calc(100dvh - 205px); }
   .viewing-actions.is-inline { position: static; }
+}
+
+/* Keep the narrow viewport clear: metadata at the top, actions at the bottom. */
+@media (max-width: 720px) {
+  .simulation-date { display: none; }
+  .scene-switcher { top: 68px; left: 50%; transform: translateX(-50%); }
+  .view-exploration .scene-caption {
+    top: 125px; bottom: auto; left: 16px;
+    max-width: calc(100% - 88px);
+  }
+  .view-exploration .scene-caption h1 { font-size: 23px; margin: 5px 0; }
+  .view-exploration .scene-caption > p,
+  .view-exploration .asset-notice { display: none; }
+  .reopen-information {
+    top: 119px; bottom: auto; right: 16px; left: auto;
+    width: 44px; height: 44px; padding: 0;
+    justify-content: center;
+  }
+  .reopen-information > span,
+  .reopen-information > svg:last-child { display: none; }
+  .object-information,
+  .object-information.is-expanded {
+    top: auto; bottom: 83px; left: 12px; right: 12px; width: auto;
+    max-height: min(62dvh, calc(100dvh - 165px));
+  }
+  .viewing-actions {
+    top: auto; bottom: 82px; left: 12px; right: 12px;
+    width: auto; padding: 2px;
+  }
+  .viewing-action-row button { min-height: 42px; }
+  .bottom-controls {
+    bottom: max(12px, env(safe-area-inset-bottom));
+    width: calc(100% - 24px); max-width: 430px;
+    height: 56px; padding: 5px 6px; gap: 3px;
+    display: grid;
+    grid-template-columns: 44px minmax(65px, 1fr) 44px 44px 44px;
+    justify-items: center;
+  }
+  .bottom-controls .control-divider { display: none; }
+  .bottom-controls .play-button,
+  .bottom-controls .time-reset,
+  .bottom-controls .camera-mode,
+  .bottom-controls .reset-view {
+    width: 44px; min-width: 44px; height: 44px; min-height: 44px;
+    padding: 0;
+  }
+  .bottom-controls .speed-control { width: 100%; min-width: 0; }
+  .bottom-controls .speed-label-desktop { display: none; }
+  .bottom-controls .speed-label-mobile {
+    display: block; width: 100%; font-size: 8px; color: #a6b6ca;
+    letter-spacing: 0; white-space: nowrap;
+  }
+  .bottom-controls .speed-control select { width: 100%; }
+  .bottom-controls .camera-mode > span,
+  .bottom-controls .reset-view > span { display: none; }
+  .rendering-diagnostics {
+    top: 119px; bottom: 83px; left: 12px; right: 12px; width: auto;
+    max-height: none;
+  }
+  .solar-controls,
+  .lunar-controls {
+    top: 175px; left: 12px; right: 12px; width: auto;
+    max-height: min(190px, calc(100dvh - 280px));
+  }
+}
+
+@media (max-width: 720px) and (max-height: 540px) {
+  .scene-switcher { top: 58px; }
+  .view-exploration .scene-caption { display: none; }
+  .reopen-information { top: 102px; bottom: auto; }
+  .viewing-actions { top: auto; bottom: 67px; }
+  .bottom-controls { bottom: 8px; height: 52px; }
+  .object-information,
+  .object-information.is-expanded { bottom: 67px; max-height: calc(100dvh - 130px); }
+  .rendering-diagnostics { top: 102px; bottom: 67px; }
+  .solar-controls,
+  .lunar-controls { top: 102px; max-height: calc(100dvh - 176px); }
 }

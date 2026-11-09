@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { useExplorationStore } from "./explorationStore";
+import { daysSinceModelEpoch, REAL_TIME_DAYS_PER_SECOND } from "../utils/simulationTime";
 
 const initialState = useExplorationStore.getState();
 beforeEach(() => useExplorationStore.setState(initialState, true));
@@ -21,7 +22,7 @@ describe("exploration state", () => {
     store.setSpeed(Infinity);
     store.setStarDensity(-4);
     expect(useExplorationStore.getState()).toMatchObject({
-      speed: 0.01,
+      speed: REAL_TIME_DAYS_PER_SECOND,
       starDensity: 0.25,
     });
   });
@@ -29,16 +30,14 @@ describe("exploration state", () => {
     useExplorationStore.setState({ simulationDays: 42, playing: false });
     useExplorationStore.getState().resetView();
     expect(useExplorationStore.getState()).toMatchObject({
-      selectedId: "moon",
+      selectedId: "earth",
       simulationDays: 42,
       playing: false,
       resetViewRequest: 1,
     });
     useExplorationStore.getState().resetTime();
-    expect(useExplorationStore.getState()).toMatchObject({
-      simulationDays: 0,
-      resetTimeRequest: 1,
-    });
+    expect(useExplorationStore.getState().simulationDays).toBeCloseTo(daysSinceModelEpoch(Date.now()), 4);
+    expect(useExplorationStore.getState().resetTimeRequest).toBe(1);
   });
   it("keeps exploration and scaled overview distinct while preserving the clock", () => {
     const store = useExplorationStore.getState();
