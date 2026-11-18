@@ -98,7 +98,9 @@ export class CelestialBody {
         : data.id === "uranus" ? "#b5d5d3"
         : data.id === "saturn" ? "#c3b395"
         : data.id === "jupiter" ? "#b4ada2" : data.color;
-      configurePartialCoverage(this.material, placeholder, data.id === "neptune" ? 0.73 : 1);
+      // The OPAL preview's colored registration fringe extends to ~30° N.
+      // Fade 18–28.8° N into a plain reconstruction before reaching that fringe.
+      configurePartialCoverage(this.material, placeholder, data.id === "neptune" ? 0.66 : 1);
     }
     const detailed = data.category.includes("planet") || ["sun", "moon", "titan"].includes(data.id);
     for (const [segments, multiple] of [

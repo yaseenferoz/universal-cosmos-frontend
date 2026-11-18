@@ -1,8 +1,10 @@
 # Planetary landing and scientific-sky architecture
 
-Status: architecture and destination-capability foundation, 3 November 2026. This is a staged extension of the existing frontend, not a claim that every Solar System body can now be landed on.
+Status update, 16 November 2026: `PlanetaryExploration` now shares entry, body-fixed navigation, local illumination, and return across the Moon and eight planets. Mercury, Venus, Earth, and Mars have reconstructed surface demonstrations; the four giants have atmospheric-only demonstrations at a fixed 25 km above the catalog radius. `ReconstructedTerrainProvider` and `PlanetarySky` provide explicitly illustrative terrain/haze; the Moon retains its measured regional provider. `LunarExploration` is a compatibility export, and some shared APIs retain lunar names. Descent and return actions remain visible with the details collapsed.
 
-## Current audit
+This does not supply measured planetary terrain, calibrated weather/pressure profiles, or accurate ephemerides. The local catalog now includes additional moons and small bodies, whose landing modes remain planned. Sky maps and source-derived star points have approximate local alignment. The following audit and target design record the **3 November foundation**, before the shared demonstrations; their Moon-only descriptions are historical.
+
+## Foundation audit (3 November)
 
 | Concern | Current implementation | Reuse assessment |
 | --- | --- | --- |
@@ -18,7 +20,7 @@ Status: architecture and destination-capability foundation, 3 November 2026. Thi
 | Backend | All object retrieval uses `CelestialService`. HTTP metadata is identity-oriented; local physical/reference data remains bundled. | Do not assume remote terrain or ephemerides. A future opt-in provider must identify source, frame, epoch, uncertainty, coverage, and offline/demo status. |
 | Tests | Coordinate, navigation, terrain geometry/selection/renderer/provider, solar/eclipse, imagery, stores, and lifecycle tests exist. | Preserve Moon tests; add body-frame, profile-selection, altitude/collision, Sun direction, angular size, horizon, rotation, and atmosphere-profile tests per supported destination. |
 
-## Destination capability contract
+## Original destination capability contract (3 November)
 
 `src/data/explorationProfiles.ts` is the single data-driven authority for the ten catalogued bodies. It classifies each as `AIRLESS_SOLID`, `ATMOSPHERIC_SOLID`, `GAS_GIANT`, `ICE_GIANT`, `STAR`, or `SMALL_BODY`, and independently marks orbital, surface, and atmospheric modes as `available`, `planned`, or `not-supported`.
 

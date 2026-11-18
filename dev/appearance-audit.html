@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Cosmos appearance audit</title>
+<style>
+body{margin:24px;background:#10141b;color:#e2e8f0;font:15px/1.5 system-ui}h1{font-size:25px}p{max-width:1000px;color:#b5c2d1}section{margin:28px 0}h2{font-size:19px;margin:0 0 8px}.views{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}figure{margin:0}canvas{width:100%;display:block;background:black}figcaption{font-size:13px;color:#b5c2d1}#status{position:sticky;top:0;background:#10141b;padding:8px 0}a{color:#9dc9ff}@media(max-width:650px){.views{grid-template-columns:1fr}}
+</style></head>
+<body><h1>Surface, daylight, twilight and night audit</h1>
+<p>Development diagnostic using production local terrain, materials and sky. Fixed camera, Sun elevations +45°, 0°, −45°. Each body uses the same exposure after solar-distance compensation. No orbital disks, planetshine, eclipses or time-dependent weather are included. Stars use the installed sky map and extracted point sources, with illustrative fallback points. Body orientation is illustrative. This is not a photograph or a prediction for a date.</p>
+<p>Quality: <a href="?quality=low">Low</a> · <a href="?quality=medium">Medium</a> · <a href="?quality=high">High</a> · <a href="?quality=auto">Auto</a>. Each selection reruns the comparison.</p>
+<p><a href="/">Return to exploration</a></p><div id="status" role="status">Preparing environments…</div><main id="results"></main>
+<script type="module" src="/src/dev/appearanceAudit.ts"></script></body></html>

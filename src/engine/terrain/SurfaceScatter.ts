@@ -1,10 +1,12 @@
 import {
-  Color, Group, IcosahedronGeometry, InstancedMesh, Matrix4, MeshStandardMaterial,
+  BufferGeometry, Color, Group, IcosahedronGeometry, InstancedMesh, Matrix4, MeshStandardMaterial,
   Quaternion, Vector3,
 } from "three";
 import type { ObjectId, Quality } from "../../types/celestial";
 import type { TerrainDataProvider } from "../../types/terrain";
 import { cartesianToGeodetic } from "./coordinates";
+import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { configureSurfaceDetail, SurfaceDetailMaps } from "./SurfaceDetailMaterial";
 
 const UP = new Vector3(0, 1, 0);
 const ROCK_RADIUS_M = 65;
@@ -35,22 +37,32 @@ function randomSequence(seed: number): () => number {
 /** Display-scale stones. Their placements are generated, never mapped observations. */
 export class SurfaceScatter {
   readonly group = new Group();
-  readonly rocks: InstancedMesh<IcosahedronGeometry, MeshStandardMaterial>;
+  readonly rocks: InstancedMesh<BufferGeometry, MeshStandardMaterial>;
+  private readonly detailMaps = new SurfaceDetailMaps();
   private readonly anchor = new Vector3();
   private initialized = false;
   private disposed = false;
   private count: number;
 
   constructor(private readonly provider: TerrainDataProvider, quality: Quality, mobile: boolean) {
-    const geometry = new IcosahedronGeometry(1, 1);
+    // Weld before recalculating normals: nonindexed icosahedra otherwise shade as flat facets.
+    const source = new IcosahedronGeometry(1, 3);
+    source.deleteAttribute("normal");
+    source.deleteAttribute("uv");
+    const geometry = mergeVertices(source);
+    source.dispose();
     const positions = geometry.getAttribute("position");
     for (let i = 0; i < positions.count; i++) {
       const x = positions.getX(i), y = positions.getY(i), z = positions.getZ(i);
-      const variation = 0.94 + 0.045 * Math.sin(x * 8.3 + z * 5.7 + y * 6.1);
-      positions.setXYZ(i, x * variation, Math.max(-0.86, y * variation), z * variation);
+      const variation = 0.88 + 0.11 * Math.sin(x * 5.3 + z * 3.7 + y * 4.1)
+        + 0.045 * Math.sin(x * 13.1 - z * 9.4 + y * 7.3);
+      positions.setXYZ(i, x * variation, Math.max(-0.7, y * variation), z * variation);
     }
     geometry.computeVertexNormals();
     const material = new MeshStandardMaterial({ color: "#ffffff", roughness: 1, metalness: 0 });
+    configureSurfaceDetail(material, this.detailMaps, new Vector3(), provider.manifest.bodyId, true);
+    // The neutral shaded geometry remains usable if the optional texture cannot load.
+    void this.detailMaps.load(true, mobile || quality === "low").catch(() => undefined);
     this.rocks = new InstancedMesh(geometry, material, ROCK_COUNTS.high);
     this.rocks.name = `${provider.manifest.bodyId} illustrative surface stones`;
     this.rocks.castShadow = this.rocks.receiveShadow = true;
@@ -105,7 +117,7 @@ export class SurfaceScatter {
       const width = 0.08 + 0.7 * random() ** 5;
       const depth = width * (0.55 + random() * 0.7);
       const rockHeight = width * (0.35 + random() * 0.55);
-      position.copy(direction).multiplyScalar(this.provider.manifest.radiusM + height + rockHeight * 0.62).sub(this.anchor);
+      position.copy(direction).multiplyScalar(this.provider.manifest.radiusM + height + rockHeight * 0.25).sub(this.anchor);
       orientation.setFromUnitVectors(UP, direction);
       spin.setFromAxisAngle(UP, random() * Math.PI * 2);
       orientation.multiply(spin);
@@ -124,6 +136,7 @@ export class SurfaceScatter {
     this.disposed = true;
     this.rocks.geometry.dispose();
     this.rocks.material.dispose();
+    this.detailMaps.dispose();
     this.group.clear();
   }
 }

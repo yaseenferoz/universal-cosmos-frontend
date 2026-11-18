@@ -113,6 +113,8 @@ export interface TerrainDataProvider {
   sampleHeight(latDeg: number, lonDeg: number): HeightSample;
   loadTile(key: TerrainTileKey, signal?: AbortSignal): Promise<TerrainTileData>;
   getImagery(latDeg: number, lonDeg: number): TerrainImagery | undefined;
+  /** Available overlapping images, coarse to fine. Keeps context around a small landing image. */
+  getImageryLayers?(latDeg: number, lonDeg: number): TerrainImagery[];
   getCacheStats(): TerrainCacheStats;
   dispose(): void;
 }

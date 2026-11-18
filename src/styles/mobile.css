@@ -19,6 +19,7 @@
   .lunar-controls.is-collapsed > .eyebrow { display: none; }
   .lunar-controls.is-collapsed h2 { margin: 0; font-size: 14px; }
   .lunar-controls.is-collapsed .lunar-collapse { min-height: 46px; }
+  .lunar-controls.is-collapsed .lunar-primary { min-height: 44px; margin: 6px 0 10px; }
   .lunar-controls.is-collapsed .lunar-collapse::before {
     content: "Explore";
     font-size: 10px;
@@ -35,6 +36,7 @@
     padding: 2px 12px;
   }
   .lunar-controls.is-active.is-collapsed .lunar-collapse::before { content: "Surface"; }
+  .lunar-controls[data-exploration-mode="atmosphere"].is-active.is-collapsed .lunar-collapse::before { content: "Atmosphere"; }
   .lunar-controls.is-expanded {
     top: auto;
     bottom: calc(146px + env(safe-area-inset-bottom));

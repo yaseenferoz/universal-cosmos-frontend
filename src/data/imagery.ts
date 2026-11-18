@@ -457,7 +457,7 @@ export const imageryById: Record<ObjectId, ObjectImagery> = {
   },
   "neptune": {
     "missing": [
-      "Unobserved north polar atmosphere and source registration edges are shown as a neutral placeholder; source imagery is only 721 x 361."
+      "Northern coverage above 28.8° N uses a plain blue-green reconstruction, blending from 18° N to exclude source registration artifacts; source imagery is only 721 x 361."
     ],
     "surface": {
       "id": "neptune-surface",
@@ -465,7 +465,7 @@ export const imageryById: Record<ObjectId, ObjectImagery> = {
       "assetUrl": "https://archive.stsci.edu/hlsps/opal/cycle22/neptune/hlsp_opal_hst_wfc3-uvis_neptune-2015a_f467m-f547m-f657n_v1_globalmap.tif",
       "sourceUrl": "https://archive.stsci.edu/hlsp/opal/opal-neptune-cycle-22",
       "attribution": "NASA / ESA / STScI / OPAL program (PI: Amy Simon)",
-      "notes": "Historical Hubble F467M/F547M/F657N preview composite; native resolution only 721 x 361. Unobserved north polar area and a 12-pixel registration-edge margin are transparent over a neutral placeholder. No invented features or upscaling; not calibrated natural color.",
+      "notes": "Historical Hubble F467M/F547M/F657N preview composite; native resolution only 721 x 361. The asset masks missing pixels and a 12-pixel edge margin. The renderer additionally fades 18–28.8° N into a plain blue-green reconstruction to suppress residual colored registration fringes. No invented cloud features or upscaling; not calibrated natural color.",
       "kind": "observational",
       "colorSpace": "srgb",
       "license": "NASA/ESA Hubble public data; MAST data-use policy. Credit NASA, ESA, STScI and OPAL team; no endorsement.",

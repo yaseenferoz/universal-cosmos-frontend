@@ -1,18 +1,19 @@
 import {
-  ClampToEdgeWrapping, Frustum, Group, Matrix4, Mesh, MeshStandardMaterial, RepeatWrapping,
-  PerspectiveCamera, Ray, SRGBColorSpace, Texture, Vector3, Vector4,
+  Frustum, Group, Matrix4, Mesh, MeshStandardMaterial,
+  PerspectiveCamera, Ray, Vector3,
 } from "three";
 import { imageryById } from "../../data/imagery";
 import { planetaryEnvironments } from "../../data/planetaryEnvironments";
 import type { Quality } from "../../types/celestial";
-import type { TerrainDataProvider, TerrainImagery } from "../../types/terrain";
-import { fetchImageTexture, scientificTextures, type TextureLease } from "../loaders/ScientificTextureLoader";
+import type { TerrainDataProvider } from "../../types/terrain";
+import { scientificTextures, type TextureLease } from "../loaders/ScientificTextureLoader";
 import {
   CUBE_ROOTS, cartesianToGeodetic, directionToCube, geodeticToCartesian,
   tileChildren, tileId, tileParent, type TerrainTileKey,
 } from "./coordinates";
 import { buildTerrainGeometry, type TerrainGeometry } from "./TerrainGeometry";
-import { configureReconstructedGround } from "./ReconstructedGroundMaterial";
+import { TerrainImageryLayers } from "./TerrainImageryLayers";
+import { configureSurfaceDetail, SurfaceDetailMaps, wrappedDetailOrigin } from "./SurfaceDetailMaterial";
 import { selectTerrainTiles, terrainBudget, type TerrainBudget, type TerrainSelection } from "./TerrainSelection";
 
 interface ResidentTile extends TerrainGeometry {
@@ -41,13 +42,12 @@ export class PlanetTerrainRenderer {
   private readonly tiles = new Map<string, ResidentTile>();
   private readonly abort = new AbortController();
   private readonly cameraPositionM = new Vector3();
-  private readonly materialOriginKm = new Vector3();
+  private readonly materialOriginM = new Vector3();
   private readonly frustum = new Frustum();
-  private readonly regionUniform = { value: null as Texture | null };
-  private readonly regionBounds = { value: new Vector4() };
-  private readonly regionEnabled = { value: 0 };
-  private readonly detailUniform = { value: null as Texture | null };
-  private readonly detailEnabled = { value: 0 };
+  private readonly imageryLayers = new TerrainImageryLayers(error => {
+    this.error = `Regional imagery: ${error instanceof Error ? error.message : "unavailable"}`;
+  });
+  private readonly detailMaps = new SurfaceDetailMaps();
   private selection: TerrainSelection = { tiles: [], splitIds: new Set() };
   private required = new Map<string, TerrainTileKey>();
   private budget: TerrainBudget;
@@ -57,9 +57,6 @@ export class PlanetTerrainRenderer {
   private disposed = false;
   private preparing: Promise<void> | null = null;
   private baseLease: TextureLease | null = null;
-  private regionalTexture: Texture | null = null;
-  private detailTexture: Texture | null = null;
-  private regionalUrl = "";
   private regionRequest = false;
   private requestedResolution = Infinity;
   private selectedRevision = -1;
@@ -75,10 +72,10 @@ export class PlanetTerrainRenderer {
     this.group.name = "Body cube-sphere terrain (camera-relative meters)";
     if (provider.manifest.reconstruction)
       this.material.color.set(planetaryEnvironments[provider.manifest.bodyId]?.groundColor ?? "#999999");
-    this.configureRegionalImagery();
-    if (provider.manifest.reconstruction) configureReconstructedGround(
-      this.material, this.materialOriginKm, provider.manifest.bodyId, this.detailUniform, this.detailEnabled,
-    );
+    this.imageryLayers.configure(this.material);
+    this.imageryLayers.setAnisotropy(quality === "low" || mobile ? 2 : 4);
+    configureSurfaceDetail(this.material, this.detailMaps, this.materialOriginM,
+      provider.manifest.bodyId, false, !provider.manifest.reconstruction);
   }
 
   prepare(): Promise<void> {
@@ -91,31 +88,6 @@ export class PlanetTerrainRenderer {
       void this.loadReconstructedDetail();
     });
     return this.preparing;
-  }
-
-  private configureRegionalImagery(): void {
-    this.material.onBeforeCompile = (shader) => {
-      shader.uniforms.terrainRegionalMap = this.regionUniform;
-      shader.uniforms.terrainRegionalBounds = this.regionBounds;
-      shader.uniforms.terrainRegionalEnabled = this.regionEnabled;
-      shader.fragmentShader = shader.fragmentShader.replace("#include <common>", `#include <common>
-uniform sampler2D terrainRegionalMap;
-uniform vec4 terrainRegionalBounds;
-uniform float terrainRegionalEnabled;`);
-      shader.fragmentShader = shader.fragmentShader.replace("#include <map_fragment>", `#include <map_fragment>
-#ifdef USE_MAP
-  if (terrainRegionalEnabled > 0.5) {
-    vec2 lonLat = vec2((fract(vMapUv.x) - 0.5) * 360.0, (vMapUv.y - 0.5) * 180.0);
-    vec2 regionalUv = (lonLat - terrainRegionalBounds.xy) / terrainRegionalBounds.zw;
-    if (all(greaterThanEqual(regionalUv, vec2(0.0))) && all(lessThanEqual(regionalUv, vec2(1.0)))) {
-      vec4 observed = texture2D(terrainRegionalMap, regionalUv);
-      float edge = min(min(regionalUv.x, regionalUv.y), min(1.0 - regionalUv.x, 1.0 - regionalUv.y));
-      diffuseColor.rgb = mix(diffuseColor.rgb, observed.rgb, observed.a * smoothstep(0.0, 0.025, edge));
-    }
-  }
-#endif`);
-    };
-    this.material.customProgramCacheKey = () => "lunar-terrain-regional-imagery-v1";
   }
 
   private async loadBaseImagery(): Promise<void> {
@@ -139,44 +111,10 @@ uniform float terrainRegionalEnabled;`);
   }
 
   private async loadReconstructedDetail(): Promise<void> {
-    const bodyId = this.provider.manifest.bodyId;
-    if (!this.provider.manifest.reconstruction || (bodyId !== "earth" && bodyId !== "mars")) return;
     try {
-      const texture = await fetchImageTexture(`/textures/${bodyId}-ground-illustrative.webp`);
-      if (this.disposed) { this.disposeTexture(texture); return; }
-      texture.colorSpace = SRGBColorSpace;
-      texture.wrapS = texture.wrapT = RepeatWrapping;
-      texture.anisotropy = this.quality === "low" || this.mobile ? 2 : 4;
-      texture.needsUpdate = true;
-      this.detailTexture = texture;
-      this.detailUniform.value = texture;
-      this.detailEnabled.value = 1;
+      await this.detailMaps.load(false, this.mobile || this.quality === "low");
     } catch (error) {
       if (!this.disposed) this.error = `Ground detail: ${error instanceof Error ? error.message : "unavailable"}`;
-    }
-  }
-
-  private async loadRegionalImagery(imagery: TerrainImagery): Promise<void> {
-    if (this.regionalUrl === imagery.url) return;
-    this.regionalUrl = imagery.url;
-    const generation = this.generation;
-    try {
-      const texture = await fetchImageTexture(imagery.url);
-      if (this.disposed || generation !== this.generation || this.regionalUrl !== imagery.url) {
-        this.disposeTexture(texture); return;
-      }
-      texture.colorSpace = SRGBColorSpace;
-      texture.wrapS = texture.wrapT = ClampToEdgeWrapping;
-      texture.anisotropy = this.quality === "low" || this.mobile ? 2 : 4;
-      texture.needsUpdate = true;
-      if (this.regionalTexture) this.disposeTexture(this.regionalTexture);
-      this.regionalTexture = texture;
-      this.regionUniform.value = texture;
-      const { west, east, south, north } = imagery.bounds;
-      this.regionBounds.value.set(west, south, east - west, north - south);
-      this.regionEnabled.value = 1;
-    } catch (error) {
-      if (!this.disposed) this.error = `Regional imagery: ${error instanceof Error ? error.message : "unavailable"}`;
     }
   }
 
@@ -190,8 +128,9 @@ uniform float terrainRegionalEnabled;`);
     const sample = this.provider.sampleHeight(sampleCoordinates.latDeg, sampleCoordinates.lonDeg);
     const altitude = Math.max(1, sampleCoordinates.heightM - sample.heightM);
     this.requestRegion(sampleCoordinates.latDeg, sampleCoordinates.lonDeg, altitude);
-    const imagery = this.provider.getImagery(sampleCoordinates.latDeg, sampleCoordinates.lonDeg);
-    if (imagery) void this.loadRegionalImagery(imagery);
+    const { latDeg, lonDeg } = sampleCoordinates;
+    const imagery = this.provider.getImagery(latDeg, lonDeg);
+    this.imageryLayers.update(this.provider.getImageryLayers?.(latDeg, lonDeg) ?? (imagery ? [imagery] : []));
     if (this.frame % 6 === 1 || this.selectedRevision !== this.provider.revision) {
       this.selection = selectTerrainTiles({
         positionM, radiusM: this.provider.manifest.radiusM,
@@ -230,7 +169,7 @@ uniform float terrainRegionalEnabled;`);
   /** Rebase after a same-frame collision correction, without another LOD/build pass. */
   updateOrigin(positionM: Vector3): void {
     this.cameraPositionM.copy(positionM);
-    this.materialOriginKm.copy(positionM).multiplyScalar(0.001);
+    wrappedDetailOrigin(positionM, this.materialOriginM);
     for (const tile of this.tiles.values()) {
       if (tile.mesh.visible) tile.mesh.position.copy(tile.centerM).sub(positionM);
     }
@@ -331,7 +270,7 @@ uniform float terrainRegionalEnabled;`);
     this.generation++;
     this.selectedRevision = -1;
     for (const tile of this.tiles.values()) tile.revision = -1;
-    this.regionalUrl = "";
+    this.imageryLayers.setAnisotropy(this.quality === "low" || this.mobile || this.autoReduced ? 2 : 4);
     if (this.initialized) void this.loadBaseImagery();
   }
 
@@ -343,7 +282,7 @@ uniform float terrainRegionalEnabled;`);
     this.generation++;
     this.selectedRevision = -1;
     for (const tile of this.tiles.values()) tile.revision = -1;
-    this.regionalUrl = "";
+    this.imageryLayers.setAnisotropy(2);
     if (this.initialized) void this.loadBaseImagery();
   }
 
@@ -362,12 +301,6 @@ uniform float terrainRegionalEnabled;`);
     };
   }
 
-  private disposeTexture(texture: Texture): void {
-    texture.dispose();
-    const bitmap: unknown = texture.image;
-    if (typeof ImageBitmap !== "undefined" && bitmap instanceof ImageBitmap) bitmap.close();
-  }
-
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
@@ -379,9 +312,7 @@ uniform float terrainRegionalEnabled;`);
     this.material.dispose();
     this.baseLease?.release();
     this.baseLease = null;
-    if (this.regionalTexture) this.disposeTexture(this.regionalTexture);
-    this.regionalTexture = null;
-    if (this.detailTexture) this.disposeTexture(this.detailTexture);
-    this.detailTexture = null;
+    this.imageryLayers.dispose();
+    this.detailMaps.dispose();
   }
 }

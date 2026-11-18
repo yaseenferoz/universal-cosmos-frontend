@@ -130,7 +130,7 @@ export class PlanetaryExploration {
       if (this.terrain) {
         this.scene.add(this.terrain.group);
         await this.terrain.prepare();
-        if (!this.disposed && ["moon", "earth", "mars"].includes(this.bodyId)) {
+        if (!this.disposed) {
           this.scatter = new SurfaceScatter(this.provider, this.quality, this.options.mobile);
           this.scene.add(this.scatter.group);
         }

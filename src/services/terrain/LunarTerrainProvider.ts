@@ -131,12 +131,17 @@ export class LunarTerrainProvider implements TerrainDataProvider {
   }
 
   getImagery(latDeg: number, lonDeg: number): TerrainImagery | undefined {
+    return this.getImageryLayers(latDeg, lonDeg).at(-1);
+  }
+
+  getImageryLayers(latDeg: number, lonDeg: number): TerrainImagery[] {
     const longitude = normalizeLongitude(lonDeg);
-    let imagery: TerrainImagery | undefined;
+    const imagery = new Map<string, TerrainImagery>();
     for (const tile of this.manifest.tiles) {
-      if (this.resident.has(tile.id) && tile.imagery && terrainBoundsContain(tile.imagery.bounds, latDeg, longitude) && (!imagery || tile.imagery.sourceResolutionM < imagery.sourceResolutionM)) imagery = tile.imagery;
+      if (this.resident.has(tile.id) && tile.imagery && terrainBoundsContain(tile.imagery.bounds, latDeg, longitude))
+        imagery.set(tile.imagery.url, tile.imagery);
     }
-    return imagery;
+    return [...imagery.values()].sort((a, b) => b.sourceResolutionM - a.sourceResolutionM);
   }
 
   async loadTile(key: TerrainTileKey, signal?: AbortSignal): Promise<TerrainTileData> {

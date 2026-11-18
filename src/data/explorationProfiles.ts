@@ -21,7 +21,7 @@ type CoreObjectId = "sun" | "mercury" | "venus" | "earth" | "moon" | "mars" | "j
 type AdditionalObjectId = Exclude<ObjectId, CoreObjectId>;
 const additionalProfiles = Object.fromEntries(additionalBodies.map((body) => [body.id, {
   objectId: body.id,
-  classification: body.id === "titan" ? "ATMOSPHERIC_SOLID" : body.parentId === "sun" ? "SMALL_BODY" : "AIRLESS_SOLID",
+  classification: body.id === "titan" || body.id === "triton" ? "ATMOSPHERIC_SOLID" : body.parentId === "sun" ? "SMALL_BODY" : "AIRLESS_SOLID",
   modes: { orbital: "available", surface: "planned", atmospheric: "not-supported" },
   terrain: { ...unsupported, coverage: "No verified landing terrain package is installed." },
   sky: { ...unsupported, coverage: "No measured local sky package is installed." },

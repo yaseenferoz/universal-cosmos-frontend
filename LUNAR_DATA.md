@@ -1,6 +1,6 @@
 # Moon terrain data and limitations
 
-This vertical slice uses measured lunar elevations and registered orbital imagery. Source files were inspected and prepared on **2026-11-02**. No procedural craters, rocks, soil relief, or AI imagery supplement the observations. A first-person camera does not turn five-meter source sampling into centimeter-scale surface knowledge.
+This vertical slice uses measured lunar elevations and registered orbital imagery. Source files were inspected and prepared on **2026-11-02**. The DEM and collision remain measurement-derived. As of **2026-11-16**, generated stones and photographic terrestrial grain add explicitly illustrative close-up material detail; they are not observations of the Moon or additional elevation measurements. See [ASSET_SOURCES.md](ASSET_SOURCES.md) for the CC0 material sources. A first-person camera does not turn five-meter source sampling into centimeter-scale surface knowledge.
 
 ## Packaged datasets
 
@@ -66,7 +66,7 @@ The landing grid is **100% finite**. Regional context is approximately **99.635%
 
 At dataset outer boundaries, measured context blends to its coarse parent across 1200 m and local heights blend to context across 160 m. These smooth transitions are explicit visualization approximations using the two measured grids, not new observations. Blended samples retain the coarser effective resolution and a `:boundary-blend` source marker. The camera collider and renderer use the same sampling function. A displayed source resolution describes the measurement grid; screen-space geometry may be coarser at low quality or distance.
 
-Cube-root requests load only global context. Regional loading begins at finer cube levels, with full detail gated separately; `ensureRegion()` also permits predictable loading before descent. Imagery is returned with its coverage bounds. The renderer must use regional imagery only within those bounds and must not clamp-stretch it across unobserved terrain.
+Cube-root requests load only global context. Regional loading begins at finer cube levels, with full detail gated separately; `ensureRegion()` also permits predictable loading before descent. Imagery is returned with its coverage bounds. The renderer must use regional imagery only within those bounds and must not clamp-stretch it across unobserved terrain. The renderer retains both context and local orthophotos, layering the smaller landing image over the wider context image rather than replacing context with the global mosaic. This does not remove baked source lighting or calibrate reflectance.
 
 ## Verification performed
 

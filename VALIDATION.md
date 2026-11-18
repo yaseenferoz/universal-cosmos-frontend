@@ -1,5 +1,33 @@
 # Validation record
 
+## 17 November 2026: surface and sky follow-up verified
+
+After the desktop was unlocked, the native Chrome appearance diagnostic completed nine supported environments at daylight, sunset and night in both low and high quality, with zero environment failures in each pass. The high-quality diagnostic now enables the same PCF shadow settings as the main renderer. No shader/WebGL errors were visible in the final console inspection.
+
+Grazing-light ground speckling was substantially reduced while daylight texture remained. Lunar regional imagery now continues onto the surrounding hills instead of dropping to the global mosaic when the landing image loads. Bright hill/valley contrast, baked source illumination and coarse distant geometry remain visible limitations. This fixed-camera check does not qualify mobile performance, all sites, motion or medium/auto presets. See [PLANETARY_APPEARANCE_AUDIT.md](PLANETARY_APPEARANCE_AUDIT.md) for every planet/satellite's capability and scientific-appearance review.
+
+`npm run typecheck`, `npm run lint`, `npm test -- --maxWorkers=2` (249 tests in 45 files), and `npm run build` passed. No dependencies were added.
+
+## 16 November 2026: surface material and stone correction
+
+The user's Earth screenshot showed large rectangular texture cells and flat-shaded icosahedral stones. Fine material coordinates previously reconstructed planet-sized positions inside the shader. The new shared surface material wraps the CPU origin at 4096 meters, keeps fine GPU coordinates small, and uses seamless triplanar photographic material samples with mipmaps/anisotropy and derivative bump shading. Four unmodified CC0 Poly Haven 1K diffuse/height JPEGs add 2.20 MB. The old illustrative WebP ground placeholders are no longer sampled. All solid surface demonstrations share this material; giant atmospheres remain groundless.
+
+Stone geometry now welds shared vertices before computing smooth normals, has more irregular relief, uses photographed stone detail, and sits partly embedded in the sampled ground. Instance counts remain bounded at 90/180/320. Moon imagery and DEM/collision remain intact; added grain and stones are explicitly marked illustrative in the controls and source documentation.
+
+Live Chrome checks verified Earth in daylight and at close range without the rectangular grid; Mars showed tinted soil and irregular shaded stones; Moon descent reached the measured region and displayed grayscale fine grain/stones in modeled daylight. Console inspection showed no rendering errors. Lunar distant terrain remains coarse, with visible source-image brightness differences; this update does not make those datasets photorealistic or resolve unmeasured geography. Mobile/low-quality budgets remain bounded but were not exhaustively re-profiled on physical devices.
+
+`npm run typecheck`, `npm run lint`, and `npm run build` passed. `npm test -- --maxWorkers=2` passed all 234 tests in 44 files, including new millimeter-precision, wrap-continuity, and late-texture-disposal regressions. Source/asset provenance is in `ASSET_SOURCES.md`.
+
+## 16 November 2026: discoverable descent and Neptune corrections
+
+Descent/cancel/return actions now remain outside the collapsible details on the Moon and all eight supported planets. Reconstruction notices stay visible on planetary cards. Telemetry from another body cannot mark the newly selected planet as an active session. Mobile launchers retain a 44 px primary action, and giant sessions use an atmospheric label.
+
+The live Neptune view exposed residual colored registration artifacts in the Hubble preview. The renderer now fades 18–28.8° N into the disclosed plain reconstruction, retaining usable coverage elsewhere. Atmospheric entry also exposed a white-out: the sky's square-root irradiance and minimum brightness conflicted with the global exposure compensation. The sky now uses the same linear incident irradiance scale as terrain. A regression checks inverse-square consistency from Venus to Neptune and invalid input handling.
+
+Live Chrome inspection at localhost:5173 verified Venus's cream orbital cloud reconstruction, visible descent action, and arrival at its amber-haze surface demonstration. Neptune's northern artifact disappeared; its atmospheric demonstration reached 25.0 km above the reference radius with blue-green haze, then returned to the orbital view and restored descent/orbit controls. These are visual demonstrations, not measured local weather. The final narrow-screen layout and measured Moon descent were not manually retested in this session.
+
+`npm run typecheck`, `npm run lint`, and `npm run build` passed. The final full suite passed with `npm test -- --maxWorkers=2`: 231 tests in 43 files. Unrestricted runs hit the existing 5-second timeout in CPU-heavy granulation/terrain checks (including one run overlapping build/lint); limiting worker contention passed without changing assertions or timeouts. Existing planetary navigation tests cover entry, collision/altitude, movement, and return for all eight planets. Frontend port 5173 and backend port 4000 remained listening.
+
 Implementation session: 2026-11-02. Platform: Windows, Node.js 24.15.0, npm 11.12.1.
 
 ## Automated checks

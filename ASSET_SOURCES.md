@@ -75,12 +75,20 @@ This audit records the source providers' terms; it does **not** add a license to
 
 ## Missing and rejected imagery
 
+### Illustrative close-up surface materials (16 November 2026)
+
+The local `dry_ground_rocks-{color,height}.jpg` and `rock_boulder_dry-{color,height}.jpg` files are unmodified 1024 px JPEG diffuse/displacement downloads from Poly Haven: [Dry Ground Rocks, Rob Tuytel](https://polyhaven.com/a/dry_ground_rocks) and [Rock Boulder Dry](https://polyhaven.com/a/rock_boulder_dry). Poly Haven distributes these assets under [CC0](https://polyhaven.com/license). Together the four files total 2,200,449 bytes. They are fetched locally only when entering a surface session.
+
+These terrestrial photographs supply representative soil/stone detail, not geographic observations of a landing site. Non-Earth albedo uses grayscale/tint adaptation in the shader. Moon close-up detail modulates its existing measured regional macro imagery; no DEM elevations or collision samples are modified. Ground textures use a nominal four-meter repeat with a sixteen-meter modulation octave and fade at distance. The displacement image affects lighting normals only. Stones have generated placements/shapes, smoothed normals, and representative photographed material. All added detail is illustrative.
+
+Fine material coordinates are wrapped on the CPU at 4096 meters before GPU interpolation; all repeat periods divide that interval, preventing camera-rebase seams while avoiding planet-radius precision loss. Textures use mipmaps, bounded anisotropy, and explicit disposal. The older `*-ground-illustrative.webp` placeholders are no longer used by the renderer.
+
 - **Sun:** no verified full-sphere photosphere texture is installed. The emissive globe is a plain visual approximation.
 - **Venus:** no verified global visible-light cloud mosaic is installed. A plain cloud-colored globe is explicitly approximate. Magellan radar must never be described as visible cloud imagery.
 - **Earth:** no verified normal or measured roughness texture is installed.
 - **Moon:** no measured roughness map is installed; elevation-derived normals are limited to their 1440 × 720 source.
 - **Mercury/Mars:** no normal or measured roughness map is installed. Mercury is explicitly monochrome and limited to 1024 × 512; Mars has only 1440 × 720 source detail. An 11520 × 5760 Mercury browse from NASA's legacy PDS `/test/` host was rejected after pixel inspection found it over 99% blank.
-- **Jupiter/Saturn/Uranus/Neptune:** incomplete atmospheric coverage remains missing and visible as neutral regions. No fabricated replacement bands, storms or stretched polar pixels were added.
+- **Jupiter/Saturn/Uranus/Neptune:** incomplete atmospheric coverage remains disclosed and uses plain fill regions. Neptune additionally blends from 18° to 28.8° N into a blue-green reconstruction, excluding the preview's residual colored registration fringe and missing northern coverage. This display fill is not measured cloud color. No fabricated replacement bands, storms or stretched polar pixels were added.
 - **Saturn:** calibrated ring optical depth and outer/diffuse rings remain absent.
 
 The legacy JPL simulator [Saturn](https://maps.jpl.nasa.gov/tmaps/saturn.html) and [Neptune](https://maps.jpl.nasa.gov/tmaps/neptune.html) maps describe fictional artwork, and the legacy [Venus visible texture](https://maps.jpl.nasa.gov/tmaps/venus.html) repeats/clones a limited observation. They were rejected. NASA hosting alone is not evidence that a texture is observational. The [JPL texture collection](https://maps.jpl.nasa.gov/tmaps/) itself warns that some images contain gaps, aesthetic alterations or representative atmosphere artwork.

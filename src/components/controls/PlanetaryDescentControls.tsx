@@ -4,6 +4,7 @@ import { planetaryEnvironments } from "../../data/planetaryEnvironments";
 import { useExplorationStore } from "../../stores/explorationStore";
 import { useLunarStore } from "../../stores/lunarStore";
 import { MovementButton } from "./LunarSurfaceControls";
+import { initialLunarTelemetry } from "../../types/lunar";
 
 export function PlanetaryDescentControls() {
   const [collapsed, setCollapsed] = useState(true);
@@ -11,7 +12,8 @@ export function PlanetaryDescentControls() {
   const objects = useExplorationStore(s => s.objects);
   const mode = useExplorationStore(s => s.viewMode);
   const ready = useExplorationStore(s => s.status === "ready");
-  const t = useLunarStore(s => s.telemetry);
+  const telemetry = useLunarStore(s => s.telemetry);
+  const t = telemetry.bodyId === selected ? telemetry : initialLunarTelemetry;
   const body = objects.find(o => o.id === selected);
   const environment = selected ? planetaryEnvironments[selected] : undefined;
   if (!body || !environment || mode !== "exploration" || !ready) return null;
@@ -19,24 +21,24 @@ export function PlanetaryDescentControls() {
   const active = !["orbit", "error"].includes(t.phase);
   const exploring = t.phase === "surface";
   const phase = t.phase === "surface" ? atmospheric ? "EXPLORING ATMOSPHERE" : "ON THE SURFACE"
-    : t.phase === "ascending" ? "RETURNING TO ORBIT" : active ? "DESCENDING" : "PLANETARY EXPLORATION";
+    : t.phase === "ascending" ? "RETURNING TO ORBIT" : t.phase === "loading" ? "PREPARING ENVIRONMENT" : active ? "DESCENDING" : "PLANETARY EXPLORATION";
   return <>
-    <section className={`lunar-controls glass ${active ? "is-active" : ""} ${collapsed ? "is-collapsed" : "is-expanded"}`} aria-label={`${body.name} exploration`}>
+    <section className={`lunar-controls glass ${active ? "is-active" : ""} ${collapsed ? "is-collapsed" : "is-expanded"}`} data-exploration-mode={environment.mode} aria-label={`${body.name} exploration`}>
       <span className="eyebrow">{phase}</span>
       <h2><button className="lunar-collapse" aria-label={collapsed ? `Open ${body.name} exploration controls` : `Close ${body.name} exploration controls`} aria-expanded={!collapsed} aria-controls="planetary-descent-details" onClick={() => setCollapsed(!collapsed)}><span>{body.name}</span>{collapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}</button></h2>
+      <p className="lunar-coverage">Demonstration · reconstructed environment</p>
+      {t.error && <p className="lunar-error" role="alert">{t.error}</p>}
+      <button className="lunar-primary" disabled={t.phase === "ascending"} onClick={() => active ? useLunarStore.getState().returnToOrbit() : useLunarStore.getState().beginDescent()}>
+        {active ? <RotateCcw size={14} /> : <ArrowDown size={14} />}
+        {active ? t.phase === "loading" ? "Cancel descent" : "Return to orbit" : atmospheric ? "Descend into atmosphere" : "Descend to surface"}
+      </button>
       <div hidden={collapsed} id="planetary-descent-details">
-        <p className="lunar-coverage">Demonstration · reconstructed environment</p>
         <p>{environment.description}</p>
-        {t.error && <p className="lunar-error" role="alert">{t.error}</p>}
         {active && <dl className="lunar-readouts">
           <div><dt>Latitude / longitude</dt><dd>{t.latDeg.toFixed(3)}° / {t.lonDeg.toFixed(3)}° E</dd></div>
           <div><dt>{atmospheric ? "Above reference radius" : "Height above terrain"}</dt><dd>{t.altitudeM >= 1000 ? `${(t.altitudeM / 1000).toFixed(1)} km` : `${t.altitudeM.toFixed(1)} m`}</dd></div>
           <div><dt>Modeled Sun altitude</dt><dd>{t.solarAltitudeDeg.toFixed(1)}°</dd></div>
         </dl>}
-        <button className="lunar-primary" disabled={t.phase === "ascending"} onClick={() => active ? useLunarStore.getState().returnToOrbit() : useLunarStore.getState().beginDescent()}>
-          {active ? <RotateCcw size={14} /> : <ArrowDown size={14} />}
-          {active ? t.phase === "loading" ? "Cancel descent" : "Return to orbit" : atmospheric ? "Descend into atmosphere" : "Descend to surface"}
-        </button>
         <details className="lunar-source-details"><summary>Environment & limits</summary><p>Generated terrain/haze are illustrative. Positions, lighting and rotation follow the current circular-orbit model. This is not a measured landing site, weather simulation or ephemeris. Use Go to Day Side before entry for a daylight view.</p><p>The night background uses a <a href="https://svs.gsfc.nasa.gov/4851/" target="_blank" rel="noreferrer">NASA SVS Milky Way map</a>, source-derived stars, and enhanced <a href="https://lambda.gsfc.nasa.gov/product/foreground/fg_halpha_info.html" target="_blank" rel="noreferrer">H-alpha gas emission</a>. Local sky alignment and atmospheric extinction are approximate. Dense Venus and giant-planet haze obscures it.</p></details>
       </div>
     </section>

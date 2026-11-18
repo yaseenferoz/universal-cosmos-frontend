@@ -42,6 +42,24 @@ describe("measured lunar raster sampling", () => {
 });
 
 describe("LunarTerrainProvider lifecycle and coverage", () => {
+  it("retains regional imagery beneath fine landing imagery without claiming unloaded coverage", async () => {
+    const context: TerrainRasterTile = { ...regionTile, id: "context", tier: "context", resolutionM: 40,
+      bounds: { west: 28, east: 32, south: 18, north: 22 },
+      imagery: { url: "/context.webp", bounds: { west: 28, east: 32, south: 18, north: 22 }, sourceResolutionM: 40, sourceId: "measured" } };
+    const local = { ...regionTile, imagery: { url: "/landing.webp", bounds: regionTile.bounds, sourceResolutionM: 5, sourceId: "measured" } };
+    const provider = new LunarTerrainProvider({ manifest: { ...manifest, tiles: [globalTile, context, local] },
+      fetcher: async input => new Response(input === "/base.f32" ? constantGrid(8, 0) : constantGrid(4, 100)) });
+    await provider.initialize();
+    expect(provider.getImageryLayers(20, 30)).toEqual([]);
+    await provider.ensureRegion({ latDeg: 20, lonDeg: 30, radiusM: 100 });
+    expect(provider.getImageryLayers(20, 30).map(image => image.url)).toEqual(["/context.webp", "/landing.webp"]);
+    expect(provider.getImagery(20, 30)?.url).toBe("/landing.webp");
+    expect(provider.getImageryLayers(20, 28.5).map(image => image.url)).toEqual(["/context.webp"]);
+    expect(provider.getImageryLayers(10, 30)).toEqual([]);
+    provider.dispose();
+    expect(provider.getImageryLayers(20, 30)).toEqual([]);
+  });
+
   it("preserves the browser global receiver for native fetch", async () => {
     vi.stubGlobal("fetch", function (this: unknown) {
       if (this !== globalThis) throw new TypeError("Illegal invocation");

@@ -94,6 +94,16 @@ export function LunarSurfaceControls() {
             {collapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
           </button>
         </h2>
+        <p className="lunar-coverage">Measured terrain · illustrative rocks and fine detail</p>
+        {telemetry.error && <p className="lunar-error" role="alert">{telemetry.error}</p>}
+        <button
+          className="lunar-primary"
+          disabled={telemetry.phase === "ascending"}
+          onClick={() => active ? useLunarStore.getState().returnToOrbit() : useLunarStore.getState().beginDescent()}
+        >
+          {active ? <RotateCcw size={14} /> : <ArrowDown size={15} />}
+          {active ? telemetry.phase === "loading" ? "Cancel loading" : "Return to orbit" : telemetry.phase === "error" ? "Retry descent" : "Descend to surface"}
+        </button>
         <div id="lunar-control-details" hidden={collapsed}>
           {!active ? (
             <>
@@ -102,20 +112,6 @@ export function LunarSurfaceControls() {
                 {site.lonDeg.toFixed(3)}° E
               </p>
               <p>Measured lunar terrain. Native DEM: 5 m per sample.</p>
-              {telemetry.error && (
-                <p className="lunar-error" role="alert">
-                  {telemetry.error}
-                </p>
-              )}
-              <button
-                className="lunar-primary"
-                onClick={() => useLunarStore.getState().beginDescent()}
-              >
-                <ArrowDown size={15} />
-                {telemetry.phase === "error"
-                  ? "Retry descent"
-                  : "Descend to surface"}
-              </button>
             </>
           ) : (
             <>
@@ -180,7 +176,7 @@ export function LunarSurfaceControls() {
                     {telemetry.resolutionM >= 1000
                       ? `${(telemetry.resolutionM / 1000).toFixed(1)} km`
                       : `${telemetry.resolutionM.toFixed(0)} m`}
-                    . Interpolated terrain, no added detail.
+                    . Measured elevations; illustrative close-up grain and stones.
                   </p>
                   {telemetry.coverageNotice && (
                     <p className="lunar-coverage" role="status">
@@ -189,16 +185,6 @@ export function LunarSurfaceControls() {
                   )}
                 </>
               )}
-              <button
-                className="lunar-primary"
-                disabled={telemetry.phase === "ascending"}
-                onClick={() => useLunarStore.getState().returnToOrbit()}
-              >
-                <RotateCcw size={14} />
-                {telemetry.phase === "loading"
-                  ? "Cancel loading"
-                  : "Return to orbit"}
-              </button>
             </>
           )}
           <details className="lunar-source-details">
@@ -206,7 +192,8 @@ export function LunarSurfaceControls() {
             <p>
               NASA LROC Apollo 17 DTM; elevations relative to a 1,737.4 km
               reference sphere. 5 m sampling does not resolve individual rocks
-              or footprints. No invented surface detail is added.
+              or footprints. Close-up grain and scattered rocks use representative
+              terrestrial materials; they are illustrative, not lunar observations.
             </p>
             <p>
               Orbital orientation and solar geometry follow the illustrative
