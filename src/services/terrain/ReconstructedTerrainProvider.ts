@@ -3,6 +3,7 @@ import type { CelestialObject } from "../../types/celestial";
 import type { TerrainDataProvider, TerrainManifest, TerrainRegion, TerrainTileData, TerrainTileKey } from "../../types/terrain";
 import { planetaryEnvironments } from "../../data/planetaryEnvironments";
 import { geodeticToCartesian } from "../../engine/terrain/coordinates";
+import { martianReliefM } from "./martianRelief";
 
 /** Seam-free analytic terrain, explicitly a reconstruction rather than a measured DEM. */
 export class ReconstructedTerrainProvider implements TerrainDataProvider {
@@ -33,9 +34,14 @@ export class ReconstructedTerrainProvider implements TerrainDataProvider {
   async initialize(signal?: AbortSignal): Promise<void> { this.check(signal); }
   async ensureRegion(_region: TerrainRegion, signal?: AbortSignal): Promise<void> { this.check(signal); }
   sampleHeight(latDeg: number, lonDeg: number) {
-    if (this.disposed || !Number.isFinite(latDeg) || !Number.isFinite(lonDeg))
+    if (this.disposed || !Number.isFinite(latDeg) || Math.abs(latDeg) > 90 || !Number.isFinite(lonDeg))
       return { heightM: 0, available: false, resolutionM: this.environment.featureScaleM, sourceId: this.manifest.id };
-    const p = geodeticToCartesian(latDeg, lonDeg, 0, this.manifest.radiusM, this.point).divideScalar(this.environment.featureScaleM);
+    const p = geodeticToCartesian(latDeg, lonDeg, 0, this.manifest.radiusM, this.point);
+    if (this.manifest.bodyId === "mars") return {
+      heightM: martianReliefM(p.x, p.y, p.z, this.environment.reliefM), available: true,
+      resolutionM: this.environment.featureScaleM, sourceId: this.manifest.id,
+    };
+    p.divideScalar(this.environment.featureScaleM);
     const hills = Math.sin(p.x * 0.7 + Math.sin(p.z * 0.23)) * Math.cos(p.z * 0.81 + p.y * 0.3);
     const detail = Math.sin(p.x * 2.1 + p.z * 1.7) * Math.cos(p.y * 2.3 - p.z * 0.6);
     // Crater-like bowls are a generated relief field, not named/observed craters.
@@ -45,7 +51,7 @@ export class ReconstructedTerrainProvider implements TerrainDataProvider {
     // Meter-scale undulations improve the eye-level silhouette. They remain
     // generated relief and are never assigned measured DEM resolution.
     const ripple = Math.sin(p.x * 260 + 0.7 * Math.sin(p.z * 170)) * Math.cos(p.z * 220 - p.y * 90);
-    const groundReliefM = this.manifest.bodyId === "mars" ? 0.75 : this.manifest.bodyId === "earth" ? 0.35 : 0;
+    const groundReliefM = this.manifest.bodyId === "earth" ? 0.35 : 0;
     const heightM = broadHeight + ripple * groundReliefM;
     return { heightM, available: true, resolutionM: this.environment.featureScaleM, sourceId: this.manifest.id };
   }

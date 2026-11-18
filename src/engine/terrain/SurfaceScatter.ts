@@ -7,6 +7,7 @@ import type { TerrainDataProvider } from "../../types/terrain";
 import { cartesianToGeodetic } from "./coordinates";
 import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { configureSurfaceDetail, SurfaceDetailMaps } from "./SurfaceDetailMaterial";
+import type { SurfaceAtmosphere } from "../effects/SurfaceAtmosphere";
 
 const UP = new Vector3(0, 1, 0);
 const ROCK_RADIUS_M = 65;
@@ -44,7 +45,7 @@ export class SurfaceScatter {
   private disposed = false;
   private count: number;
 
-  constructor(private readonly provider: TerrainDataProvider, quality: Quality, mobile: boolean) {
+  constructor(private readonly provider: TerrainDataProvider, quality: Quality, mobile: boolean, atmosphere?: SurfaceAtmosphere) {
     // Weld before recalculating normals: nonindexed icosahedra otherwise shade as flat facets.
     const source = new IcosahedronGeometry(1, 3);
     source.deleteAttribute("normal");
@@ -54,13 +55,17 @@ export class SurfaceScatter {
     const positions = geometry.getAttribute("position");
     for (let i = 0; i < positions.count; i++) {
       const x = positions.getX(i), y = positions.getY(i), z = positions.getZ(i);
+      // Rounded fracture faces instead of a uniformly spherical pebble silhouette.
+      const exponent = provider.manifest.bodyId === "mars" ? 4 : 2.8;
+      const face = 1 / Math.pow(Math.abs(x) ** exponent + Math.abs(y) ** exponent + Math.abs(z) ** exponent, 1 / exponent);
       const variation = 0.88 + 0.11 * Math.sin(x * 5.3 + z * 3.7 + y * 4.1)
         + 0.045 * Math.sin(x * 13.1 - z * 9.4 + y * 7.3);
-      positions.setXYZ(i, x * variation, Math.max(-0.7, y * variation), z * variation);
+      positions.setXYZ(i, x * variation * face, Math.max(-0.7, y * variation * face), z * variation * face);
     }
     geometry.computeVertexNormals();
     const material = new MeshStandardMaterial({ color: "#ffffff", roughness: 1, metalness: 0 });
     configureSurfaceDetail(material, this.detailMaps, new Vector3(), provider.manifest.bodyId, true);
+    atmosphere?.configure(material);
     // The neutral shaded geometry remains usable if the optional texture cannot load.
     void this.detailMaps.load(true, mobile || quality === "low").catch(() => undefined);
     this.rocks = new InstancedMesh(geometry, material, ROCK_COUNTS.high);
@@ -101,22 +106,24 @@ export class SurfaceScatter {
     const east = new Vector3(-Math.sin(lon), 0, -Math.cos(lon));
     const north = new Vector3().crossVectors(radial, east).normalize();
     const random = randomSequence(siteSeed(this.provider.manifest.bodyId, this.anchor));
-    const base = new Color(this.provider.manifest.bodyId === "mars" ? "#9f7256"
+    const martian = this.provider.manifest.bodyId === "mars";
+    const base = new Color(martian ? "#7d746c"
+      : this.provider.manifest.bodyId === "moon" ? "#656563"
       : this.provider.manifest.bodyId === "earth" ? "#978976" : "#96918b");
     const direction = new Vector3(), position = new Vector3(), scale = new Vector3();
     const orientation = new Quaternion(), spin = new Quaternion();
     const matrix = new Matrix4(), color = new Color();
     for (let i = 0; i < this.count; i++) {
       const angle = random() * Math.PI * 2;
-      const distance = 1.5 + Math.sqrt(random()) * ROCK_RADIUS_M;
+      const distance = 1.8 + random() ** 0.7 * (i < 12 ? 14 : ROCK_RADIUS_M);
       direction.copy(radial).multiplyScalar(this.provider.manifest.radiusM)
         .addScaledVector(east, Math.cos(angle) * distance)
         .addScaledVector(north, Math.sin(angle) * distance).normalize();
       const geo = cartesianToGeodetic(direction, 1);
       const height = this.provider.sampleHeight(geo.latDeg, geo.lonDeg).heightM;
-      const width = 0.08 + 0.7 * random() ** 5;
+      const width = 0.055 + (martian ? 1.1 : 0.7) * random() ** 5;
       const depth = width * (0.55 + random() * 0.7);
-      const rockHeight = width * (0.35 + random() * 0.55);
+      const rockHeight = width * (martian ? 0.18 + random() * 0.38 : 0.35 + random() * 0.55);
       position.copy(direction).multiplyScalar(this.provider.manifest.radiusM + height + rockHeight * 0.25).sub(this.anchor);
       orientation.setFromUnitVectors(UP, direction);
       spin.setFromAxisAngle(UP, random() * Math.PI * 2);

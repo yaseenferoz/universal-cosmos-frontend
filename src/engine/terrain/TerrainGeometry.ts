@@ -22,6 +22,7 @@ export function buildTerrainGeometry(key: TerrainTileKey, segments: number, prov
   const centerM = middle.multiplyScalar(datum + middleHeight.heightM);
   const count = (segments + 1) ** 2;
   const positions: number[] = [], normals: number[] = [], uvs: number[] = [], indices: number[] = [];
+  const elevations: number[] = [], slopes: number[] = [];
   const direction = new Vector3(), point = new Vector3();
   let sourceResolutionM = 0;
   let sourceId = middleHeight.sourceId;
@@ -32,7 +33,10 @@ export function buildTerrainGeometry(key: TerrainTileKey, segments: number, prov
   const edgeM = tileDirection(key, 0, 0.5).angleTo(tileDirection(key, 1, 0.5)) * datum;
   const spacingM = edgeM / segments;
   // Skirts close different-LOD edges without fabricating terrain above the DEM.
-  const skirtDepthM = Math.max(0.25, Math.min(4000, 4 * spacingM ** 2 / datum + Math.min(50, spacingM * 0.3)));
+  const reliefClosureM = provider.manifest.reconstruction
+    ? Math.min(provider.manifest.maxElevationM - provider.manifest.minElevationM, spacingM * 3)
+    : Math.min(50, spacingM * 0.3);
+  const skirtDepthM = Math.max(0.25, Math.min(4000, 4 * spacingM ** 2 / datum + reliefClosureM));
   for (let y = 0; y <= segments; y++) {
     for (let x = 0; x <= segments; x++) {
       tileDirection(key, x / segments, y / segments, direction);
@@ -42,6 +46,7 @@ export function buildTerrainGeometry(key: TerrainTileKey, segments: number, prov
       if (sample.resolutionM < middleHeight.resolutionM) sourceId = sample.sourceId;
       point.copy(direction).multiplyScalar(datum + sample.heightM).sub(centerM);
       positions.push(point.x, point.y, point.z);
+      elevations.push(sample.heightM);
       let longitude = coordinates.lonDeg;
       while (longitude - middleCoordinates.lonDeg > 180) longitude -= 360;
       while (longitude - middleCoordinates.lonDeg < -180) longitude += 360;
@@ -57,6 +62,7 @@ export function buildTerrainGeometry(key: TerrainTileKey, segments: number, prov
       const northMinus = direction.clone().addScaledVector(north, -stepM / datum).normalize();
       const slopeEast = (heightAt(eastPlus) - heightAt(eastMinus)) / (2 * stepM);
       const slopeNorth = (heightAt(northPlus) - heightAt(northMinus)) / (2 * stepM);
+      slopes.push(Math.hypot(slopeEast, slopeNorth));
       const normal = direction.clone().addScaledVector(east, -slopeEast).addScaledVector(north, -slopeNorth).normalize();
       normals.push(normal.x, normal.y, normal.z);
     }
@@ -81,6 +87,8 @@ export function buildTerrainGeometry(key: TerrainTileKey, segments: number, prov
       positions.push(point.x, point.y, point.z);
       normals.push(normals[index * 3], normals[index * 3 + 1], normals[index * 3 + 2]);
       uvs.push(uvs[index * 2], uvs[index * 2 + 1]);
+      elevations.push(elevations[index]);
+      slopes.push(slopes[index]);
     }
     for (let i = 0; i < segments; i++) {
       const a = edge[i], b = edge[i + 1], c = start + i, d = c + 1;
@@ -91,11 +99,13 @@ export function buildTerrainGeometry(key: TerrainTileKey, segments: number, prov
   geometry.setAttribute("position", new BufferAttribute(new Float32Array(positions), 3));
   geometry.setAttribute("normal", new BufferAttribute(new Float32Array(normals), 3));
   geometry.setAttribute("uv", new BufferAttribute(new Float32Array(uvs), 2));
+  geometry.setAttribute("terrainElevationM", new BufferAttribute(new Float32Array(elevations), 1));
+  geometry.setAttribute("terrainSlope", new BufferAttribute(new Float32Array(slopes), 1));
   geometry.setIndex(indices);
   geometry.computeBoundingSphere();
   geometry.userData.surfaceVertexCount = count;
   return {
     geometry, centerM, key, segments, surfaceIndexCount: segments * segments * 6, sourceResolutionM, sourceId,
-    byteLength: positions.length * 4 + normals.length * 4 + uvs.length * 4 + indices.length * 2,
+    byteLength: positions.length * 4 + normals.length * 4 + uvs.length * 4 + (elevations.length + slopes.length) * 4 + indices.length * 2,
   };
 }

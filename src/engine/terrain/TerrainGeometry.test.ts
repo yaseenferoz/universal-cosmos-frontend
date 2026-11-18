@@ -63,4 +63,23 @@ describe("measured cube-sphere mesh construction", () => {
     }
     coarse.geometry.dispose(); fine.geometry.dispose();
   });
+
+  it("closes coarse/fine joins across steep reconstructed relief", () => {
+    const provider = testTerrainProvider((lat, lon) => 100 * Math.sin(lat * 500) + 100 * Math.cos(lon * 500));
+    provider.manifest.reconstruction = true;
+    provider.manifest.minElevationM = -200;
+    provider.manifest.maxElevationM = 200;
+    const coarse = buildTerrainGeometry({ face: 0, level: 10, x: 500, y: 600 }, 16, provider);
+    const fine = buildTerrainGeometry({ face: 0, level: 11, x: 1002, y: 1200 }, 16, provider);
+    const parentPositions = coarse.geometry.getAttribute("position");
+    const childPositions = fine.geometry.getAttribute("position");
+    for (let row = 0; row <= 16; row++) {
+      const a = new Vector3().fromBufferAttribute(parentPositions, Math.floor(row / 2) * 17 + 16).add(coarse.centerM);
+      const b = new Vector3().fromBufferAttribute(parentPositions, Math.ceil(row / 2) * 17 + 16).add(coarse.centerM);
+      const parentEdge = a.lerp(b, row / 2 % 1);
+      const skirt = new Vector3().fromBufferAttribute(childPositions, 17 ** 2 + 3 * 17 + 16 - row).add(fine.centerM);
+      expect(skirt.length()).toBeLessThan(parentEdge.length());
+    }
+    coarse.geometry.dispose(); fine.geometry.dispose();
+  });
 });

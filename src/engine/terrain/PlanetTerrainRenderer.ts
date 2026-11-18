@@ -13,6 +13,7 @@ import {
 } from "./coordinates";
 import { buildTerrainGeometry, type TerrainGeometry } from "./TerrainGeometry";
 import { TerrainImageryLayers } from "./TerrainImageryLayers";
+import type { SurfaceAtmosphere } from "../effects/SurfaceAtmosphere";
 import { configureSurfaceDetail, SurfaceDetailMaps, wrappedDetailOrigin } from "./SurfaceDetailMaterial";
 import { selectTerrainTiles, terrainBudget, type TerrainBudget, type TerrainSelection } from "./TerrainSelection";
 
@@ -65,7 +66,7 @@ export class PlanetTerrainRenderer {
   private mobile: boolean;
   private autoReduced = false;
 
-  constructor(readonly provider: TerrainDataProvider, quality: Quality = "auto", mobile = false) {
+  constructor(readonly provider: TerrainDataProvider, quality: Quality = "auto", mobile = false, atmosphere?: SurfaceAtmosphere) {
     this.quality = quality;
     this.mobile = mobile;
     this.budget = terrainBudget(quality, mobile);
@@ -76,6 +77,7 @@ export class PlanetTerrainRenderer {
     this.imageryLayers.setAnisotropy(quality === "low" || mobile ? 2 : 4);
     configureSurfaceDetail(this.material, this.detailMaps, this.materialOriginM,
       provider.manifest.bodyId, false, !provider.manifest.reconstruction);
+    atmosphere?.configure(this.material);
   }
 
   prepare(): Promise<void> {

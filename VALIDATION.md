@@ -1,5 +1,15 @@
 # Validation record
 
+## 18 November 2026: Moon and Mars realism
+
+Mars now has continuous body-fixed reconstructed uplands, benches, erosion variation and shallow dunes, shared by rendered geometry and collision. Elevation/slope attributes drive dusty versus exposed-rock materials, and generated stones have flatter fracture-like shapes. Meter-space haze applies to ground and stones before tone mapping and has no solar radiance at deep night. The Moon keeps its measured heights and registered imagery with a bounded, explicitly artistic display contrast remap. Ground specular response is reduced to remove mirror-white grazing bands. No source raster, dependency, texture asset, tile budget or instance-count limit was added or enlarged.
+
+Native Chrome comparisons completed **9 environments × 3 Sun angles at both low and high quality**, with **0 environment failures** per pass. Inspection confirmed gray lunar hills with retained image detail, distinct Martian relief and stones, distance haze, and substantially reduced bright sunset bands. A live main-app Mars descent near **23.409° N, 96.000° W** reached **1.7 m above terrain** in modeled daylight. Drag-to-look and short forward-control inputs were exercised, with a close-range rock/soil inspection and no shader/WebGL errors in the final console. This is not a long walking traverse or a collision qualification for individual stones.
+
+`npm run typecheck`, `npm run lint`, `npm test -- --maxWorkers=2` (**256 tests / 48 files**), and `npm run build` passed. New regressions cover relief bounds/continuity, longitude seams, mesh/collision height consistency, coarse/fine skirt coverage, bounded lunar display reflectance, and haze illumination/extinction. Production engine chunk: **154.35 kB / 45.29 kB gzip**.
+
+Limits: Martian geography, rock placement, grain and atmospheric parameters are illustrative; lunar source shadows remain baked into imagery. Repetition and coarse distant triangles can still be visible. Medium/auto were not separately compared in the fixed-view grid, physical mobile performance was not profiled, and additional satellite landings remain deferred. See [PLANETARY_APPEARANCE_AUDIT.md](PLANETARY_APPEARANCE_AUDIT.md) and [LUNAR_DATA.md](LUNAR_DATA.md).
+
 ## 17 November 2026: surface and sky follow-up verified
 
 After the desktop was unlocked, the native Chrome appearance diagnostic completed nine supported environments at daylight, sunset and night in both low and high quality, with zero environment failures in each pass. The high-quality diagnostic now enables the same PCF shadow settings as the main renderer. No shader/WebGL errors were visible in the final console inspection.

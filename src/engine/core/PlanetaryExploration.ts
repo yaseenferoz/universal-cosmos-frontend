@@ -12,6 +12,7 @@ import { ReconstructedTerrainProvider } from "../../services/terrain/Reconstruct
 import { planetaryEnvironments } from "../../data/planetaryEnvironments";
 import { cartesianToGeodetic } from "../terrain/coordinates";
 import { PlanetarySky, localStarVisibility } from "../effects/PlanetarySky";
+import { SurfaceAtmosphere } from "../effects/SurfaceAtmosphere";
 import { initialLunarTelemetry, type LunarTelemetry } from "../../types/lunar";
 import { LunarTerrainProvider } from "../../services/terrain/LunarTerrainProvider";
 import {
@@ -40,6 +41,7 @@ export class PlanetaryExploration {
   readonly navigation: LunarNavigationController;
   private readonly provider: TerrainDataProvider;
   private readonly sky: PlanetarySky | null;
+  private readonly surfaceAtmosphere: SurfaceAtmosphere | undefined;
   private readonly skyScene = new Scene();
   private readonly ambient = new AmbientLight("#ffffff", 0.008);
   private terrain: PlanetTerrainRenderer | null = null;
@@ -76,6 +78,8 @@ export class PlanetaryExploration {
       maxConcurrentRequests: options.mobile ? 2 : 4,
     });
     this.sky = environment ? new PlanetarySky(environment) : null;
+    this.surfaceAtmosphere = this.bodyId === "mars" && environment
+      ? new SurfaceAtmosphere(environment.horizonColor, 0.00012, environment.hazeHeightM) : undefined;
     if (this.sky) this.skyScene.add(this.sky.mesh);
     this.navigation = new LunarNavigationController(
       element,
@@ -126,12 +130,13 @@ export class PlanetaryExploration {
         this.provider,
         this.quality,
         this.options.mobile,
+        this.surfaceAtmosphere,
       );
       if (this.terrain) {
         this.scene.add(this.terrain.group);
         await this.terrain.prepare();
         if (!this.disposed) {
-          this.scatter = new SurfaceScatter(this.provider, this.quality, this.options.mobile);
+          this.scatter = new SurfaceScatter(this.provider, this.quality, this.options.mobile, this.surfaceAtmosphere);
           this.scene.add(this.scatter.group);
         }
       }
@@ -218,6 +223,7 @@ export class PlanetaryExploration {
     const irradiance = relativeSolarIrradiance(distanceAu);
     this.sky?.update(observer, sunDirection, altitude, irradiance);
     const solarCosine = observer.clone().normalize().dot(sunDirection);
+    this.surfaceAtmosphere?.update(solarCosine, irradiance, altitude);
     const daylight = Math.max(0, solarCosine);
     this.starVisibility = localStarVisibility(solarCosine, environment);
     const dayFraction = MathUtils.smoothstep(solarCosine, -0.12, 0.18);

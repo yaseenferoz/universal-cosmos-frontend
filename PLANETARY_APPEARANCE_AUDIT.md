@@ -80,6 +80,18 @@ Native browser inspection confirmed that the bright grazing-light speckling is s
 
 These checks use fixed 600×360 captures and controlled lighting. Medium/auto, mobile performance, walking motion and arbitrary sites were not separately visually qualified in this follow-up. Type checking, lint, **249 tests / 45 files**, and the production build passed again on 17 November.
 
+### Moon and Mars realism pass — 18 November 2026
+
+Mars now uses a deterministic body-fixed relief field with layered uplands, rounded benches, erosion variation and shallow sand undulations. Mesh generation and collision sample the same field, continuous across longitude wrap and poles. Ground material blends dusty sand with darker exposed slopes, and stones have flatter fractured silhouettes. Terrain and stones share distance-dependent aerial perspective before tone mapping; solar haze radiance reaches zero at deep night. These are illustrative parameters, not measured Mars topography or aerosol/weather data.
+
+Visual references include NASA's [Curiosity sulfate-region and streambed view](https://science.nasa.gov/resource/curiositys-view-of-sulfate-bearing-region-and-streambed-rocks/) and [dune texture comparison](https://science.nasa.gov/resource/textures-where-curiosity-rover-studied-a-martian-dune/). They guide morphology, not exact geography or calibrated color; white-balanced rover pictures are not used as natural-color standards. No new image assets or dependencies were added.
+
+The Moon retains its measured elevations and spatial imagery. A monotonic display contrast remap reduces excessive bright-hill/dark-valley differences; [LUNAR_DATA.md](LUNAR_DATA.md) records the formula and the remaining baked-lighting limitation. Ground reflectance uses a restrained specular lobe to avoid mirror-like grazing highlights on porous terrain. Reconstruction edge skirts extend below steep adjacent mesh chords; they remain excluded from shadow casting and collision.
+
+Terrain tile and stone-count budgets remain unchanged. New elevation/slope vertex attributes are included in GPU memory accounting, and shared haze uniforms create no additional textures or render targets. Source resolution, generated feature scale, and rendered triangle spacing remain separate quantities. The pass does not enable additional satellite environments or certify photorealism.
+
+Final low/high comparisons each completed nine environments at three Sun angles with zero failures. Inspection confirmed reduced lunar brightness mismatch and removed the pronounced white Martian sunset bands. Live Mars descent, drag-to-look and short forward-control inputs were exercised at a separate daylight site, with 1.7 m eye height and no shader/WebGL errors in the final console. Repetition, coarse distant geometry, and unmeasured local geology remain limitations; long walking traverses and physical mobile performance are unqualified. All four required checks passed, including 256 tests in 48 files; details are in [VALIDATION.md](VALIDATION.md).
+
 ## Recommended implementation order
 
 1. Extend the verified low/high fixed-view checks to movement, medium/auto and mobile; address lunar baked-lighting contrast without inventing calibrated reflectance.

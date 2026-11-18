@@ -66,6 +66,16 @@ export function ExplorationRail() {
       >
         <HelpCircle size={16} /> Flight manual <span>?</span>
       </button>
+      <a
+        className="developer-credit"
+        href="https://yaseenferoz.github.io/yaseen-feroz/"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Developed by Yaseen Feroz — portfolio (opens in a new tab)"
+      >
+        <span>Developed by <strong>Yaseen Feroz</strong></span>
+        <ArrowUpRight size={14} aria-hidden="true" />
+      </a>
     </aside>
   );
 }

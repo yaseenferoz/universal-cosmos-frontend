@@ -73,6 +73,8 @@ Select Mercury, Venus, Earth, or Mars and choose **Descend to surface**. Jupiter
 
 These eight destinations use explicitly labeled generated terrain or haze, body-specific colors, and modeled solar illumination. They are not measured landing sites or weather simulations. Arbitrary measured lunar landing sites, terrain packages for other moons/small bodies, pressure/temperature profiles, and full Rayleigh/Mie scattering remain deferred.
 
+The 18 November realism pass adds reconstructed Martian layered uplands, shallow dunes, slope-dependent dust/bedrock colors, flatter stones, and distance-dependent dusty haze. Moon terrain keeps its measured heights and registered imagery, with a bounded display contrast adjustment rather than a claim of calibrated albedo. Photographic grain and generated stones remain illustrative. See [PLANETARY_APPEARANCE_AUDIT.md](PLANETARY_APPEARANCE_AUDIT.md) for validation and remaining limits.
+
 ## Scientific model and provenance
 
 The core catalog contains the Sun, Mercury, Venus, Earth, Earth's Moon, Mars, Jupiter, Saturn, Uranus, and Neptune; local mode adds the moons and small bodies described above. The frontend's bundled physical quantities are rounded reference values with explicit units from NASA's [Planetary Fact Sheets](https://nssdc.gsfc.nasa.gov/planetary/factsheet/). In HTTP mode, object identities and parent relationships come from the backend; the displayed physical properties and visualization settings still come from this bundled reference catalog. The backend seed intentionally supplies no physical measurements, so those values are not presented as backend observations.
