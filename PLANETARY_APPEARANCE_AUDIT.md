@@ -94,6 +94,18 @@ Final low/high comparisons each completed nine environments at three Sun angles 
 
 ## Recommended implementation order
 
+### 23 November 2026 implementation update
+
+All five solid local destinations (Mercury, Venus, Earth, Moon, Mars) now support the optional original 2K detail tier. Mercury uses an irregular cellular crater field with a compact bowl/rim profile; Earth uses hills/ridges at multiple scales; Venus uses broader plains/uplands with subdued small relief. All generated elevations are sampled identically for geometry and collision and remain bounded by their manifests. The Moon's measured elevation and imagery package is unchanged. No additional satellite landing capabilities are advertised.
+
+The qualitative terrain choices follow [NASA Mercury facts](https://science.nasa.gov/mercury/facts/) and [NASA Venus facts](https://science.nasa.gov/venus/venus-facts/). No radar/geodetic landing data was acquired for these planets. Their meter scales, slope colors and placements remain author-selected reconstructions.
+
+Local lighting now attenuates direct sunlight with a bounded spherical-shell air-mass approximation and a per-body display optical depth. Venus uses strong direct attenuation and diffuse daylight, avoiding hard airless-style surface shadows. Earth and Venus gain shared terrain/stone aerial perspective, while Mercury and Moon remain optically airless. The unqualified constant solar ambient floor is removed. Night-side terrain can consequently be black: parent-body illumination, airglow and thermal emission are still not modeled. Eclipse handling remains the existing direct-light approximation; no multiple scattering calculation is claimed.
+
+All atmospheric skies use a bounded forward-scattering angular lobe and finite horizon path length. Venus and the four giant demonstrations replace repetitive sine cloud patterns with three octaves of continuous three-dimensional noise; this remains a sky dome, not volumetric clouds or a weather simulation. Giant sessions retain their groundless 25 km hover and opaque cloud-level nights. The cyan/blue-green distinction remains qualitative, informed by [NASA Hubble observations](https://science.nasa.gov/asset/hubble/uranus-and-neptune/), not calibrated local radiance.
+
+High-quality detail is optional and bounded; geometry budgets, pixel-ratio caps and rock counts are unchanged. A live tier upgrade can briefly retain both old/new map pairs (about 107 MiB for those RGBA8 texture pairs including mipmaps), then releases the old tier. Automatic quality does not select HD maps. Source downloads and provenance are recorded in [ASSET_SOURCES.md](ASSET_SOURCES.md). Visual checks and final automated results belong in [VALIDATION.md](VALIDATION.md).
+
 1. Extend the verified low/high fixed-view checks to movement, medium/auto and mobile; address lunar baked-lighting contrast without inventing calibrated reflectance.
 2. Give Mercury, Venus, Earth and Mars distinct terrain morphology and atmosphere-aware lighting instead of relying primarily on tint changes.
 3. Add icy-moon, volcanic-moon and small-body terrain families, with explicit source/procedural labels and shape-aware navigation.

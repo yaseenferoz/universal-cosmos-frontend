@@ -84,7 +84,7 @@ ASSETS = [
          assetUrl='https://archive.stsci.edu/hlsps/opal/cycle28/saturn/hlsp_opal_hst_wfc3-uvis_saturn-2021a_f395n-f502n-f631n_v1_globalmap.tif',
          sourceUrl='https://archive.stsci.edu/hlsp/opal/opal-saturn-cycle-28',
          attribution='NASA / ESA / STScI / OPAL program (PI: Amy Simon)', license=MAST_LICENSE,
-         notes='Historical Hubble OPAL F395N/F502N/F631N preview composite, not current or calibrated natural color. Large ring-obscured and southern regions have no observations. Black no-data pixels and a 10-pixel edge margin are transparent over a neutral placeholder; no cloud bands filled or invented.',
+         notes='Historical Hubble OPAL F395N/F502N/F631N preview composite, not current or calibrated natural color. Large ring-obscured and southern regions have no observations. The renderer averages valid pixels across longitude, retains muted latitude contrast in a warm reconstructed palette, and fills missing latitudes with illustrative bands. Longitude-local weather and calibrated natural color are not represented.',
          kind='observational', colorSpace='srgb', maximum=1800, partialCoverage=True, coverageMargin=10),
     dict(body='uranus', slot='surface', id='uranus-surface', filename='uranus.tif',
          title='Hubble OPAL Uranus atmospheric mosaic, 2014 A',
@@ -106,7 +106,7 @@ ASSETS = [
          sourceUrl='https://science.nasa.gov/photojournal/expanse-of-ice/',
          attribution='NASA/JPL/Space Science Institute',
          license='JPL image use policy: educational/personal use with full source credit; no endorsement.',
-         notes='Observed May 9, 2007 natural-color scan of the unilluminated rings. Cropped to main C/B/A rings; central 20 rows averaged into a radial profile. Approximate radius registration uses C inner and A outer boundaries. Alpha is source luminance, a visual transparency approximation, NOT measured optical depth. Original source shading remains; azimuthal variations and D/F/G/E rings are not represented.',
+         notes='Observed May 9, 2007 natural-color scan of the unilluminated rings. Cropped to main C/B/A rings; central 20 rows averaged. Stored luminance alpha is ignored by the renderer. RGB supplies subtle modulation of reconstructed ice reflectance, not calibrated albedo. Representative major-ring optical depths drive viewing-angle opacity and analytic planet/ring shadows. Fine radial ringlets are procedural, not observed. Named fine gaps, azimuthal variations and D/F/G/E rings are omitted.',
          kind='derived', colorSpace='srgb', maximum=2048, radialRangeKm=[74658,136780]),
 ]
 
@@ -192,10 +192,12 @@ def prepare(asset):
     print(asset['id'], original.size, record['variants'], flush=True)
     return record
 
-catalog = {body: {'missing': ['No verified global surface map is installed; color and shape are illustrative.']} for body in ['sun','mercury','venus','earth','moon','mars','jupiter','saturn','uranus','neptune','phobos','deimos','io','europa','ganymede','callisto','enceladus','titan','titania','triton','ceres','vesta','bennu']}
+catalog = {body: {'missing': ['No verified global surface map is installed; color and shape are illustrative.']} for body in ['sun','mercury','venus','earth','moon','mars','jupiter','saturn','uranus','neptune','phobos','deimos','io','europa','ganymede','callisto','enceladus','titan','titania','triton','ceres','vesta','bennu','mimas','tethys','dione','rhea','iapetus','miranda','ariel','umbriel','oberon']}
 for asset in ASSETS:
     catalog[asset['body']][asset['slot']] = prepare(asset)
     if asset['slot'] == 'surface': catalog[asset['body']]['missing'] = []
+
+catalog['iss'] = {'missing': ['Lightweight station marker in the Solar System; Visit ISS loads NASA exterior and interior models. Configuration and attitude are illustrative.']}
 
 catalog['sun']['missing'] = ['The white-light photosphere, granulation and corona are modeled approximations, not an observed solar activity map. No prominence dataset is installed.']
 catalog['venus']['missing'] = ['Cream-colored, low-contrast visible-light clouds are a procedural reconstruction. No verified global visible-light Venus cloud mosaic is installed; Magellan radar is not a visible-light cloud map.']
@@ -204,7 +206,7 @@ catalog['moon']['missing'] = ['No measured roughness map is installed. The norma
 catalog['mercury']['missing'] = ['Natural-color, normal and measured roughness maps are not installed; the observed monochrome preview is limited to 1024 x 512.']
 catalog['mars']['missing'] = ['No normal or measured roughness maps are installed; Viking surface imagery is limited to 1440 x 720.']
 catalog['jupiter']['missing'] = ['Polar coverage is absent from the Hubble map and is shown as a neutral placeholder.']
-catalog['saturn']['missing'] = ['Ring-obscured and south polar atmospheric coverage is absent and shown as a neutral placeholder.', 'Ring opacity is derived from image brightness, not a calibrated optical-depth profile; D/F/G/E rings are omitted.']
+catalog['saturn']['missing'] = ['Cloud appearance combines observed latitude contrast with illustrative warm color and missing-latitude fill; not measured weather.', 'Rings use representative C/B/A optical depths and analytic shadows, not calibrated occultation data. Fine gaps and D/F/G/E rings are omitted.']
 catalog['uranus']['missing'] = ['Unobserved south polar atmosphere and source registration edges are shown as a neutral placeholder; source imagery is only 721 x 361.']
 catalog['neptune']['missing'] = ['Unobserved north polar atmosphere and source registration edges are shown as a neutral placeholder; source imagery is only 721 x 361.']
 for body in ['phobos','deimos','io','europa','ganymede','callisto','enceladus','titania','triton']:

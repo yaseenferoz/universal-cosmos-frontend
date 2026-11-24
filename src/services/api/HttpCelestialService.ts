@@ -16,6 +16,8 @@ import {
   type BackendCatalog,
 } from "./backendCatalog";
 import { record } from "./validation";
+import { celestialObjects } from "../../data/catalog";
+import { searchCatalog } from "./searchCatalog";
 
 interface ApiPayload {
   data: unknown;
@@ -23,12 +25,6 @@ interface ApiPayload {
 }
 const SEARCH_PAGE_SIZE = 100;
 const MAX_SEARCH_PAGES = 10;
-const normalize = (value: string) =>
-  value
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
 
 export class HttpCelestialService implements CelestialService {
   private readonly baseUrl: string;
@@ -143,7 +139,10 @@ export class HttpCelestialService implements CelestialService {
     const identity = [...catalog.identities.values()].find(
       (object) => object.slug === id || object.id === id.toLowerCase(),
     );
-    if (!identity) return null;
+    if (!identity) {
+      const reference = catalog.objects.find((object) => object.id === id && !object.backendId);
+      return reference ? structuredClone(reference) : null;
+    }
     try {
       const payload = await this.request(
         `/objects/${encodeURIComponent(identity.id)}`,
@@ -178,12 +177,7 @@ export class HttpCelestialService implements CelestialService {
       );
     const catalog = await this.loadCatalog(options);
     if (term.length < 2) {
-      const needle = normalize(term);
-      return structuredClone(
-        catalog.objects.filter((object) =>
-          normalize(`${object.name} ${object.category}`).includes(needle),
-        ),
-      );
+      return structuredClone(searchCatalog(catalog.objects, term));
     }
     const results = new Map<ObjectId, CelestialObject>();
     let totalPages = 1;
@@ -210,12 +204,15 @@ export class HttpCelestialService implements CelestialService {
         );
       totalPages = pages;
       for (const identity of parseBackendIdentities(payload.data)) {
-        // The renderer supports the initial ten worlds; other catalog results stay out.
+        // Only the ten contracted backend identities have validated UUID mappings.
         if (!isSupportedSlug(identity.slug)) continue;
         results.set(identity.slug, mapBackendIdentity(identity, catalog));
       }
     }
-    return [...results.values()];
+    for (const object of searchCatalog(catalog.objects, term)) {
+      if (!results.has(object.id)) results.set(object.id, object);
+    }
+    return structuredClone([...results.values()]);
   }
 
   async getSystem(id: "solar", options?: RequestOptions): Promise<SolarSystem> {
@@ -233,7 +230,7 @@ export class HttpCelestialService implements CelestialService {
     options?: RequestOptions,
   ): Promise<EphemerisResult> {
     assertActive(options?.signal);
-    if (!isSupportedSlug(id))
+    if (!celestialObjects.some((object) => object.id === id))
       throw new CelestialApiError(
         "This object is not supported by the explorer.",
         404,
@@ -243,8 +240,9 @@ export class HttpCelestialService implements CelestialService {
       objectId: id,
       epoch: normalizeEpoch(isoDate),
       position: null,
-      reason:
-        "The backend exposes sampled JPL Horizons windows in TDB. This explorer needs an explicit UTC/TDB and sampled-vector adapter before scientific positions can be used. Display orbits remain illustrative; no ephemeris request was made.",
+      reason: isSupportedSlug(id)
+        ? "The backend exposes sampled JPL Horizons windows in TDB. This explorer needs an explicit UTC/TDB and sampled-vector adapter before scientific positions can be used. Display orbits remain illustrative; no ephemeris request was made."
+        : "This destination uses the bundled reference catalog, which has no scientific ephemeris. Its circular path and chosen phase are illustrative; no ephemeris request was made.",
     };
   }
 }

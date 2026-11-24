@@ -1,4 +1,5 @@
 import type { CelestialObject } from "../types/celestial";
+import { majorMoons } from "./majorMoons";
 
 type BodyInput = Pick<CelestialObject,
   "id" | "name" | "category" | "parentId" | "description" | "radiusKm" |
@@ -32,9 +33,9 @@ const inputs: BodyInput[] = [
   { id: "bennu", name: "Bennu", category: "Near-Earth asteroid", parentId: "sun", description: "A small near-Earth asteroid sampled by OSIRIS-REx.", radiusKm: 0.246, massKg: 7.33e10, gravityMs2: 0.00008, orbitalPeriodDays: 436.6, rotationPeriodHours: 4.3, semiMajorAxisKm: 168e6, axialTiltDeg: 178, color: "#726c65", source: { label: "NASA Bennu Facts", url: "https://science.nasa.gov/solar-system/asteroids/101955-bennu/facts/" }, orbitRadius: 21.8, phase: 5.1, inclinationDeg: 5, displayRadius: 0.06 },
 ];
 
-export const additionalBodies: CelestialObject[] = inputs.map(({ orbitRadius, phase, inclinationDeg, displayRadius, ...body }) => ({
+export const additionalBodies: CelestialObject[] = [...inputs.map(({ orbitRadius, phase, inclinationDeg, displayRadius, ...body }) => ({
   ...body,
   display: { radius: displayRadius, orbitRadius, initialPhase: phase, inclination: inclinationDeg * Math.PI / 180 },
   facts: [{ label: "Orbits", value: body.parentId === "sun" ? "Sun" : body.parentId ?? "—" }],
-}));
+})), ...majorMoons];
 

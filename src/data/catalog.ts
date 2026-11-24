@@ -4,6 +4,7 @@ import type {
   SolarSystem,
 } from "../types/celestial";
 import { additionalBodies } from "./additionalBodies";
+import { iss } from "./spacecraft";
 
 /** Chosen visualization origin. Initial phases are NOT observed positions on this date. */
 export const SIMULATION_EPOCH = "2026-01-01T00:00:00.000Z";
@@ -291,6 +292,7 @@ export const celestialObjects: CelestialObject[] = [
     ],
   },
   ...additionalBodies,
+  iss,
 ];
 
 export const objectById = Object.fromEntries(

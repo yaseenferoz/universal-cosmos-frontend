@@ -1,4 +1,6 @@
 import type { CelestialObject, ObjectId } from "../../types/celestial";
+import { Vector3 } from "three";
+import { earthOrientationAt } from "./EarthOrientation";
 
 export interface Cartesian {
   x: number;
@@ -80,7 +82,8 @@ export function modeledRelativePositionKm(
   const phase =
     object.display.initialPhase +
     ((days % object.orbitalPeriodDays) / object.orbitalPeriodDays) * TAU;
-  const z = Math.sin(phase) * object.semiMajorAxisKm;
+  // +X equinox, -Z east: ISS is prograde relative to Earth's +Y pole.
+  const z = Math.sin(phase) * object.semiMajorAxisKm * (object.id === "iss" ? -1 : 1);
   return {
     x: Math.cos(phase) * object.semiMajorAxisKm,
     y: z * Math.sin(object.display.inclination),
@@ -124,10 +127,20 @@ function resolveHierarchy(
 export function modeledPositionsKm(
   objects: readonly CelestialObject[],
   days: number,
+  epoch = "2026-01-01T00:00:00.000Z",
 ): Map<ObjectId, Cartesian> {
-  return resolveHierarchy(objects, (object) =>
-    modeledRelativePositionKm(object, days),
-  );
+  const earth = objects.find(({ id }) => id === "earth");
+  return resolveHierarchy(objects, (object) => {
+    const offset = modeledRelativePositionKm(object, days);
+    if (object.id !== "iss" || !earth) return offset;
+    // ISS's 51.6° is equatorial, unlike the other illustrative ecliptic planes.
+    // Share the rendered Earth's pole correction so the displayed orbit stays inclined
+    // to that equator. Epoch matches the bundled visualization clock, not a TLE epoch.
+    const earthOffset = modeledRelativePositionKm(earth, days);
+    const sun = new Vector3(-earthOffset.x, -earthOffset.y, -earthOffset.z);
+    const pole = earthOrientationAt(Date.parse(epoch) + days * 86400000, sun).poleRotation;
+    return new Vector3(offset.x, offset.y, offset.z).applyQuaternion(pole);
+  });
 }
 
 export function overviewPositions(

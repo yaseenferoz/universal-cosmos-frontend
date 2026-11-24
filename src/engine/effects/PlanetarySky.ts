@@ -22,7 +22,7 @@ export function skySolarIllumination(solarCosine: number): number {
 export class PlanetarySky {
   private readonly material: ShaderMaterial;
   readonly mesh: Mesh<SphereGeometry, ShaderMaterial>;
-  constructor(private readonly profile: PlanetaryEnvironment) {
+  constructor(private readonly profile: PlanetaryEnvironment, asymmetry = 0.6) {
     this.material = new ShaderMaterial({
       uniforms: {
         upDirection: { value: new Vector3(0, 1, 0) }, sunDirection: { value: new Vector3(1, 0, 0) },
@@ -30,6 +30,7 @@ export class PlanetarySky {
         density: { value: 0 }, irradiance: { value: 1 }, opaqueHaze: { value: profile.nightSkyTransmission === 0 ? 1 : 0 },
         nightTransmission: { value: profile.nightSkyTransmission },
         cloudStructure: { value: profile.cloudStructure },
+        asymmetry: { value: Math.max(0, Math.min(0.85, asymmetry)) },
         daylight: { value: 0 },
         twilightColor: { value: new Color(profile.twilightColor ?? profile.horizonColor) },
         twilightStrength: { value: profile.twilightColor ? 1 : 0 },
@@ -40,6 +41,20 @@ export class PlanetarySky {
         varying vec3 sightline;
         uniform vec3 upDirection, sunDirection, zenithColor, horizonColor, twilightColor;
         uniform float density, irradiance, opaqueHaze, nightTransmission, cloudStructure, daylight, twilightStrength;
+        uniform float asymmetry;
+        float cloudHash(vec3 p) {
+          p = fract(p * 0.1031);
+          p += dot(p, p.yzx + 33.33);
+          return fract((p.x + p.y) * p.z);
+        }
+        float cloudNoise(vec3 p) {
+          vec3 i = floor(p), f = fract(p);
+          f = f * f * (3.0 - 2.0 * f);
+          return mix(mix(mix(cloudHash(i), cloudHash(i + vec3(1,0,0)), f.x),
+                         mix(cloudHash(i + vec3(0,1,0)), cloudHash(i + vec3(1,1,0)), f.x), f.y),
+                     mix(mix(cloudHash(i + vec3(0,0,1)), cloudHash(i + vec3(1,0,1)), f.x),
+                         mix(cloudHash(i + vec3(0,1,1)), cloudHash(i + vec3(1,1,1)), f.x), f.y), f.z);
+        }
         void main() {
           vec3 ray = normalize(sightline);
           float elevation = dot(ray, upDirection);
@@ -47,7 +62,9 @@ export class PlanetarySky {
           float day = daylight;
           float cosine = dot(ray, sunDirection);
           float rayleigh = 0.75 * (1.0 + cosine * cosine);
-          float forwardScatter = pow(max(0.0, cosine), 24.0);
+          // Normalize the HG lobe to one looking toward the Sun: bounded HDR energy.
+          float phaseDenominator = max(0.0225, 1.0 + asymmetry * asymmetry - 2.0 * asymmetry * cosine);
+          float forwardScatter = pow((1.0 - asymmetry) * (1.0 - asymmetry) / phaseDenominator, 1.5);
           vec3 color = mix(horizonColor, zenithColor, pow(max(0.0, elevation), 0.45));
           // Directional sunset tint: Mars dust is blue near the Sun; Earth is warm.
           // This is an artistic angular envelope, not spectral radiative transfer.
@@ -55,13 +72,20 @@ export class PlanetarySky {
             * pow(max(0.0, cosine), 8.0) * twilightStrength;
           color = mix(color, twilightColor, twilight * 0.85);
           // Broad, stable cloud variation is illustrative, not a weather map.
-          float cloud = 0.5 + 0.25 * sin(ray.x * 19.0 + 2.0 * sin(ray.z * 9.0))
-            + 0.25 * sin(ray.z * 27.0 - ray.y * 15.0 + sin(ray.x * 13.0));
+          float cloud = 0.5;
+          if (cloudStructure > 0.0) {
+            vec3 p = ray * vec3(9.0, 22.0, 9.0);
+            float warp = cloudNoise(p * 0.6 + 17.0);
+            p += vec3(warp, 0.3 * warp, -warp) * 2.0;
+            cloud = 0.57 * cloudNoise(p) + 0.29 * cloudNoise(p * 2.0 + 11.0)
+              + 0.14 * cloudNoise(p * 4.0 - 7.0);
+          }
           color *= mix(1.0, mix(0.72, 1.18, cloud), cloudStructure);
           // Sunlight cannot leave a permanent colored glow on the night side.
           // Airglow, aurora, lightning and reflected planet/moonlight are not modeled.
           color *= (0.5 + 0.3 * rayleigh + 0.3 * forwardScatter) * day * irradiance;
-          float airMass = 1.0 / max(0.12, max(0.0, elevation));
+          float zenithCosine = max(0.0, elevation);
+          float airMass = 2.01 / (sqrt(zenithCosine * zenithCosine + 0.0201) + zenithCosine);
           float alpha = 1.0 - exp(-density * (0.8 + airMass * 0.3));
           float horizonDust = 1.0 - smoothstep(0.02, 0.45, elevation);
           float nightExtinction = mix(0.07, 0.35, 1.0 - nightTransmission) + 0.3 * horizonDust;

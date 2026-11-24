@@ -1,0 +1,198 @@
+{
+  "revision": "1cb0620121099cc848f5a3db480464188dc91ea3",
+  "credit": "NASA Astrobee / NASA JSC IGOAL",
+  "usage": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+  "note": "Historic simulator geometry, not a current scan. Texture resolution capped at 2048; converted to WebP retaining alpha.",
+  "assets": [
+    {
+      "file": "Airlock.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/Airlock.png",
+      "sourceSha256": "520161db6445d5698bd891e2d5743435bab38627586bb13d8097df03ccda57db"
+    },
+    {
+      "file": "Airlock_02.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/Airlock_02.png",
+      "sourceSha256": "6213927e23f97850deafdb2fa831bc4084d5ab01f64b57b00fa762fe0f8c5bd9"
+    },
+    {
+      "file": "Airlock_externalDoor_inside.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/Airlock_externalDoor_inside.png",
+      "sourceSha256": "53cef23c9dcf07a99e8660caeaf4c90cdaa316860d936a69b08cb86a3524fc13"
+    },
+    {
+      "file": "ChromeReflection.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/ChromeReflection.png",
+      "sourceSha256": "a208bf91a4726fc2d32320470840546c616a07c1eda1f6b677964c161f5db5e1"
+    },
+    {
+      "file": "Columbus_01.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/Columbus_01.png",
+      "sourceSha256": "b622b24086289edf32c4b9ed28b647d39127f4e3d82775ef5e2b3fc0319c2fde"
+    },
+    {
+      "file": "Columbus_02.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/Columbus_02.png",
+      "sourceSha256": "c52e0bd584f924e1e057d085b484b65f564e7a145b5027b39f4d850651179fcc"
+    },
+    {
+      "file": "Columbus_03.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/Columbus_03.png",
+      "sourceSha256": "ec605ebc6a7f843da4ed9390f9cfaf8c22e7bbd5ee3c44254a8756afedceb305"
+    },
+    {
+      "file": "Columbus_Bulkhead.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/Columbus_Bulkhead.png",
+      "sourceSha256": "81d04bf4899bad63e5cd1ebd6c5234adb61264aca4cdaa4acdbda7727dc152a2"
+    },
+    {
+      "file": "Cupola_Int_Diffuse.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/Cupola_Int_Diffuse.png",
+      "sourceSha256": "7caa2c8073637ecdc61838a57c8953a5655e386e80c5a53c5ce395ae8ade0222"
+    },
+    {
+      "file": "Generic_Intersection.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/Generic_Intersection.png",
+      "sourceSha256": "cd671cd9e1e8f76418b596e5bf2b1c0b4d719a117f9a3998dd8c925056404de3"
+    },
+    {
+      "file": "Generic_Misc_Details.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/Generic_Misc_Details.png",
+      "sourceSha256": "52b49786fa9f6677c505aa779584cfe51e263068509919c9f6f58199497c6bf5"
+    },
+    {
+      "file": "JLP_Int_Racks.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/JLP_Int_Racks.png",
+      "sourceSha256": "132127e025fadcd30ca7ddd7397e6cd250e17d70cfd10f7e657171288a29b207"
+    },
+    {
+      "file": "JLP_Interior.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/JLP_Interior.png",
+      "sourceSha256": "90fd40e73fe45b5bc14f9f4cbcfc1826b970a9aa049af198706caddc4c94cefe"
+    },
+    {
+      "file": "JPM_Bulkhead.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/JPM_Bulkhead.png",
+      "sourceSha256": "11b9c4693c2cc05b01089f0c0d7e5ecc390a46d36b2b03686a0cb0e75c724797"
+    },
+    {
+      "file": "JPM_Racks_01.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/JPM_Racks_01.png",
+      "sourceSha256": "caa2e35ca283f0cd9b01ddbfdb2874caac5b3bb8323d6a3f42a077fdbcad4d4e"
+    },
+    {
+      "file": "JPM_Racks_02.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/JPM_Racks_02.png",
+      "sourceSha256": "75443486b0983eefef1c8bb6b27412d202769a5c6fda996c56966b920ad32cf0"
+    },
+    {
+      "file": "JPM_Racks_03.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/JPM_Racks_03.png",
+      "sourceSha256": "6e2a80f6db8ccf211e0e33a731d24f612b151cd0799cecd66695126235022d22"
+    },
+    {
+      "file": "Node1_Bulkhead.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/Node1_Bulkhead.png",
+      "sourceSha256": "9f9a042da5de4713180f621191c8d10a23066abc1d0342ed775fe5e8632ad788"
+    },
+    {
+      "file": "Node1_Rack.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/Node1_Rack.png",
+      "sourceSha256": "cf6238d4918059fec5eeb688edd3ce423988752b8d6d51edf4611c4eb8785ab8"
+    },
+    {
+      "file": "Node2_Bulkheads.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/Node2_Bulkheads.png",
+      "sourceSha256": "8ec15c9ad18ab187aa9c31161dfd3241953962fa8389105a42b9fdd3e6a58e58"
+    },
+    {
+      "file": "Node2_Interior_Racks.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/Node2_Interior_Racks.png",
+      "sourceSha256": "5e06742ed2c5ba5813d6fa05acdd00a421bb6c1d6bb7f8c3403b7b066589ccf3"
+    },
+    {
+      "file": "Node3_Bulkhead.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/Node3_Bulkhead.png",
+      "sourceSha256": "df141ed31154e10ed8c2910b847019f990254114a847ff275e96e49e8ebfb515"
+    },
+    {
+      "file": "Node3_Rack_01.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/Node3_Rack_01.png",
+      "sourceSha256": "f253080016d2023a80660b4c71ae6ba2850c6d22e8f204252daa8407a9b9db27"
+    },
+    {
+      "file": "Node3_Rack_02.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/Node3_Rack_02.png",
+      "sourceSha256": "616b6444ca81a926b50de3c54704db4ac96b69e3e55d85fff8d7a63531e81f53"
+    },
+    {
+      "file": "PMM_01.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/PMM_01.png",
+      "sourceSha256": "f692ac0bf6f4c44d4bc095e7a2e2cd87ff5b8e0e8a62a8d9fcfe4252c188a6a9"
+    },
+    {
+      "file": "USLab_FWD_Bulkhead.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/USLab_FWD_Bulkhead.png",
+      "sourceSha256": "a4a30c82cce9adcd36d4381d221bd03cbf523a652f9be663982c14da2148fd4d"
+    },
+    {
+      "file": "USLab_Racks_02.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/USLab_Racks_02.png",
+      "sourceSha256": "10f810093fee6814f985708c651fada88f5f05d735cddd5c2da12f127390aa40"
+    },
+    {
+      "file": "Untitled.002.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/Untitled.002.png",
+      "sourceSha256": "e24d9e9b0630811ce3cd17778675b731732087954cf7ab9a6d9345e83cbd8589"
+    },
+    {
+      "file": "Untitled.004.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/Untitled.004.png",
+      "sourceSha256": "94092f52a9e1c9bb75c0cc77b7d9d3878cabcaea6f0fd3076f3c2f9dd887e255"
+    },
+    {
+      "file": "Untitled.005.webp",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/media/materials/textures/Untitled.005.png",
+      "sourceSha256": "16884d041e0fef119b42191bc16c3b0287292b2331846a17ec78213d04eb7e5e"
+    },
+    {
+      "file": "cupola.dae",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/meshes/cupola.dae",
+      "sourceSha256": "e2f4bd7cab203b352e91136310ef22d127cd4a0fc3a6ae51a406d5a56d9cbfdb"
+    },
+    {
+      "file": "eu_lab.dae",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/meshes/eu_lab.dae",
+      "sourceSha256": "c40e3fc2f788e3903344f15ae91148a4989453c59e446075d8b88b76535b16ba"
+    },
+    {
+      "file": "jpm.dae",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/meshes/jpm.dae",
+      "sourceSha256": "3f9cf28d876efcedde103a96f7f9dd551295abd4f3b751ef9fd153929ce1f2ec"
+    },
+    {
+      "file": "node_1.dae",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/meshes/node_1.dae",
+      "sourceSha256": "f7aa19cf46499d6e6f3b1cfbfb904ec38f71681439bffade74ef8f9cb63dc754"
+    },
+    {
+      "file": "node_2.dae",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/meshes/node_2.dae",
+      "sourceSha256": "3aef123c3124fafeddea1dc5341c2396b948a8ff724dfe6bf5519b876d8057b9"
+    },
+    {
+      "file": "node_3.dae",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/meshes/node_3.dae",
+      "sourceSha256": "222ef680f52ebd51f09f837306c6ce645eb5f90f8a923eee9b3d1e4632d40343"
+    },
+    {
+      "file": "us_lab.dae",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/meshes/us_lab.dae",
+      "sourceSha256": "259db04d7bf93cbc8cb7c2958046b48f6a9bb59ea9e0179741b08b04650dd126"
+    },
+    {
+      "file": "model.urdf",
+      "source": "https://raw.githubusercontent.com/nasa/astrobee_media/1cb0620121099cc848f5a3db480464188dc91ea3/astrobee_iss/urdf/model.urdf",
+      "sourceSha256": "5abdfc844483c969a5b8404a198cfb72ffe199cfa9ff6bb6101d01d8186523a7"
+    }
+  ]
+}

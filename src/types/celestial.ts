@@ -5,6 +5,7 @@ export type ObjectId =
   | "venus"
   | "earth"
   | "moon"
+  | "iss"
   | "mars"
   | "jupiter"
   | "saturn"
@@ -19,6 +20,15 @@ export type ObjectId =
   | "enceladus"
   | "titan"
   | "titania"
+  | "mimas"
+  | "tethys"
+  | "dione"
+  | "rhea"
+  | "iapetus"
+  | "miranda"
+  | "ariel"
+  | "umbriel"
+  | "oberon"
   | "triton"
   | "ceres"
   | "vesta"
@@ -34,10 +44,10 @@ export interface CelestialObject {
   category: string;
   description: string;
   parentId: ObjectId | null;
-  /** Approximate equatorial radius for planets/Moon; volumetric mean for the Sun. */
+  /** Equatorial radius for planets/Moon; mean for Sun; ISS uses half its reference span. */
   radiusKm: number;
   massKg: number;
-  /** Approximate surface gravity; giant planets use the reference atmospheric level. */
+  /** Surface gravity; giants use atmospheric reference level. ISS uses zero as N/A, displayed as orbital free fall. */
   gravityMs2: number;
   /** Sidereal orbital period about parent. Zero means not modeled (Sun). */
   orbitalPeriodDays: number;

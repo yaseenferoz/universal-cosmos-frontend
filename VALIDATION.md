@@ -1,5 +1,15 @@
 # Validation record
 
+## 24 November 2026: ISS exterior and interior
+
+Added the ISS as catalog object 33 in local and HTTP-supplement modes, with a lightweight orbital marker and a separate meter-scale visit. NASA VTAD exterior model; seven registered NASA Astrobee/IGOAL modules; free-flight keep-in bounds, touch/keyboard movement, module selector, Cupola view, hideable controls, exterior orbit presets and return to Earth. The planetary renderer is disposed for the visit and restored afterward; model resources, input handlers and observers are disposed on exit. Quality presets bound antialiasing/pixel ratio. Orbits, hardware configuration, attitude, lighting, navigation and Cupola window adaptations are qualified in the UI and asset notes.
+
+Desktop Chrome visual checks at `http://127.0.0.1:5173/` confirmed Earth → Visit ISS, NASA exterior rendering and drag fly-around, the connected Unity corridor, textured Kibo/Destiny interiors, Cupola's open-window Earth view, hide/show controls, Escape from interior to exterior, and return to functioning Earth exploration. Native mobile/touch hardware and exhaustive per-preset GPU performance were not tested.
+
+Typecheck, lint and production build passed. The final full test run passed 293 of 294 tests; the unchanged solar granulation test exceeded its 5-second limit during concurrent build/host load. That test passed separately with `npm test -- src/engine/solar/GranulationTexture.test.ts --maxWorkers=1 --testTimeout=30000` (4.55 seconds for the file). All 294 tests are accounted for; no persistent timeout changed. Seven new station tests cover module entry points, connected hatch traversal including Cupola, swept wall confinement, ISS service discovery/non-ephemeris behavior, fixed-altitude prograde equatorial orbital math, and disposal of shared geometry/materials/textures. An older satellite-profile assertion was narrowed to natural satellites because a station has no planetary surface-descent mode.
+
+Asset integrity checks confirmed seven module meshes, all 37 referenced texture paths present locally, 30 textures bounded to 2048px, valid exterior GLB byte length, and parsable preparation scripts. Interior assets total 30.6 MB and exterior 17.8 MB, loaded only for the station visit/interior entry. Production emits the existing-style large Three.js chunk advisory (717 kB before gzip); the build succeeds. No dependencies, credentials, publishing or pushes were added.
+
 ## 18 November 2026: Moon and Mars realism
 
 Mars now has continuous body-fixed reconstructed uplands, benches, erosion variation and shallow dunes, shared by rendered geometry and collision. Elevation/slope attributes drive dusty versus exposed-rock materials, and generated stones have flatter fracture-like shapes. Meter-space haze applies to ground and stones before tone mapping and has no solar radiance at deep night. The Moon keeps its measured heights and registered imagery with a bounded, explicitly artistic display contrast remap. Ground specular response is reduced to remove mirror-white grazing bands. No source raster, dependency, texture asset, tile budget or instance-count limit was added or enlarged.
@@ -182,6 +192,22 @@ The star-point layer now renders at far depth with depth testing, so opaque plan
 The user's Moon-orbit screenshot showed the 2020 diffuse map filling the viewport as an overbright, enlarged soft texture. The default desktop view had been selecting the 2048-pixel tier even though a 4096-pixel tier existed. Desktop automatic, medium, and high quality now use the 4096-pixel tier; mobile and low quality keep the bounded 2048-pixel tier. The diffuse shader compresses bright source values and lowers its strength so the dark sky and sharp point stars remain dominant. The prepared H-alpha layer also uses less spatial smoothing. A native browser inspection after the shader change showed a darker, less intrusive background around the Moon, although a direct match to the user's exact camera orientation was unavailable.
 
 The new 4096 asset URL returned HTTP 200. `npm run typecheck`, `npm run lint`, `npm test` (223 tests in 41 files), and `npm run build` passed.
+
+## 24 November 2026: moon and asteroid discovery
+
+The 32-body catalog is available in both service modes. HTTP mode retains its ten validated backend identities and supplements them with explicitly local references; missing backend connectivity still surfaces an error. Added nine major Saturnian/Uranian moons, parent-qualified and plural collection search, grouped Overview destinations, and moon links in planet information panels. New bodies are labeled orbital markers with unavailable imagery/descent; this is not an exhaustive satellite catalog.
+
+`npm run typecheck`, `npm run lint`, and `npm run build` passed. The full 283-test run passed 279 tests initially: three existing geometry tests exceeded the default five-second timeout on the slow host, and the new synchronous-period assertion used exact floating-point equality. After correcting that assertion to a numerical tolerance, all eight tests in the three affected files passed with one worker and a 30-second timeout. No production or repository timeout was changed. Service regressions cover parent/plural queries, all 32 HTTP destinations, immutable bundled details, no fabricated UUID/detail requests, and unavailable ephemerides. `git diff --check` passed.
+
+The local frontend returned HTTP 200 at `http://127.0.0.1:5173/`. Live visual verification remains incomplete: Windows browser activation timed out on both the initial and recovery attempts. Layout, focus behavior, and travel from the new controls still require a direct browser check. Earlier terrain/UTC improvements remain present and are included in the passing build/tests.
+
+## 24 November 2026: Saturn globe and ring correction
+
+Saturn now uses the 1-bar polar/equatorial radius ratio at every globe LOD, with the ring plane retaining its equatorial dimensions. OPAL partial coverage is reduced to muted longitudinal-average latitude bands in a disclosed warm reconstruction, removing colored missing-coverage patches. Rings ignore the unlit-side scan's luminance alpha: representative optical depths, view-angle transmission, filtered illustrative ringlets and analytic oblate-planet/ring shadows replace binary alpha-tested shadows. Radial texture coordinates are evaluated per fragment to avoid interpolation spokes. Ring rendering uses one transparent pass without depth writes; no bitmap regeneration, new downloads, or dependencies were required. Detailed provenance and limits are in ASSET_SOURCES.md and in-app imagery notes.
+
+Live Chrome verification at `http://127.0.0.1:5173/` confirmed the final globe and rings render after reload, travel to Saturn works, and Go to Day Side changes the view successfully. The colored OPAL patches seen in the first inspection were removed in the final inspection; the Cassini Division, finer radial variation, oblate silhouette and planet shadow are visible. This is a qualitative desktop check, not calibrated photometry, a complete mobile/performance audit, or a current scientific observation.
+
+Final typecheck, lint, production build and whitespace checks passed. The final full run passed 286 of 287 tests; one existing terrain eviction test exceeded its five-second timeout under host contention. All six tests in that file then passed with `npm test -- src/engine/terrain/PlanetTerrainRenderer.test.ts --maxWorkers=1 --testTimeout=30000`. Four new Saturn tests cover geometry/physical-radius separation, major-ring transmission, and shader composition with stable floating-origin transforms. No persistent test timeout was changed.
 
 ## Dependency review
 

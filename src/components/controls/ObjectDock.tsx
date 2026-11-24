@@ -31,8 +31,15 @@ export function ObjectDock() {
       <span className="eyebrow">SELECT A DESTINATION</span>
       <div>{primary.map(destination)}</div>
       {additional.length > 0 && <details className="additional-destinations">
-        <summary>Moons & asteroids ({additional.length})</summary>
-        <div>{additional.map(destination)}</div>
+        <summary>Moons, asteroids & stations ({additional.length})</summary>
+        <div>{["earth", "mars", "jupiter", "saturn", "uranus", "neptune", "sun"].map((parentId) => {
+          const children = additional.filter((object) => object.parentId === parentId);
+          if (!children.length) return null;
+          return <section key={parentId} className="destination-group">
+            <h3>{parentId === "sun" ? "Asteroids & dwarf planets" : parentId === "earth" ? "Earth orbit" : `${objects.find((object) => object.id === parentId)?.name} moons`}</h3>
+            <div>{children.map(destination)}</div>
+          </section>;
+        })}</div>
       </details>}
     </section>
   );

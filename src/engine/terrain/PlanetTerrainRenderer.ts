@@ -114,7 +114,7 @@ export class PlanetTerrainRenderer {
 
   private async loadReconstructedDetail(): Promise<void> {
     try {
-      await this.detailMaps.load(false, this.mobile || this.quality === "low");
+      await this.detailMaps.load(false, this.mobile || this.quality === "low", this.quality === "high");
     } catch (error) {
       if (!this.disposed) this.error = `Ground detail: ${error instanceof Error ? error.message : "unavailable"}`;
     }
@@ -273,7 +273,7 @@ export class PlanetTerrainRenderer {
     this.selectedRevision = -1;
     for (const tile of this.tiles.values()) tile.revision = -1;
     this.imageryLayers.setAnisotropy(this.quality === "low" || this.mobile || this.autoReduced ? 2 : 4);
-    if (this.initialized) void this.loadBaseImagery();
+    if (this.initialized) { void this.loadBaseImagery(); void this.loadReconstructedDetail(); }
   }
 
   /** The host supplies its five-second FPS sample; explicit quality resets this reduction. */

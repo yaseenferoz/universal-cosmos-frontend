@@ -23,6 +23,8 @@ import { PlanetTerrainRenderer } from "../terrain/PlanetTerrainRenderer";
 import { SurfaceScatter } from "../terrain/SurfaceScatter";
 import { relativeSolarIrradiance } from "../coordinates/LunarFrame";
 import { qualityConfig } from "./quality";
+import { localAtmosphereModel } from "../../data/localAtmosphereModels";
+import { localIllumination } from "../effects/localIllumination";
 
 interface LunarOptions {
   body?: CelestialObject;
@@ -77,9 +79,10 @@ export class PlanetaryExploration {
       maxCacheBytes: options.mobile ? 12 * 1048576 : 24 * 1048576,
       maxConcurrentRequests: options.mobile ? 2 : 4,
     });
-    this.sky = environment ? new PlanetarySky(environment) : null;
-    this.surfaceAtmosphere = this.bodyId === "mars" && environment
-      ? new SurfaceAtmosphere(environment.horizonColor, 0.00012, environment.hazeHeightM) : undefined;
+    const optics = localAtmosphereModel(this.bodyId);
+    this.sky = environment ? new PlanetarySky(environment, optics.asymmetry) : null;
+    this.surfaceAtmosphere = environment && optics.extinctionPerM > 0
+      ? new SurfaceAtmosphere(environment.horizonColor, optics.extinctionPerM, environment.hazeHeightM) : undefined;
     if (this.sky) this.skyScene.add(this.sky.mesh);
     this.navigation = new LunarNavigationController(
       element,
@@ -224,16 +227,15 @@ export class PlanetaryExploration {
     this.sky?.update(observer, sunDirection, altitude, irradiance);
     const solarCosine = observer.clone().normalize().dot(sunDirection);
     this.surfaceAtmosphere?.update(solarCosine, irradiance, altitude);
-    const daylight = Math.max(0, solarCosine);
+    const illumination = localIllumination(solarCosine, altitude, environment?.hazeHeightM ?? 0, localAtmosphereModel(this.bodyId));
     this.starVisibility = localStarVisibility(solarCosine, environment);
     const dayFraction = MathUtils.smoothstep(solarCosine, -0.12, 0.18);
     this.skyAdaptation = 1 + ((environment?.nightSkyAdaptation ?? 1) - 1) * (1 - dayFraction);
-    const haze = environment ? Math.max(0, 1 - altitude / Math.max(1, environment.hazeHeightM)) : 0;
-    this.ambient.intensity = irradiance * (0.008 + haze * daylight * 0.6);
+    this.ambient.intensity = irradiance * illumination.diffuse;
     if (environment) this.ambient.color.set(environment.horizonColor);
     // A kilometer-wide shadow map has no useful surface precision at orbital altitude.
     this.sunlight.castShadow =
-      altitude < 20_000 &&
+      altitude < 20_000 && illumination.direct > 0.01 &&
       qualityConfig(this.quality, 1, this.options.mobile).shadowMapSize > 0;
     const radius = this.provider.manifest.radiusM;
     const ground = observer
@@ -243,7 +245,7 @@ export class PlanetaryExploration {
     const target = ground.sub(observer);
     const extent = Math.max(120, Math.min(radius * 1.1, altitude * 2 + 500));
     const distance = extent * 2 + 1000;
-    this.baseSolarIntensity = 3.1 * relativeSolarIrradiance(distanceAu);
+    this.baseSolarIntensity = 3.1 * irradiance * illumination.direct;
     this.sunlight.intensity = this.baseSolarIntensity * this.solarVisibility;
     this.sunlight.position.copy(target).addScaledVector(sunDirection, distance);
     this.sunlight.target.position.copy(target);

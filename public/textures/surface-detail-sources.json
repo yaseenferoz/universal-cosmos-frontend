@@ -1,0 +1,34 @@
+﻿[
+    {
+        "file":  "dry_ground_rocks-height-2048.jpg",
+        "source":  "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/dry_ground_rocks/dry_ground_rocks_disp_2k.jpg",
+        "bytes":  868001,
+        "sha256":  "a0fea34701a09a6d073768ac35d3b979e7ec7befb1fdc83976cd15f8eaeca63e",
+        "license":  "CC0",
+        "assetPage":  "https://polyhaven.com/a/dry_ground_rocks"
+    },
+    {
+        "file":  "dry_ground_rocks-color-2048.jpg",
+        "source":  "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/dry_ground_rocks/dry_ground_rocks_diff_2k.jpg",
+        "bytes":  3428360,
+        "sha256":  "ebfb8b98b48a4fcafac354d1e206944824c549e93ea6d977f69664f0dc3dbb6a",
+        "license":  "CC0",
+        "assetPage":  "https://polyhaven.com/a/dry_ground_rocks"
+    },
+    {
+        "file":  "rock_boulder_dry-height-2048.jpg",
+        "source":  "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/rock_boulder_dry/rock_boulder_dry_disp_2k.jpg",
+        "bytes":  785931,
+        "sha256":  "e8ef6d94411f6b8396425426c08d9848feb0c81ac29c4a6acae28342786f17a1",
+        "license":  "CC0",
+        "assetPage":  "https://polyhaven.com/a/rock_boulder_dry"
+    },
+    {
+        "file":  "rock_boulder_dry-color-2048.jpg",
+        "source":  "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/rock_boulder_dry/rock_boulder_dry_diff_2k.jpg",
+        "bytes":  3437626,
+        "sha256":  "c66de7f7b48ef1ba542c17af780787ca6d43da2160a46ff3544dd9fcdf65ca30",
+        "license":  "CC0",
+        "assetPage":  "https://polyhaven.com/a/rock_boulder_dry"
+    }
+]

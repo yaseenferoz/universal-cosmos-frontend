@@ -2,8 +2,9 @@ import { useEffect } from "react";
 import { useExplorationStore } from "../stores/explorationStore";
 import { useLunarStore } from "../stores/lunarStore";
 
-export function useExplorationShortcuts() {
+export function useExplorationShortcuts(enabled = true) {
   useEffect(() => {
+    if (!enabled) return;
     const onKeyDown = (event: KeyboardEvent) => {
       const state = useExplorationStore.getState();
       if (event.key === "Escape") {
@@ -39,5 +40,5 @@ export function useExplorationShortcuts() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [enabled]);
 }

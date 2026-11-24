@@ -431,8 +431,7 @@
   bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
-  display: grid;
-  grid-template-columns: repeat(3, minmax(110px, 1fr));
+  display: block;
   gap: 3px;
   width: min(400px, calc(100vw - 32px));
   max-height: 35vh;
@@ -443,6 +442,48 @@
   background: #080c15f2;
   box-shadow: 0 12px 30px #0009;
 }
+.destination-group h3 {
+  font-size: 11px;
+  font-weight: 500;
+  text-align: left;
+  padding: 10px;
+  color: #d4dfeb;
+}
+.destination-group > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.destination-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0;
+}
+.destination-filters button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 7px 10px;
+  border: 1px solid #ffffff25;
+  border-radius: 5px;
+  color: #bdcadb;
+  font-size: 11px;
+}
+.destination-filters button:hover,
+.destination-filters button[aria-pressed="true"] {
+  background: #aaccff16;
+  color: #fff;
+}
+.destination-filters button:focus-visible,
+.catalog-reference-notes summary:focus-visible {
+  outline: 2px solid #9bc9fa;
+  outline-offset: 2px;
+}
+.related-destinations { margin-top: 16px; }
+.catalog-reference-notes { margin: 16px 0; font-size: 11px; line-height: 1.7; color: #9cacc0; }
+.catalog-reference-notes summary { cursor: pointer; }
+.catalog-reference-notes p { margin-top: 8px; }
 .view-overview .scene-caption {
   top: 112px;
   bottom: auto;

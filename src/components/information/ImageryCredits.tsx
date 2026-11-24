@@ -33,6 +33,11 @@ export function ImageryCredits({ id }: { id: ObjectId }) {
           <p>Local 1.6 MB GLB with a 1024 px texture atlas. Its irregular outline is scaled to the catalog mean radius; orientation and baked lighting are approximate.</p>
         </div>
       )}
+      {id === "iss" && <div className="imagery-credit">
+        <a href="https://science.nasa.gov/resource/international-space-station-3d-model/" target="_blank" rel="noreferrer">NASA / VTAD exterior model <ArrowUpRight size={12} /></a>
+        <a href="https://github.com/nasa/astrobee_media" target="_blank" rel="noreferrer">NASA Astrobee / IGOAL interior models <ArrowUpRight size={12} /></a>
+        <p>Visit ISS loads the detailed models. Seven connected interior modules; historical configuration, approximate lighting and station attitude. Orbit is a fixed-altitude demonstration, not a TLE prediction.</p>
+      </div>}
       {layers.map(({ layer, asset }) => (
         <div className="imagery-credit" key={layer}>
           <span>

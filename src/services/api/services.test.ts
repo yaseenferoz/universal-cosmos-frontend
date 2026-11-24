@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   celestialObjects,
   objectById,
@@ -24,7 +24,7 @@ describe("local celestial service", () => {
       (await service.search("gas giant")).map((object) => object.id),
     ).toEqual(["jupiter", "saturn"]);
     expect(await service.search("not a catalog object")).toEqual([]);
-    expect(await service.search("")).toHaveLength(23);
+    expect(await service.search("")).toHaveLength(33);
     expect((await service.search("Europa")).map(({ id }) => id)).toEqual(["europa"]);
     expect((await service.search("asteroid")).map(({ id }) => id)).toEqual(["ceres", "vesta", "bennu"]);
   });
@@ -43,6 +43,18 @@ describe("local celestial service", () => {
     expect(await service.getObject("unknown")).toBeNull();
   });
 
+  it("discovers moons by parent and accepts plural collection names", async () => {
+    expect((await service.search("asteroids")).map(({ id }) => id)).toEqual(["ceres", "vesta", "bennu"]);
+    expect(await service.search("moons")).toHaveLength(20);
+    const saturn = await service.search("Saturn moons");
+    expect(saturn.map(({ id }) => id)).toEqual(expect.arrayContaining(["mimas", "tethys", "dione", "rhea", "iapetus", "enceladus", "titan"]));
+    expect(saturn).toHaveLength(7);
+    expect(saturn.every(({ parentId }) => parentId === "saturn")).toBe(true);
+    expect(await service.search("Uranus satellites")).toHaveLength(5);
+    expect(await service.search("Mercury moons")).toEqual([]);
+    expect(await service.getObject("oberon")).toMatchObject({ parentId: "uranus", radiusKm: 761.4 });
+  });
+
   it("distinguishes a visualization epoch from unavailable scientific ephemerides", async () => {
     const result = await service.getEphemeris("earth", SIMULATION_EPOCH);
     expect(result).toMatchObject({
@@ -55,7 +67,7 @@ describe("local celestial service", () => {
     );
     const system = await service.getSystem("solar");
     expect(system.model).toBe("illustrative-circular");
-    expect(system.objectIds).toHaveLength(23);
+    expect(system.objectIds).toHaveLength(33);
   });
 
   it("honors already aborted requests without performing work", async () => {

@@ -6,6 +6,7 @@ import {
   LineLoop,
   LOD,
   Material,
+  Matrix4,
   Mesh,
   MeshDepthMaterial,
   MeshStandardMaterial,
@@ -33,6 +34,11 @@ import { SunRenderer } from "../solar/SunRenderer";
 import { SolarMaterialLighting } from "../solar/PlanetSolarLighting";
 import { configureVenusClouds } from "./VenusClouds";
 import { loadDeimosModel, type DeimosModel } from "./DeimosModel";
+import { SIMULATION_EPOCH } from "../../data/catalog";
+import { simulationUtcMs } from "../../utils/simulationTime";
+import { earthOrientationAt } from "../coordinates/EarthOrientation";
+import { configureSaturnClouds, configureSaturnLighting, SATURN_POLAR_RATIO } from "./SaturnAppearance";
+import { createStationMarker } from "../station/StationMarker";
 
 type Layer = "surface" | "clouds" | "night" | "normal" | "roughness" | "rings";
 export interface BodyTextureStatus {
@@ -57,13 +63,13 @@ export class CelestialBody {
   private clouds: Mesh<SphereGeometry, MeshStandardMaterial> | null = null;
   private rings: Mesh<RingGeometry, MeshStandardMaterial> | null = null;
   private cloudDepth: MeshDepthMaterial | null = null;
-  private ringDepth: MeshDepthMaterial | null = null;
   private textureSize = 0;
   private requestGeneration = 0;
   private textureRequest: Promise<void> = Promise.resolve();
   private loading = false;
   private disposed = false;
   private radius: number;
+  private readonly saturnInverse = new Matrix4();
 
   constructor(readonly data: CelestialObject) {
     this.radius = data.display.radius;
@@ -80,6 +86,14 @@ export class CelestialBody {
       this.tilted.add(this.surface, this.sunRenderer.corona);
       this.pickables.push(...this.sunRenderer.pickables);
       this.orbit = null;
+      return;
+    }
+    if (data.id === "iss") {
+      this.material = null;
+      const marker = createStationMarker(data.display.radius);
+      marker.traverse((node) => { if (node instanceof Mesh) this.pickables.push(node); });
+      this.surface.addLevel(marker, 0);
+      this.orbit = this.createOrbit();
       return;
     }
     // Missing measurements remain disclosed; Venus has an explicit cloud reconstruction.
@@ -102,7 +116,8 @@ export class CelestialBody {
       // Fade 18–28.8° N into a plain reconstruction before reaching that fringe.
       configurePartialCoverage(this.material, placeholder, data.id === "neptune" ? 0.66 : 1);
     }
-    const detailed = data.category.includes("planet") || ["sun", "moon", "titan"].includes(data.id);
+    if (data.id === "saturn") configureSaturnClouds(this.material);
+    const detailed = data.category.includes("planet") || ["sun", "moon", "titan", "saturn"].includes(data.id);
     for (const [segments, multiple] of [
       [detailed ? 128 : 48, 0],
       [detailed ? 48 : 24, 20],
@@ -115,6 +130,12 @@ export class CelestialBody {
       mesh.userData.objectId = data.id;
       mesh.castShadow = data.id !== "sun";
       mesh.receiveShadow = data.id !== "sun";
+      if (data.id === "saturn") {
+        mesh.geometry.scale(1, SATURN_POLAR_RATIO, 1);
+        // Analytic ring shadows work in every quality preset, without binary alpha shadows.
+        mesh.receiveShadow = false;
+        mesh.onBeforeRender = () => this.saturnInverse.copy(this.tilted.matrixWorld).invert();
+      }
       this.surface.addLevel(mesh, multiple * this.radius);
       this.pickables.push(mesh);
     }
@@ -162,6 +183,10 @@ export class CelestialBody {
     this.solarLighting.attach(this.material);
     if (this.clouds) this.solarLighting.attach(this.clouds.material);
     if (this.rings) this.solarLighting.attach(this.rings.material);
+    if (data.id === "saturn") {
+      configureSaturnLighting(this.material, this.saturnInverse, data.display.radius, false);
+      if (this.rings) configureSaturnLighting(this.rings.material, this.saturnInverse, data.display.radius, true);
+    }
     this.orbit = data.parentId ? this.createOrbit() : null;
   }
 
@@ -187,6 +212,7 @@ export class CelestialBody {
       this.towardSun.copy(sunDirection).normalize();
   }
   get textureStatus(): BodyTextureStatus {
+    if (this.data.id === "iss") return { state: "partial", messages: imageryById.iss.missing };
     const missing = imageryById[this.data.id].missing;
     const messages = [...missing, ...this.failures.values()];
     if (this.loading) return { state: "loading", messages };
@@ -227,7 +253,7 @@ export class CelestialBody {
     const outer =
       this.data.display.radius *
       (radialRange ? radialRange[1] / this.data.radiusKm : 2.33);
-    const geometry = new RingGeometry(inner, outer, 192, 1);
+    const geometry = new RingGeometry(inner, outer, 256, 1);
     const positions = geometry.getAttribute("position");
     const uvs = geometry.getAttribute("uv");
     for (let index = 0; index < positions.count; index++) {
@@ -240,22 +266,17 @@ export class CelestialBody {
       metalness: 0,
       side: DoubleSide,
       transparent: true,
-      alphaTest: 0.025,
-      depthWrite: true,
+      alphaTest: 0.001,
+      depthWrite: false,
+      forceSinglePass: true,
     });
     this.rings = new Mesh(geometry, material);
     this.rings.rotation.x = -Math.PI / 2;
     this.rings.userData.objectId = this.data.id;
-    this.rings.castShadow = true;
-    this.rings.receiveShadow = true;
+    this.rings.castShadow = false;
+    this.rings.receiveShadow = false;
+    this.rings.onBeforeRender = () => this.saturnInverse.copy(this.tilted.matrixWorld).invert();
     this.rings.visible = false;
-    // Alpha-tested shadows approximate the measured profile's opacity, not a solid annulus.
-    this.ringDepth = new MeshDepthMaterial({
-      depthPacking: RGBADepthPacking,
-      side: DoubleSide,
-      alphaTest: 0.15,
-    });
-    this.rings.customDepthMaterial = this.ringDepth;
     this.tilted.add(this.rings);
     this.pickables.push(this.rings);
   }
@@ -373,15 +394,20 @@ export class CelestialBody {
     ) {
       this.material.roughnessMap = texture;
       this.material.needsUpdate = true;
-    } else if (layer === "rings" && this.rings && this.ringDepth) {
+    } else if (layer === "rings" && this.rings) {
       this.rings.material.map = texture;
       this.rings.material.needsUpdate = true;
-      this.ringDepth.map = texture;
-      this.ringDepth.needsUpdate = true;
       this.rings.visible = true;
     }
   }
-  rotate(days: number): void {
+  rotate(days: number, epoch = SIMULATION_EPOCH, modelSunDirection?: Vector3): void {
+    if (this.data.id === "earth") {
+      const orientation = earthOrientationAt(simulationUtcMs(days, epoch), modelSunDirection);
+      this.tilted.quaternion.copy(orientation.poleRotation);
+      this.surface.rotation.y = orientation.spinRadians;
+      if (this.clouds) this.clouds.rotation.y = orientation.spinRadians;
+      return;
+    }
     const period = Math.abs(this.data.rotationPeriodHours) / 24;
     if (period === 0) return;
     // Pole obliquity encodes retrograde spin; cloud composite rotates with the globe.
@@ -413,7 +439,6 @@ export class CelestialBody {
     });
     geometries.forEach((geometry) => geometry.dispose());
     this.cloudDepth?.dispose();
-    this.ringDepth?.dispose();
     materials.forEach((material) => material.dispose());
     if (this.material && !materials.has(this.material)) this.material.dispose();
     this.deimosModel?.dispose();

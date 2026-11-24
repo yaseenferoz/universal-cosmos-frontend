@@ -130,11 +130,13 @@ export function parseBackendCatalog(value: unknown): BackendCatalog {
     system: {
       ...structuredClone(solarSystem),
       name,
-      objectIds: [...backendIds],
-      notice: `${solarSystem.notice} HTTP mode currently provides ten bodies. Additional moons and asteroids are available in local mode. Identities are connected to the backend; physical values remain bundled references.`,
+      objectIds: celestialObjects.map(({ id }) => id),
+      notice: `${solarSystem.notice} Ten core identities are connected to the backend; additional moons and asteroids come from the bundled reference catalog. Physical values remain bundled references.`,
     },
   };
-  catalog.objects = celestialObjects.filter(({ id }) => backendIds.has(id)).map(({ id }) => {
+  catalog.objects = celestialObjects.map((object) => {
+    const { id } = object;
+    if (!backendIds.has(id)) return structuredClone(object);
     const identity = supported.get(id);
     if (!identity) invalid("incomplete Solar System catalog");
     return mapBackendIdentity(identity, catalog);

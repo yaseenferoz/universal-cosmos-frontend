@@ -1,4 +1,5 @@
-import { ScanLine, Sun, Sunrise } from "lucide-react";
+import { ScanLine, Sun, Sunrise, Satellite } from "lucide-react";
+import { useStationStore } from "../../stores/stationStore";
 import { useExplorationStore } from "../../stores/explorationStore";
 import { useLunarStore } from "../../stores/lunarStore";
 import { useRenderingStore } from "../../stores/renderingStore";
@@ -18,6 +19,9 @@ export function ViewingActions({ inline = false }: { inline?: boolean }) {
   return (
     <div className={`viewing-actions ${inline ? "is-inline" : "glass"}`}>
       <div className="viewing-action-row" role="group" aria-label="Viewing actions">
+        {(selected === "earth" || selected === "iss") && <button onClick={useStationStore.getState().enter}>
+          <Satellite size={15} /><span>Visit ISS</span>
+        </button>}
         <button onClick={imaging.lookAtSun} title="Rotate toward the Sun without changing your position">
           <Sun size={14} /><span>Look at Sun</span>
         </button>

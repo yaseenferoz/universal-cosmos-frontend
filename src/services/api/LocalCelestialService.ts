@@ -8,13 +8,7 @@ import type {
   SolarSystem,
 } from "../../types/celestial";
 import { assertActive, CelestialApiError, normalizeEpoch } from "./errors";
-
-const normalize = (value: string) =>
-  value
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toLowerCase();
+import { searchCatalog } from "./searchCatalog";
 
 /** In-memory data, with no artificial latency or fetch requests. */
 export class LocalCelestialService implements CelestialService {
@@ -37,18 +31,7 @@ export class LocalCelestialService implements CelestialService {
     options?: RequestOptions,
   ): Promise<CelestialObject[]> {
     assertActive(options?.signal);
-    const term = normalize(query);
-    const tokens = term.split(/\s+/);
-    const matches = celestialObjects.filter((object) => {
-      const searchable = normalize(`${object.name} ${object.category}`);
-      return tokens.every((token) => searchable.includes(token));
-    });
-    // Exact names take priority over category matches, then preserve catalog order.
-    matches.sort(
-      (a, b) =>
-        Number(normalize(b.name) === term) - Number(normalize(a.name) === term),
-    );
-    return structuredClone(matches);
+    return structuredClone(searchCatalog(celestialObjects, query));
   }
 
   async getSystem(id: "solar", options?: RequestOptions): Promise<SolarSystem> {

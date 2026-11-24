@@ -4,6 +4,7 @@ import type { TerrainDataProvider, TerrainManifest, TerrainRegion, TerrainTileDa
 import { planetaryEnvironments } from "../../data/planetaryEnvironments";
 import { geodeticToCartesian } from "../../engine/terrain/coordinates";
 import { martianReliefM } from "./martianRelief";
+import { terrestrialReliefM } from "./terrestrialRelief";
 
 /** Seam-free analytic terrain, explicitly a reconstruction rather than a measured DEM. */
 export class ReconstructedTerrainProvider implements TerrainDataProvider {
@@ -41,19 +42,13 @@ export class ReconstructedTerrainProvider implements TerrainDataProvider {
       heightM: martianReliefM(p.x, p.y, p.z, this.environment.reliefM), available: true,
       resolutionM: this.environment.featureScaleM, sourceId: this.manifest.id,
     };
-    p.divideScalar(this.environment.featureScaleM);
-    const hills = Math.sin(p.x * 0.7 + Math.sin(p.z * 0.23)) * Math.cos(p.z * 0.81 + p.y * 0.3);
-    const detail = Math.sin(p.x * 2.1 + p.z * 1.7) * Math.cos(p.y * 2.3 - p.z * 0.6);
-    // Crater-like bowls are a generated relief field, not named/observed craters.
-    const cell = Math.cos(p.x) * Math.cos(p.y) * Math.cos(p.z);
-    const crater = -Math.pow(Math.max(0, cell), 12) + 0.18 * Math.exp(-Math.pow((cell - 0.76) * 12, 2));
-    const broadHeight = this.environment.reliefM * (this.manifest.bodyId === "mercury" ? 0.7 * crater + 0.15 * hills : 0.7 * hills + 0.16 * detail);
-    // Meter-scale undulations improve the eye-level silhouette. They remain
-    // generated relief and are never assigned measured DEM resolution.
-    const ripple = Math.sin(p.x * 260 + 0.7 * Math.sin(p.z * 170)) * Math.cos(p.z * 220 - p.y * 90);
-    const groundReliefM = this.manifest.bodyId === "earth" ? 0.35 : 0;
-    const heightM = broadHeight + ripple * groundReliefM;
-    return { heightM, available: true, resolutionM: this.environment.featureScaleM, sourceId: this.manifest.id };
+    const body = this.manifest.bodyId;
+    if (body === "earth" || body === "venus" || body === "mercury") return {
+      heightM: terrestrialReliefM(body, p.x, p.y, p.z, this.environment.reliefM), available: true,
+      resolutionM: this.environment.featureScaleM, sourceId: this.manifest.id,
+    };
+    // Atmospheric destinations have no solid terrain; the navigation datum is not a ground mesh.
+    return { heightM: 0, available: true, resolutionM: this.environment.featureScaleM, sourceId: this.manifest.id };
   }
   async loadTile(_key: TerrainTileKey, signal?: AbortSignal): Promise<TerrainTileData> {
     this.check(signal);

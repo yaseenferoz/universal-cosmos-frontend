@@ -63,7 +63,7 @@ export function SearchDialog() {
             ref={input}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search planets, moons, our star…"
+            placeholder="Try Saturn moons, asteroids, or a name…"
             aria-label="Search celestial objects"
             autoComplete="off"
             maxLength={100}
@@ -71,6 +71,12 @@ export function SearchDialog() {
           <kbd>ESC</kbd>
         </label>
       </form>
+      <div className="destination-filters" aria-label="Browse destinations">
+        {["All", "Moons", "Asteroids", "Saturn moons", "Uranus moons"].map((label) => (
+          <button key={label} aria-pressed={query === (label === "All" ? "" : label)}
+            onClick={() => setQuery(label === "All" ? "" : label)}>{label}</button>
+        ))}
+      </div>
       <div className="search-result-heading">
         <span>{query ? "SEARCH RESULTS" : "OUR SOLAR SYSTEM"}</span>
         <span>
@@ -105,7 +111,7 @@ export function SearchDialog() {
               <PlanetSwatch object={object} />
               <span>
                 <strong>{object.name}</strong>
-                <small>{object.category}</small>
+                <small>{object.category}{object.parentId && object.parentId !== "sun" ? ` · ${object.parentId}` : ""}</small>
               </span>
               <ArrowUpRight size={17} />
             </button>
@@ -113,7 +119,7 @@ export function SearchDialog() {
         )}
       </div>
       <div className="modal-footer">
-        <span>10 real objects. Countless perspectives.</span>
+        <span>Selected real bodies · catalog is not exhaustive</span>
         <span>↵ to travel</span>
       </div>
     </Modal>

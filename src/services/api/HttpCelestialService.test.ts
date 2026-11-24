@@ -59,7 +59,7 @@ describe("backend catalog mapping", () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(reply(system));
     const service = new HttpCelestialService("https://example.test", fetcher);
     const objects = await service.getObjects();
-    expect(objects).toHaveLength(10);
+    expect(objects).toHaveLength(33);
     expect(objects.find((object) => object.id === "earth")).toMatchObject({
       backendId: ids.get("earth"),
       radiusKm: objectById.earth.radiusKm,
@@ -88,7 +88,7 @@ describe("backend catalog mapping", () => {
     expect(
       parseBackendCatalog({ ...system, objects: [...identities, extra] })
         .objects,
-    ).toHaveLength(10);
+    ).toHaveLength(33);
     expect(() =>
       parseBackendCatalog({ ...system, objects: identities.slice(1) }),
     ).toThrow("incomplete");
@@ -123,10 +123,31 @@ describe("backend catalog mapping", () => {
 });
 
 describe("connected search and detail", () => {
+  it("retains bundled destinations in HTTP mode without inventing backend identities or detail requests", async () => {
+    const fetcher = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(reply(system))
+      .mockResolvedValueOnce(reply([], pagination(1, 0)))
+      .mockResolvedValueOnce(reply([], pagination(1, 0)));
+    const service = new HttpCelestialService("https://example.test", fetcher);
+    const loaded = await service.getObjects();
+    expect((await service.getSystem("solar")).objectIds).toEqual(loaded.map(({ id }) => id));
+    expect((await service.search("asteroids")).map(({ id }) => id)).toEqual(["ceres", "vesta", "bennu"]);
+    expect(await service.search("Saturn moons")).toHaveLength(7);
+    for (const id of ["bennu", "europa", "mimas", "oberon"]) {
+      const object = await service.getObject(id);
+      expect(object?.id).toBe(id);
+      expect(object?.backendId).toBeUndefined();
+      if (object) object.display.radius = 1000;
+      expect((await service.getObject(id))?.display.radius).toBeLessThan(1);
+    }
+    expect(fetcher).toHaveBeenCalledTimes(3);
+    expect(await service.getEphemeris("mimas", SIMULATION_EPOCH)).toMatchObject({ status: "unavailable", position: null });
+  });
+
   it("handles initial and one-character searches from the loaded backend catalog", async () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(reply(system));
     const service = new HttpCelestialService("https://example.test", fetcher);
-    expect(await service.search("")).toHaveLength(10);
+    expect(await service.search("")).toHaveLength(33);
     expect((await service.search("j")).map((object) => object.id)).toEqual([
       "jupiter",
     ]);
@@ -235,7 +256,7 @@ describe("backend failures and cancellation", () => {
     const service = new HttpCelestialService("https://example.test", fetcher);
     await expect(service.getObjects()).rejects.toMatchObject({ status: 503 });
     await expect(service.getObjects()).rejects.toThrow("unreadable JSON");
-    expect(await service.getObjects()).toHaveLength(10);
+    expect(await service.getObjects()).toHaveLength(33);
     expect(fetcher).toHaveBeenCalledTimes(3);
   });
 
@@ -252,7 +273,7 @@ describe("backend failures and cancellation", () => {
     await expect(
       service.getObjects({ signal: controller.signal }),
     ).rejects.toMatchObject({ name: "AbortError" });
-    expect(await service.getObjects()).toHaveLength(10);
+    expect(await service.getObjects()).toHaveLength(33);
     await expect(
       service.getObjects({ signal: controller.signal }),
     ).rejects.toMatchObject({ name: "AbortError" });

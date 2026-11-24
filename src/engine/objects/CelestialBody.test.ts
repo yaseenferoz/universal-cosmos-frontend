@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { BoxGeometry, Mesh, MeshStandardMaterial, Texture } from "three";
+import { BoxGeometry, Mesh, MeshStandardMaterial, Texture, Vector3 } from "three";
 import { objectById } from "../../data/catalog";
 import {
   scientificTextures,
@@ -7,6 +7,8 @@ import {
 } from "../loaders/ScientificTextureLoader";
 import { CelestialBody } from "./CelestialBody";
 import { loadDeimosModel } from "./DeimosModel";
+import { earthOrientationAt } from "../coordinates/EarthOrientation";
+import { advanceSimulationDays, daysSinceModelEpoch, REAL_TIME_DAYS_PER_SECOND, simulationUtcMs } from "../../utils/simulationTime";
 
 vi.mock("./DeimosModel", () => ({ loadDeimosModel: vi.fn() }));
 
@@ -16,6 +18,31 @@ afterEach(() => {
 });
 
 describe("body scale and asynchronous resource lifecycle", () => {
+  it("drives Earth, clouds and surface coordinates from the displayed epoch and clock", () => {
+    const earth = new CelestialBody(objectById.earth);
+    const epoch = "2000-01-01T12:00:00.000Z";
+    const now = Date.UTC(2026, 10, 19, 12);
+    const sun = new Vector3(1, 0, 0);
+    let days = daysSinceModelEpoch(now, epoch);
+    earth.rotate(days, epoch, sun);
+    const expected = earthOrientationAt(simulationUtcMs(days, epoch), sun);
+    expect(earth.surface.rotation.y).toBeCloseTo(expected.spinRadians, 12);
+    expect(earth.tilted.quaternion.angleTo(expected.poleRotation)).toBeLessThan(1e-7);
+    const clouds = earth.tilted.children.find(child => child instanceof Mesh && child.material instanceof MeshStandardMaterial);
+    expect(clouds?.rotation.y).toBeCloseTo(earth.surface.rotation.y, 12);
+    const frozen = earth.surface.rotation.y;
+    days = advanceSimulationDays(days, 10, false, REAL_TIME_DAYS_PER_SECOND, now + 10000, epoch);
+    earth.rotate(days, epoch, sun);
+    expect(earth.surface.rotation.y).toBe(frozen);
+    // Real-time resumption uses wall UTC; accelerated playback uses simulated UTC.
+    days = advanceSimulationDays(days, 1, true, REAL_TIME_DAYS_PER_SECOND, now + 3_600_000, epoch);
+    earth.rotate(days, epoch, sun);
+    expect(earth.surface.rotation.y).toBeCloseTo(earthOrientationAt(now + 3_600_000).spinRadians, 10);
+    days = advanceSimulationDays(days, 2, true, 0.1, now, epoch);
+    earth.rotate(days, epoch, sun);
+    expect(earth.surface.rotation.y).toBeCloseTo(earthOrientationAt(now + 3_600_000 + 0.2 * 86_400_000).spinRadians, 10);
+    earth.dispose();
+  });
   it("changes render radius without changing catalog dimensions or child orbit scale", () => {
     const earth = new CelestialBody(objectById.earth);
     const physicalRadius = earth.data.radiusKm;

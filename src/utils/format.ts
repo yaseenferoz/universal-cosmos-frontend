@@ -1,8 +1,10 @@
+import { simulationUtcMs } from "./simulationTime";
+
 export function formatSimulationDate(
   days: number,
   epoch = "2026-01-01T00:00:00.000Z",
 ): string {
-  const date = new Date(Date.parse(epoch) + days * 86_400_000);
+  const date = new Date(simulationUtcMs(days, epoch));
   return new Intl.DateTimeFormat("en-GB", {
     day: "2-digit",
     month: "short",
@@ -22,7 +24,7 @@ export function formatSimulationClock(
   epoch = "2026-01-01T00:00:00.000Z",
   showSeconds = false,
 ): string {
-  const date = new Date(Date.parse(epoch) + days * 86_400_000);
+  const date = new Date(simulationUtcMs(days, epoch));
   return new Intl.DateTimeFormat("en-GB", {
     hour: "2-digit",
     minute: "2-digit",

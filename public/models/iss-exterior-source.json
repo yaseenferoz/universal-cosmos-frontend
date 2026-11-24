@@ -1,0 +1,8 @@
+{
+  "source": "https://assets.science.nasa.gov/content/dam/science/psd/solar/2023/09/i/ISS_stationary.glb",
+  "page": "https://science.nasa.gov/resource/international-space-station-3d-model/",
+  "credit": "NASA Visualization Technology Applications and Development (VTAD)",
+  "sourceSha256": "26dba905b4b7555edbcb0c5f5a61b5c18659f5166076ab27dbb0e64025759fca",
+  "outputSha256": "611c8f7bf1b62a450dfa039ba68921d3dae4020567b469d618dfa26aa6605610",
+  "processing": "Original geometry/materials; texture cap 2048px, opaque textures JPEG quality 90. Historical configuration, not a live model."
+}

@@ -18,7 +18,7 @@ const unsupported = {
 } as const;
 
 type CoreObjectId = "sun" | "mercury" | "venus" | "earth" | "moon" | "mars" | "jupiter" | "saturn" | "uranus" | "neptune";
-type AdditionalObjectId = Exclude<ObjectId, CoreObjectId>;
+type AdditionalObjectId = Exclude<ObjectId, CoreObjectId | "iss">;
 const additionalProfiles = Object.fromEntries(additionalBodies.map((body) => [body.id, {
   objectId: body.id,
   classification: body.id === "titan" || body.id === "triton" ? "ATMOSPHERIC_SOLID" : body.parentId === "sun" ? "SMALL_BODY" : "AIRLESS_SOLID",
@@ -30,6 +30,12 @@ const additionalProfiles = Object.fromEntries(additionalBodies.map((body) => [bo
 
 /** Current capabilities for the bundled catalog. */
 export const explorationProfiles: Record<ObjectId, PlanetaryExplorationProfile> = {
+  iss: {
+    objectId: "iss", classification: "SPACECRAFT",
+    modes: { orbital: "available", surface: "not-supported", atmospheric: "not-supported" },
+    terrain: unsupported, sky: unsupported,
+    notice: "Use Visit ISS for the exterior fly-around and seven-module interior walkthrough. Model configuration and orbit are illustrative.",
+  },
   sun: {
     objectId: "sun", classification: "STAR",
     modes: { orbital: "available", surface: "not-supported", atmospheric: "not-supported" },

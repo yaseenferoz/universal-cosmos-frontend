@@ -45,7 +45,10 @@ export function UniverseViewport() {
         useExplorationStore.setState({
           objects,
           simulationEpoch: system.visualizationEpoch,
-          simulationDays: daysSinceModelEpoch(Date.now(), system.visualizationEpoch),
+          // A station visit temporarily unmounts this engine. Preserve its UTC clock on return.
+          simulationDays: useExplorationStore.getState().objects.length === 0
+            ? daysSinceModelEpoch(Date.now(), system.visualizationEpoch)
+            : useExplorationStore.getState().simulationDays,
         });
         engine = new module.UniverseEngine(element, {
           objects,

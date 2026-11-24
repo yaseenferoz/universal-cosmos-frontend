@@ -6,6 +6,7 @@
 @import "./solar.css";
 @import "./diagnostics.css";
 @import "./mobile.css";
+@import "./station.css";
 
 :root {
   font-family: Inter, "Segoe UI", Arial, sans-serif;

@@ -1,6 +1,7 @@
-import { Color, LinearMipmapLinearFilter, NoColorSpace, RepeatWrapping, SRGBColorSpace, Vector3, type MeshStandardMaterial, type Texture } from "three";
+import { Color, Vector3, type MeshStandardMaterial } from "three";
 import type { ObjectId } from "../../types/celestial";
-import { fetchImageTexture } from "../loaders/ScientificTextureLoader";
+import { SurfaceDetailMaps } from "./SurfaceDetailMaps";
+export { SurfaceDetailMaps } from "./SurfaceDetailMaps";
 import { LUNAR_DISPLAY_DARK, LUNAR_DISPLAY_RANGE } from "./lunarAppearance";
 
 /** A power-of-two period shared by every texture octave, in body-fixed meters. */
@@ -9,55 +10,21 @@ export function wrappedDetailOrigin(positionM: Vector3, target = new Vector3()):
   return target.set(...positionM.toArray().map(value => ((value % DETAIL_PERIOD_M) + DETAIL_PERIOD_M) % DETAIL_PERIOD_M) as [number, number, number]);
 }
 
-/** CC0 terrestrial material samples. Their use off Earth is explicitly illustrative. */
-export class SurfaceDetailMaps {
-  readonly color = { value: null as Texture | null };
-  readonly height = { value: null as Texture | null };
-  readonly enabled = { value: 0 };
-  private disposed = false;
-  async load(rock: boolean, mobile: boolean): Promise<void> {
-    const name = rock ? "rock_boulder_dry" : "dry_ground_rocks";
-    const results = await Promise.allSettled(["color", "height"].map(async kind => {
-      const texture = await fetchImageTexture(`/textures/${name}-${kind}.jpg`);
-      if (this.disposed) { this.release(texture); return; }
-      texture.colorSpace = kind === "color" ? SRGBColorSpace : NoColorSpace;
-      texture.wrapS = texture.wrapT = RepeatWrapping;
-      texture.minFilter = LinearMipmapLinearFilter;
-      texture.generateMipmaps = true;
-      texture.anisotropy = mobile ? 2 : 8;
-      texture.needsUpdate = true;
-      (kind === "color" ? this.color : this.height).value = texture;
-    }));
-    if (!this.disposed && this.color.value && this.height.value) this.enabled.value = 1;
-    const failure = results.find(result => result.status === "rejected");
-    if (failure?.status === "rejected" && !this.disposed) throw failure.reason;
-  }
-  private release(texture: Texture): void {
-    texture.dispose();
-    if (typeof ImageBitmap !== "undefined" && texture.image instanceof ImageBitmap) texture.image.close();
-  }
-  dispose(): void {
-    if (this.disposed) return;
-    this.disposed = true;
-    this.enabled.value = 0;
-    if (this.color.value) this.release(this.color.value);
-    if (this.height.value) this.release(this.height.value);
-    this.color.value = this.height.value = null;
-  }
-}
-
 /** Small coordinates, triplanar photographs, and derivative bump shading; no DEM displacement. */
 export function configureSurfaceDetail(material: MeshStandardMaterial, maps: SurfaceDetailMaps,
   originM: Vector3, bodyId: ObjectId, rock = false, measured = false): void {
   const previous = material.onBeforeCompile;
   const previousKey = material.customProgramCacheKey();
   const tint = new Color(bodyId === "mars" ? "#c69576" : bodyId === "venus" ? "#ac9679" : "#a5a3a0").multiplyScalar(3.2);
+  const soil = new Color(bodyId === "mercury" ? "#696663" : "#80756a");
+  const outcrop = new Color(bodyId === "mercury" ? "#545252" : "#625e59");
   material.onBeforeCompile = (shader, renderer) => {
     previous.call(material, shader, renderer);
     Object.assign(shader.uniforms, {
       detailOriginM: { value: originM }, detailColorMap: maps.color, detailHeightMap: maps.height,
       detailEnabled: maps.enabled, detailTint: { value: tint },
       martianSand: { value: new Color("#a18163") }, martianRock: { value: new Color("#786b5c") },
+      substrateColor: { value: soil }, outcropColor: { value: outcrop },
     });
     shader.vertexShader = shader.vertexShader.replace("#include <common>", `#include <common>
       uniform vec3 detailOriginM;
@@ -74,6 +41,7 @@ export function configureSurfaceDetail(material: MeshStandardMaterial, maps: Sur
       uniform float detailEnabled;
       uniform vec3 detailTint;
       uniform vec3 martianSand, martianRock;
+      uniform vec3 substrateColor, outcropColor;
       ${rock ? "" : "varying float detailElevationM, detailSlope;"}
       vec3 detailWeights() {
         vec3 w = pow(abs(normalize(detailNormal)), vec3(6.0));
@@ -114,6 +82,13 @@ export function configureSurfaceDetail(material: MeshStandardMaterial, maps: Sur
             vec3 bedrock = martianRock * bedding * mix(1.0, grain, 0.75);
             diffuseColor.rgb = mix(dust, bedrock, exposed);
           ` : ""}
+          ${!rock && (bodyId === "mercury" || bodyId === "venus") ? `
+            // Neutral rocky substrates, with atmospheric tint supplied by lighting.
+            // Colors and slope masks are illustrative, not mineral measurements.
+            float exposedRock = smoothstep(0.15, 0.6, detailSlope);
+            diffuseColor.rgb = mix(substrateColor, outcropColor, exposedRock)
+              * clamp(luminance / 0.22, 0.65, 1.4);
+          ` : ""}
         }
         #include <roughnessmap_fragment>`)
       .replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>
@@ -141,5 +116,5 @@ export function configureSurfaceDetail(material: MeshStandardMaterial, maps: Sur
       material.specularColorBlended = vec3(0.005);
       material.specularF90 = 0.05;`);
   };
-  material.customProgramCacheKey = () => `${previousKey}-surface-detail-v3-${bodyId}-${rock}-${measured}`;
+  material.customProgramCacheKey = () => `${previousKey}-surface-detail-v4-${bodyId}-${rock}-${measured}`;
 }

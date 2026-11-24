@@ -246,7 +246,7 @@ export class UniverseEngine {
   }
 
   private updateBodies(): void {
-    const modeledKm = modeledPositionsKm(this.options.objects, this.days);
+    const modeledKm = modeledPositionsKm(this.options.objects, this.days, this.options.simulationEpoch);
     this.modeledKm = modeledKm;
     const overview =
       this.viewMode === "overview"
@@ -259,7 +259,11 @@ export class UniverseEngine {
       const global = this.globalPositions.get(body.data.id) ?? new Vector3();
       global.set(position.x, position.y, position.z);
       this.globalPositions.set(body.data.id, global);
-      body.rotate(this.days);
+      const sun = modeledKm.get("sun");
+      body.rotate(this.days, this.options.simulationEpoch,
+        body.data.id === "earth" && sun
+          ? new Vector3(sun.x - kilometerPosition.x, sun.y - kilometerPosition.y, sun.z - kilometerPosition.z).normalize()
+          : undefined);
     }
     this.applyRelativePositions();
   }

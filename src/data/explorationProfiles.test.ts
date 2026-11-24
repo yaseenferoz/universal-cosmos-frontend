@@ -13,12 +13,12 @@ describe("planetary exploration profiles", () => {
   });
 
   it("never classifies a star or giant as a solid-surface destination", () => {
-    for (const id of ["sun", "jupiter", "saturn", "uranus", "neptune"] as const)
+    for (const id of ["sun", "jupiter", "saturn", "uranus", "neptune", "iss"] as const)
       expect(explorationProfile(id).modes.surface).toBe("not-supported");
   });
 
   it("does not claim local environments for orbit-only satellites", () => {
-    for (const body of celestialObjects.filter(body => body.parentId && body.parentId !== "sun" && body.id !== "moon")) {
+    for (const body of celestialObjects.filter(body => body.category === "Natural satellite" && body.id !== "moon")) {
       const profile = explorationProfile(body.id);
       expect(profile.modes.surface).toBe("planned");
       expect(profile.modes.atmospheric).toBe("not-supported");

@@ -118,7 +118,7 @@ export class CameraController {
       this.controls.target
         .copy(this.camera.position)
         .addScaledVector(this.forward, this.referenceRadius * 4);
-      this.controls.minDistance = 0.05;
+      this.controls.minDistance = Math.min(0.05, this.referenceRadius * 0.1);
     }
   }
   setEnabled(enabled: boolean): void {
@@ -127,7 +127,7 @@ export class CameraController {
     if (!enabled) this.release();
   }
   setReferenceRadius(radius: number): void {
-    this.referenceRadius = Math.max(radius, 0.01);
+    this.referenceRadius = Math.max(radius, 0.000001);
   }
   update(delta: number): void {
     if (!this.enabled) return;

@@ -67,7 +67,7 @@ export class SurfaceScatter {
     configureSurfaceDetail(material, this.detailMaps, new Vector3(), provider.manifest.bodyId, true);
     atmosphere?.configure(material);
     // The neutral shaded geometry remains usable if the optional texture cannot load.
-    void this.detailMaps.load(true, mobile || quality === "low").catch(() => undefined);
+    void this.detailMaps.load(true, mobile || quality === "low", quality === "high").catch(() => undefined);
     this.rocks = new InstancedMesh(geometry, material, ROCK_COUNTS.high);
     this.rocks.name = `${provider.manifest.bodyId} illustrative surface stones`;
     this.rocks.castShadow = this.rocks.receiveShadow = true;
@@ -79,6 +79,7 @@ export class SurfaceScatter {
   }
 
   setQuality(quality: Quality, mobile: boolean): void {
+    void this.detailMaps.load(true, mobile || quality === "low", quality === "high").catch(() => undefined);
     this.count = rockCount(quality, mobile);
     this.rocks.count = this.count;
     if (this.initialized) this.placeRocks();

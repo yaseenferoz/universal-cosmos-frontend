@@ -2,6 +2,7 @@ import type { ObjectId } from "./celestial";
 
 /** Physical category used to select exploration rules, never a display label. */
 export type DestinationClass =
+  | "SPACECRAFT"
   | "AIRLESS_SOLID"
   | "ATMOSPHERIC_SOLID"
   | "GAS_GIANT"

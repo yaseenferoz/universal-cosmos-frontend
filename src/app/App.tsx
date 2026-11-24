@@ -20,8 +20,11 @@ import { useRenderingStore } from "../stores/renderingStore";
 import { ViewingActions } from "../components/controls/ViewingActions";
 import { RenderingDiagnostics } from "../components/panels/RenderingDiagnostics";
 import { planetaryEnvironments } from "../data/planetaryEnvironments";
+import { useStationStore } from "../stores/stationStore";
+import { StationExperience } from "../features/station/StationExperience";
 
 export function App() {
+  const stationActive = useStationStore((s) => s.active);
   const dialog = useExplorationStore((s) => s.dialog);
   const viewMode = useExplorationStore((s) => s.viewMode);
   const selectedId = useExplorationStore((s) => s.selectedId);
@@ -30,7 +33,8 @@ export function App() {
   const diagnostics = useRenderingStore((s) => s.diagnosticsEnabled);
   const hasExplorationControls = viewMode === "exploration" && selectedId !== null &&
     (selectedId === "moon" || planetaryEnvironments[selectedId] !== undefined);
-  useExplorationShortcuts();
+  useExplorationShortcuts(!stationActive);
+  if (stationActive) return <StationExperience />;
   return (
     <main
       className={`universe-app view-${viewMode} ${lunarActive ? "is-lunar-active" : ""} ${hasExplorationControls ? "has-exploration-controls" : ""} ${selectedId === "sun" && viewMode === "exploration" ? "is-solar-observation" : ""} ${diagnostics ? "has-diagnostics" : ""}`}

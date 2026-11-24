@@ -30,6 +30,7 @@ export function ObjectInformation() {
       </button>
     );
   const parent = objects.find((item) => item.id === object.parentId);
+  const moons = objects.filter((item) => item.parentId === object.id && item.category === "Natural satellite");
   return (
     <aside
       className="object-information glass is-expanded"
@@ -57,6 +58,14 @@ export function ObjectInformation() {
       </div>
       <p className="object-description">{object.description}</p>
       <ViewingActions inline />
+      {moons.length > 0 && <section className="related-destinations" aria-label={`Explore ${object.name}'s moons`}>
+        <span className="eyebrow">MOONS IN THIS CATALOG ({moons.length})</span>
+        <div className="destination-filters">
+          {moons.map((moon) => <button key={moon.id} onClick={() => useExplorationStore.getState().selectObject(moon.id)}>
+            {moon.name}<ArrowUpRight size={12} />
+          </button>)}
+        </div>
+      </section>}
       <div className="information-details">
         <div className="detail-divider">
           <span>
@@ -66,15 +75,15 @@ export function ObjectInformation() {
         </div>
         <dl className="physical-grid">
           <div>
-            <dt>Diameter</dt>
+            <dt>{object.id === "iss" ? "Reference span" : "Diameter"}</dt>
             <dd>
-              {formatNumber(object.radiusKm * 2)} <small>km</small>
+              {formatNumber(object.radiusKm * 2 * (object.id === "iss" ? 1000 : 1))} <small>{object.id === "iss" ? "m" : "km"}</small>
             </dd>
           </div>
           <div>
-            <dt>Surface gravity</dt>
+            <dt>{object.id === "iss" ? "Crew environment" : "Surface gravity"}</dt>
             <dd>
-              {formatNumber(object.gravityMs2, 2)} <small>m/s²</small>
+              {object.id === "iss" ? "Orbital free fall" : <>{formatNumber(object.gravityMs2, 2)} <small>m/s²</small></>}
             </dd>
           </div>
           <div>
@@ -82,8 +91,8 @@ export function ObjectInformation() {
             <dd>
               {object.orbitalPeriodDays ? (
                 <>
-                  {formatNumber(object.orbitalPeriodDays, 1)}{" "}
-                  <small>days</small>
+                  {formatNumber(object.orbitalPeriodDays * (object.id === "iss" ? 1440 : 1), 1)}{" "}
+                  <small>{object.id === "iss" ? "min (model)" : "days"}</small>
                 </>
               ) : (
                 <span className="muted-value">Not modeled</span>
@@ -91,9 +100,9 @@ export function ObjectInformation() {
             </dd>
           </div>
           <div>
-            <dt>Axial tilt</dt>
+            <dt>{object.id === "iss" ? "Equatorial inclination" : "Axial tilt"}</dt>
             <dd>
-              {formatNumber(object.axialTiltDeg, 2)}
+              {formatNumber(object.id === "iss" ? 51.6 : object.axialTiltDeg, 2)}
               <small> °</small>
             </dd>
           </div>
@@ -101,12 +110,12 @@ export function ObjectInformation() {
         {parent && (
           <div className="distance-block">
             <div>
-              <span>MEAN DISTANCE FROM {parent.name.toUpperCase()}</span>
+              <span>{object.id === "iss" ? "MODELED ALTITUDE ABOVE EARTH" : `MEAN DISTANCE FROM ${parent.name.toUpperCase()}`}</span>
               <ArrowUpRight size={14} />
             </div>
             <strong>
-              {formatNumber(object.semiMajorAxisKm / 1_000_000, 3)}{" "}
-              <span>million km</span>
+              {formatNumber(object.id === "iss" ? 400 : object.semiMajorAxisKm / 1_000_000, 3)}{" "}
+              <span>{object.id === "iss" ? "km" : "million km"}</span>
             </strong>
             <span className="distance-line">
               <i />
@@ -127,6 +136,12 @@ export function ObjectInformation() {
               values are from the bundled NASA reference catalog.
             </p>
           )}
+          {object.id === "earth" && (
+            <p>
+              Earth rotation and seasonal daylight follow the displayed UTC using
+              an approximate solar model. Clouds are a static composite, not live weather.
+            </p>
+          )}
         </div>
         <a
           className="source-link"
@@ -138,6 +153,10 @@ export function ObjectInformation() {
           <ArrowUpRight size={12} />
         </a>
         <ImageryCredits id={object.id} />
+        <details className="catalog-reference-notes">
+          <summary>Reference notes</summary>
+          {object.facts.map((fact) => <p key={fact.label}><strong>{fact.label}: </strong>{fact.value}</p>)}
+        </details>
       </div>
       <button
         className="travel-button"
