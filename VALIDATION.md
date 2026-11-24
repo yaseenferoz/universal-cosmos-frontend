@@ -1,5 +1,15 @@
 # Validation record
 
+## 24 November 2026: ISS Earth detail and Sun follow-up
+
+User screenshots showed the 2K cloud mask obscuring the 4K Earth map and the physically small solar disk hard to find. ISS-only Earth rendering now uses NASA's original 8192 × 4096 Blue Marble cloud-free source where GPU texture size and screen width allow, with 4K/2K fallbacks. The ISS view omits the lower-resolution clouds; the planetary Earth mode is unchanged. The Sun still has a 0.53° disk, now with broader glare and a camera-projected Sun label when in frame. The Sunward preset offsets the station from the solar line of sight. The 8K source is historical NASA imagery, not current orbital photography. `public/textures/iss-earth-source.json` records exact provenance and hashes.
+
+## 24 November 2026: station Earth clarity and visible Sun
+
+The ISS viewer now uses the already packaged 4K NASA Earth surface map at medium/high quality, bounds anisotropic filtering, and reduces the lower-resolution historical cloud layer's opacity from 0.88 to 0.26. A 0.53° solar disk and halo share the exterior and Earth lighting direction; the Sunward view preset points toward it with the station offset from the line of sight. Source data, scientific limits, and quality behavior are documented in ASSET_SOURCES.md. Native Windows browser automation was unavailable during this follow-up (the Computer Use helper's native pipe was missing), so the new appearance could not be visually rechecked in the browser; prior ISS exterior/interior/Cupola visual checks are recorded below.
+
+`npm run typecheck`, `npm run lint`, `npm test -- --maxWorkers=2 --testTimeout=30000` (295/295), and `npm run build` passed. The local frontend responded HTTP 200 at `http://127.0.0.1:5173/`. The production build reports the existing Three.js chunk-size advisory.
+
 ## 24 November 2026: ISS exterior and interior
 
 Added the ISS as catalog object 33 in local and HTTP-supplement modes, with a lightweight orbital marker and a separate meter-scale visit. NASA VTAD exterior model; seven registered NASA Astrobee/IGOAL modules; free-flight keep-in bounds, touch/keyboard movement, module selector, Cupola view, hideable controls, exterior orbit presets and return to Earth. The planetary renderer is disposed for the visit and restored afterward; model resources, input handlers and observers are disposed on exit. Quality presets bound antialiasing/pixel ratio. Orbits, hardware configuration, attitude, lighting, navigation and Cupola window adaptations are qualified in the UI and asset notes.

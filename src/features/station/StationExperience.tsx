@@ -69,6 +69,7 @@ export function StationExperience() {
           <button onClick={() => engine.current?.exteriorView("front")}>Front</button>
           <button onClick={() => engine.current?.exteriorView("arrays")}>Solar arrays</button>
           <button onClick={() => engine.current?.exteriorView("earth")}>Earth backdrop</button>
+          <button onClick={() => engine.current?.exteriorView("sun")}>Sunward view</button>
           <button onClick={() => engine.current?.resetExterior()} aria-label="Reset exterior view"><RotateCcw size={14} /></button>
         </div>
       </> : <>
@@ -83,7 +84,7 @@ export function StationExperience() {
         <p>The main simulation pauses during this visit. A fixed 400 km altitude, stationary lighting and geographic orientation illustrate the view; this is not live ISS tracking.</p>
         <p><a href="https://science.nasa.gov/resource/international-space-station-3d-model/" target="_blank" rel="noreferrer">Exterior: NASA / VTAD</a>, scaled to a 109 m span. Historical hardware configuration and fixed solar arrays.</p>
         <p><a href="https://github.com/nasa/astrobee_media" target="_blank" rel="noreferrer">Interior: NASA Astrobee / IGOAL</a>. Seven connected modules with source geometry and textures. Russian modules and current equipment changes are not included. Navigation uses NASA simulator keep-in volumes.</p>
-        <p>Microgravity is orbital free fall. Movement here is a controlled camera, not an astronaut dynamics simulation. Earth uses NASA historical imagery.</p>
+        <p>Microgravity is orbital free fall. Movement here is a controlled camera, not an astronaut dynamics simulation. Earth uses NASA's historical cloud-free Blue Marble mosaic, up to its native 8K resolution on supported desktop hardware.</p>
       </details>
     </section>}
     {state.status !== "ready" && <div className="station-status glass" role={state.status === "error" ? "alert" : "status"}>

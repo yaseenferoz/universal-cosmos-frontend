@@ -1,9 +1,9 @@
-import { ACESFilmicToneMapping, AmbientLight, DirectionalLight, Euler, Group, HemisphereLight, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from "three";
+import { ACESFilmicToneMapping, AmbientLight, DirectionalLight, Euler, Group, HemisphereLight, PerspectiveCamera, Quaternion, Scene, Vector3, WebGLRenderer } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import type { Quality } from "../../types/celestial";
 import { disposeStationObject, loadStationExterior, loadStationInterior } from "./StationAssets";
 import { moveInStation, stationModules, stationPoint, type StationModuleId } from "./StationLayout";
-import { StationBackdrop } from "./StationBackdrop";
+import { StationBackdrop, STATION_SUN_DIRECTION } from "./StationBackdrop";
 
 export type StationMode = "exterior" | "interior";
 export interface StationState {
@@ -26,6 +26,9 @@ export class StationEngine {
   private readonly observer: ResizeObserver;
   private readonly exteriorLight = new Group();
   private readonly interiorLight = new Group();
+  private readonly sunLabel: HTMLDivElement;
+  private readonly skyDirection = new Vector3();
+  private readonly inverseCamera = new Quaternion();
   private exterior: Group | null = null;
   private interior: Group | null = null;
   private interiorRequest: Promise<Group> | null = null;
@@ -51,18 +54,23 @@ export class StationEngine {
     canvas.tabIndex = 0;
     canvas.setAttribute("aria-label", "3D ISS viewport. Drag to look. Inside, use W A S D or arrows to float, Q and E to move down and up.");
     container.append(canvas);
+    this.sunLabel = document.createElement("div");
+    this.sunLabel.className = "station-sun-label";
+    this.sunLabel.textContent = "SUN · 0.53°";
+    this.sunLabel.setAttribute("aria-hidden", "true");
+    container.append(this.sunLabel);
     this.controls = new OrbitControls(this.camera, canvas);
     this.controls.enableDamping = true;
     this.controls.enablePan = false;
     this.controls.minDistance = 65;
     this.controls.maxDistance = 350;
     const sunlight = new DirectionalLight("#fff7e9", 3.5);
-    sunlight.position.set(-80, 120, 90);
-    this.exteriorLight.add(sunlight, new HemisphereLight("#c4d8f0", "#405f87", 1.1));
+    sunlight.position.copy(STATION_SUN_DIRECTION).multiplyScalar(180);
+    this.exteriorLight.add(sunlight, new HemisphereLight("#c4d8f0", "#405f87", 1.7));
     this.interiorLight.add(new AmbientLight("#ffffff", 1.8));
     this.interiorLight.visible = false;
     this.scene.add(this.exteriorLight, this.interiorLight);
-    this.backdrop = new StationBackdrop(quality);
+    this.backdrop = new StationBackdrop(quality, this.renderer.capabilities.maxTextureSize);
     this.resetExterior();
     canvas.addEventListener("pointerdown", this.pointerDown);
     canvas.addEventListener("pointermove", this.pointerMove);
@@ -127,11 +135,19 @@ export class StationEngine {
     this.camera.position.set(115, 65, 115);
     this.controls.target.set(0, 0, 0); this.controls.update();
   }
-  exteriorView(view: "front" | "arrays" | "earth"): void {
+  exteriorView(view: "front" | "arrays" | "earth" | "sun"): void {
     if (this.state.mode !== "exterior") return;
-    const positions = { front: [0, 16, 125], arrays: [100, 120, 0], earth: [50, 90, 105] } as const;
-    const point = positions[view];
-    this.camera.position.set(point[0], point[1], point[2]); this.controls.update();
+    if (view === "sun") {
+      // Offset the station so its truss does not cover the Sun in this preset.
+      const lateral = new Vector3().crossVectors(STATION_SUN_DIRECTION, new Vector3(0, 1, 0)).normalize();
+      this.camera.position.copy(STATION_SUN_DIRECTION).multiplyScalar(-135).addScaledVector(lateral, 55);
+    }
+    else {
+      const positions = { front: [0, 16, 125], arrays: [100, 120, 0], earth: [50, 90, 105] } as const;
+      const point = positions[view];
+      this.camera.position.set(point[0], point[1], point[2]);
+    }
+    this.controls.update();
   }
   visitModule(id: StationModuleId): void {
     if (!this.interior || this.state.mode !== "interior") return;
@@ -193,10 +209,24 @@ export class StationEngine {
         if (closest.id !== this.state.moduleId) this.publish({ moduleId: closest.id });
       }
     } else if (this.state.mode === "exterior") this.controls.update();
+    this.updateSunLabel();
     this.renderer.clear();
     this.backdrop.render(this.renderer, this.camera);
     this.renderer.render(this.scene, this.camera);
   };
+  private updateSunLabel(): void {
+    if (this.state.mode !== "exterior") { this.sunLabel.hidden = true; return; }
+    this.inverseCamera.copy(this.camera.quaternion).invert();
+    this.skyDirection.copy(STATION_SUN_DIRECTION).applyQuaternion(this.inverseCamera);
+    const direction = this.skyDirection;
+    if (direction.z >= 0) { this.sunLabel.hidden = true; return; }
+    const halfHeight = Math.tan(this.camera.fov * Math.PI / 360);
+    const x = (direction.x / -direction.z) / (halfHeight * this.camera.aspect);
+    const y = (direction.y / -direction.z) / halfHeight;
+    this.sunLabel.hidden = Math.abs(x) > 0.93 || Math.abs(y) > 0.9;
+    this.sunLabel.style.left = `${(x + 1) * 50}%`;
+    this.sunLabel.style.top = `${(1 - y) * 50}%`;
+  }
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true; ++this.command;
@@ -213,6 +243,6 @@ export class StationEngine {
     document.removeEventListener("visibilitychange", this.visibilityChanged);
     if (this.exterior) disposeStationObject(this.exterior);
     if (this.interior) disposeStationObject(this.interior);
-    this.backdrop.dispose(); this.renderer.dispose(); this.renderer.forceContextLoss(); canvas.remove();
+    this.backdrop.dispose(); this.renderer.dispose(); this.renderer.forceContextLoss(); canvas.remove(); this.sunLabel.remove();
   }
 }
