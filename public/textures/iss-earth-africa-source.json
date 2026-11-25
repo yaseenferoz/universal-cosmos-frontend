@@ -1,0 +1,26 @@
+{
+  "sourcePage": "https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/base-map/",
+  "sources": {
+    "C1": "https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-base/july/world.200407.3x21600x21600.C1.jpg",
+    "C2": "https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-base/july/world.200407.3x21600x21600.C2.jpg"
+  },
+  "sourceSha256": {
+    "C1": "18c4b869510f63bb2261182e26e5c072faee7bc6553842bf9d52175da539e956",
+    "C2": "15fe50659ddb7b3f6395a76d7d880bfa1c78c7c957b9ed3b57dda60cac0866a1"
+  },
+  "outputSha256": "e223989aa424810097d44bf28d28a05aff249d5becbdd484a4939f4f03536fa8",
+  "credit": "NASA Earth Observatory / Reto Stöckli and the Blue Marble Next Generation team",
+  "sourceMonth": "July 2004",
+  "extentDegrees": {
+    "west": 10,
+    "east": 30,
+    "north": 10,
+    "south": -10
+  },
+  "sourceResolution": "500 m at equator; 4800 x 4800 native pixels in this crop",
+  "outputResolution": [
+    4096,
+    4096
+  ],
+  "processing": "Cropped and joined native NASA C1/C2 JPEG tiles, reduced to 4096 pixels and feathered at edges; no invented detail or upscaling."
+}

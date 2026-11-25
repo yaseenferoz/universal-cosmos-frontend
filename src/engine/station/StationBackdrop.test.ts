@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { STATION_SUN_DIRECTION, STATION_SUN_SKY_DISTANCE, STATION_SUN_SKY_RADIUS, stationEarthTexturePath } from "./StationBackdrop";
+import { STATION_SUN_DIRECTION, STATION_SUN_SKY_DISTANCE, STATION_SUN_SKY_RADIUS, stationEarthDetailEnabled, stationEarthTexturePath } from "./StationBackdrop";
 
 describe("station sky scale", () => {
   it("draws a Sun with its approximately 0.53 degree apparent diameter at Earth", () => {
@@ -13,5 +13,12 @@ describe("station sky scale", () => {
     expect(stationEarthTexturePath("high", 4096, false)).toBe("/textures/earth-day-4096.webp");
     expect(stationEarthTexturePath("medium", 16384, false)).toBe("/textures/earth-day-4096.webp");
     expect(stationEarthTexturePath("auto", 16384, true)).toBe("/textures/earth-day-4096.webp");
+  });
+  it("uses the regional 500 m crop only in capable desktop quality presets", () => {
+    expect(stationEarthDetailEnabled("auto", 8192, false)).toBe(true);
+    expect(stationEarthDetailEnabled("high", 4096, false)).toBe(true);
+    expect(stationEarthDetailEnabled("medium", 8192, false)).toBe(false);
+    expect(stationEarthDetailEnabled("auto", 2048, false)).toBe(false);
+    expect(stationEarthDetailEnabled("auto", 8192, true)).toBe(false);
   });
 });

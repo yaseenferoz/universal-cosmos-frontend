@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowDown, ArrowUp, ArrowRight, ChevronUp, ChevronDown, DoorOpen, RotateCcw, Satellite } from "lucide-react";
+import { ArrowLeft, ArrowDown, ArrowUp, ArrowRight, ChevronUp, ChevronDown, DoorOpen, Pause, Play, RotateCcw, Satellite, SkipBack, SkipForward } from "lucide-react";
 import { useExplorationStore } from "../../stores/explorationStore";
 import { useStationStore } from "../../stores/stationStore";
 import { stationModules, type StationModuleId } from "../../engine/station/StationLayout";
+import { stationRegions } from "../../data/stationRegions";
 import type { StationEngine, StationMotion, StationState } from "../../engine/station/StationEngine";
 
-const initial: StationState = { mode: "exterior", status: "loading", message: "Preparing station visit…", moduleId: "node_1" };
+const initial: StationState = { mode: "exterior", status: "loading", message: "Preparing station visit…", moduleId: "node_1", orbit: {
+  playing: true, speed: 60, elapsedSeconds: 0, progress: 0, latitudeDeg: 0, longitudeDeg: 20, sunAltitudeDeg: 45,
+} };
+const coordinate = (degrees: number, positive: string, negative: string) => `${Math.abs(degrees).toFixed(1)}° ${degrees >= 0 ? positive : negative}`;
 export function StationExperience() {
   const viewport = useRef<HTMLDivElement>(null);
   const engine = useRef<StationEngine | null>(null);
@@ -80,11 +84,37 @@ export function StationExperience() {
         <h2>{module.name}</h2><p>{module.role}. Drag to look; float through the connected hatches.</p>
         <button disabled={state.status !== "ready"} onClick={() => engine.current?.visitModule("cupola")}>Go to Cupola · Earth view</button>
       </>}
+      <div className="station-orbit-controls">
+        <h2>Earth observation</h2>
+        <p>Simulated 400 km orbit · 51.6° inclination. The station holds a nadir-facing attitude while Earth turns below.</p>
+        <div className="station-orbit-actions">
+          <button onClick={() => engine.current?.setOrbitPlaying(!state.orbit.playing)} aria-label={state.orbit.playing ? "Pause simulated orbit" : "Play simulated orbit"}>
+            {state.orbit.playing ? <Pause size={15} /> : <Play size={15} />}{state.orbit.playing ? "Pause" : "Play"}
+          </button>
+          <label htmlFor="station-orbit-speed">Speed</label>
+          <select id="station-orbit-speed" value={state.orbit.speed} onChange={(event) => engine.current?.setOrbitSpeed(Number(event.target.value))}>
+            <option value={1}>1×</option><option value={60}>60×</option><option value={300}>300×</option><option value={1200}>1200×</option>
+          </select>
+        </div>
+        <label htmlFor="station-orbit-progress">Position in current orbit</label>
+        <input id="station-orbit-progress" type="range" min={0} max={1000} step={1} value={Math.round(state.orbit.progress * 1000)} onChange={(event) => engine.current?.setOrbitProgress(Number(event.target.value) / 1000)} />
+        <div className="station-orbit-actions station-orbit-skip">
+          <button onClick={() => engine.current?.skipOrbit(-1)} aria-label="Previous simulated orbit"><SkipBack size={15} /> Previous orbit</button>
+          <button onClick={() => engine.current?.skipOrbit(1)} aria-label="Next simulated orbit">Next orbit <SkipForward size={15} /></button>
+        </div>
+        <label htmlFor="station-region">Jump to next daylight pass near</label>
+        <select id="station-region" defaultValue="" onChange={(event) => { engine.current?.jumpToRegion(event.target.value); event.currentTarget.value = ""; }}>
+          <option value="" disabled>Choose a region</option>
+          {stationRegions.map((region) => <option key={region.id} value={region.id}>{region.name}</option>)}
+        </select>
+        <p className="station-orbit-readout" aria-live="off">Above {coordinate(state.orbit.latitudeDeg, "N", "S")}, {coordinate(state.orbit.longitudeDeg, "E", "W")} · {state.orbit.sunAltitudeDeg > 3 ? "daylight" : state.orbit.sunAltitudeDeg < -3 ? "night" : "twilight"}</p>
+        <p className="station-orbit-note">Imagery is historical and cloud-free; this route is illustrative, not the ISS's live position.</p>
+      </div>
       <details className="station-sources"><summary>Model & scientific context</summary>
-        <p>The main simulation pauses during this visit. A fixed 400 km altitude, stationary lighting and geographic orientation illustrate the view; this is not live ISS tracking.</p>
+        <p>The main simulation pauses during this visit. This is a circular 400 km, 51.6° orbital reconstruction with Earth rotation and changing Sun direction. Its initial ascending node, station attitude and Sun phase are illustrative; no dated orbital epoch or TLE is used.</p>
         <p><a href="https://science.nasa.gov/resource/international-space-station-3d-model/" target="_blank" rel="noreferrer">Exterior: NASA / VTAD</a>, scaled to a 109 m span. Historical hardware configuration and fixed solar arrays.</p>
         <p><a href="https://github.com/nasa/astrobee_media" target="_blank" rel="noreferrer">Interior: NASA Astrobee / IGOAL</a>. Seven connected modules with source geometry and textures. Russian modules and current equipment changes are not included. Navigation uses NASA simulator keep-in volumes.</p>
-        <p>Microgravity is orbital free fall. Movement here is a controlled camera, not an astronaut dynamics simulation. Earth uses NASA's historical cloud-free Blue Marble mosaic, up to its native 8K resolution on supported desktop hardware.</p>
+        <p>Microgravity is orbital free fall. Movement here is a controlled camera, not an astronaut dynamics simulation. Earth uses NASA's historical cloud-free Blue Marble mosaic, up to its native 8K resolution on supported desktop hardware. High/Auto desktop adds a feathered 500 m Blue Marble Next Generation crop while passing central Africa (July 2004); the rest remains the older global composite.</p>
       </details>
     </section>}
     {state.status !== "ready" && <div className="station-status glass" role={state.status === "error" ? "alert" : "status"}>

@@ -10,7 +10,7 @@
 .station-experience button { display: inline-flex; justify-content: center; align-items: center; gap: 7px; }
 .station-experience button:hover { background: #253746; }
 .station-experience button:disabled { opacity: .45; cursor: wait; }
-.station-experience button:focus-visible, .station-experience select:focus-visible, .station-viewport canvas:focus-visible { outline: 2px solid #91d3ff; outline-offset: 3px; }
+.station-experience button:focus-visible, .station-experience select:focus-visible, .station-experience input:focus-visible, .station-viewport canvas:focus-visible { outline: 2px solid #91d3ff; outline-offset: 3px; }
 .station-panel { position: absolute; top: 132px; left: 28px; width: 310px; padding: 20px; border-radius: 12px; max-height: calc(100% - 260px); overflow-y: auto; }
 .station-tabs { display: flex; gap: 6px; }
 .station-tabs button { flex: 1; font-size: 12px; padding: 8px; }
@@ -21,6 +21,18 @@
 .station-panel select { width: 100%; font-size: 12px; }
 .station-presets { display: flex; flex-wrap: wrap; gap: 5px; }
 .station-presets button { font-size: 11px; }
+.station-orbit-controls { margin-top: 20px; padding-top: 2px; border-top: 1px solid #ffffff1a; }
+.station-orbit-controls h2 { margin-top: 16px; }
+.station-orbit-controls > label { margin: 13px 0 7px; }
+.station-orbit-controls input[type=range] { width: 100%; accent-color: #a1d7fd; cursor: pointer; }
+.station-orbit-actions { display: flex; align-items: center; gap: 6px; }
+.station-orbit-actions button { font-size: 11px; white-space: nowrap; }
+.station-orbit-actions label { margin: 0; font-size: 10px; }
+.station-orbit-actions select { width: auto; flex: 1; min-width: 0; }
+.station-orbit-skip { margin-top: 7px; }
+.station-orbit-skip button { flex: 1; padding: 7px 5px; }
+.station-orbit-readout { margin: 12px 0 2px; color: #e7edf4 !important; font-variant-numeric: tabular-nums; }
+.station-orbit-note { margin: 0; font-size: 10px !important; }
 .station-sources { margin-top: 18px; font-size: 11px; color: #a7bacb; }
 .station-sources summary { cursor: pointer; padding: 5px 0; }
 .station-sources a { text-decoration: underline; color: #bbdfff; }

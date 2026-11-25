@@ -3,7 +3,9 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import type { Quality } from "../../types/celestial";
 import { disposeStationObject, loadStationExterior, loadStationInterior } from "./StationAssets";
 import { moveInStation, stationModules, stationPoint, type StationModuleId } from "./StationLayout";
-import { StationBackdrop, STATION_SUN_DIRECTION } from "./StationBackdrop";
+import { StationBackdrop } from "./StationBackdrop";
+import { nearestDaylightPass, STATION_ORBIT_PERIOD_SECONDS, StationOrbitModel } from "./StationOrbit";
+import { stationRegions } from "../../data/stationRegions";
 
 export type StationMode = "exterior" | "interior";
 export interface StationState {
@@ -11,6 +13,16 @@ export interface StationState {
   status: "loading" | "ready" | "error";
   message: string;
   moduleId: StationModuleId;
+  orbit: StationOrbitTelemetry;
+}
+export interface StationOrbitTelemetry {
+  playing: boolean;
+  speed: number;
+  elapsedSeconds: number;
+  progress: number;
+  latitudeDeg: number;
+  longitudeDeg: number;
+  sunAltitudeDeg: number;
 }
 export type StationMotion = "forward" | "back" | "left" | "right" | "up" | "down";
 const keys: Record<string, StationMotion> = { KeyW: "forward", ArrowUp: "forward", KeyS: "back", ArrowDown: "back", KeyA: "left", ArrowLeft: "left", KeyD: "right", ArrowRight: "right", KeyE: "up", KeyQ: "down" };
@@ -22,6 +34,12 @@ export class StationEngine {
   private readonly scene = new Scene();
   private readonly controls: OrbitControls;
   private readonly backdrop: StationBackdrop;
+  private readonly orbit = new StationOrbitModel();
+  private orbitSeconds = 0;
+  private orbitSpeed = 60;
+  private orbitPlaying = true;
+  private orbitReportTime = 0;
+  private readonly stationSunlight = new DirectionalLight("#fff7e9", 3.5);
   private readonly abort = new AbortController();
   private readonly observer: ResizeObserver;
   private readonly exteriorLight = new Group();
@@ -32,7 +50,9 @@ export class StationEngine {
   private exterior: Group | null = null;
   private interior: Group | null = null;
   private interiorRequest: Promise<Group> | null = null;
-  private state: StationState = { mode: "exterior", status: "loading", message: "Loading NASA station model…", moduleId: "node_1" };
+  private state: StationState = { mode: "exterior", status: "loading", message: "Loading NASA station model…", moduleId: "node_1", orbit: {
+    playing: true, speed: 60, elapsedSeconds: 0, progress: 0, latitudeDeg: 0, longitudeDeg: 20, sunAltitudeDeg: 45,
+  } };
   private readonly held = new Set<StationMotion>();
   private readonly keyboard = new Set<StationMotion>();
   private yaw = -Math.PI / 2;
@@ -64,13 +84,12 @@ export class StationEngine {
     this.controls.enablePan = false;
     this.controls.minDistance = 65;
     this.controls.maxDistance = 350;
-    const sunlight = new DirectionalLight("#fff7e9", 3.5);
-    sunlight.position.copy(STATION_SUN_DIRECTION).multiplyScalar(180);
-    this.exteriorLight.add(sunlight, new HemisphereLight("#c4d8f0", "#405f87", 1.7));
+    this.exteriorLight.add(this.stationSunlight, new HemisphereLight("#c4d8f0", "#405f87", 1.7));
     this.interiorLight.add(new AmbientLight("#ffffff", 1.8));
     this.interiorLight.visible = false;
     this.scene.add(this.exteriorLight, this.interiorLight);
     this.backdrop = new StationBackdrop(quality, this.renderer.capabilities.maxTextureSize);
+    this.syncOrbit();
     this.resetExterior();
     canvas.addEventListener("pointerdown", this.pointerDown);
     canvas.addEventListener("pointermove", this.pointerMove);
@@ -95,6 +114,42 @@ export class StationEngine {
     this.state = { ...this.state, ...patch }; this.onState(this.state);
   }
   private fail(error: unknown): void { this.publish({ status: "error", message: error instanceof Error ? error.message : "Station model could not be loaded." }); }
+  private orbitTelemetry(): StationOrbitTelemetry {
+    const sample = this.orbit.snapshot;
+    return {
+      playing: this.orbitPlaying, speed: this.orbitSpeed, elapsedSeconds: this.orbitSeconds,
+      progress: sample.progress, latitudeDeg: sample.latitudeDeg, longitudeDeg: sample.longitudeDeg,
+      sunAltitudeDeg: Math.asin(sample.sunDirection.y) * 180 / Math.PI,
+    };
+  }
+  private syncOrbit(): void {
+    const sample = this.orbit.sample(this.orbitSeconds);
+    this.backdrop.setOrbit(sample);
+    this.stationSunlight.position.copy(sample.sunDirection).multiplyScalar(180);
+    // Earth occults the Sun below roughly -20° apparent altitude at 400 km.
+    this.stationSunlight.intensity = 3.5 * Math.max(0, Math.min(1, (sample.sunDirection.y + 0.34) / 0.06));
+  }
+  setOrbitPlaying(playing: boolean): void { this.orbitPlaying = playing; this.publish({ orbit: this.orbitTelemetry() }); }
+  setOrbitSpeed(speed: number): void {
+    if (![1, 60, 300, 1200].includes(speed)) return;
+    this.orbitSpeed = speed; this.publish({ orbit: this.orbitTelemetry() });
+  }
+  setOrbitProgress(progress: number): void {
+    if (!Number.isFinite(progress)) return;
+    const revolution = Math.floor(this.orbitSeconds / STATION_ORBIT_PERIOD_SECONDS);
+    this.orbitSeconds = (revolution + Math.max(0, Math.min(1, progress))) * STATION_ORBIT_PERIOD_SECONDS;
+    this.syncOrbit(); this.publish({ orbit: this.orbitTelemetry() });
+  }
+  skipOrbit(count: number): void {
+    this.orbitSeconds += Math.sign(count) * STATION_ORBIT_PERIOD_SECONDS;
+    this.syncOrbit(); this.publish({ orbit: this.orbitTelemetry() });
+  }
+  jumpToRegion(id: string): void {
+    const region = stationRegions.find((item) => item.id === id);
+    if (!region) return;
+    this.orbitSeconds = nearestDaylightPass(this.orbit, this.orbitSeconds, region);
+    this.syncOrbit(); this.publish({ orbit: this.orbitTelemetry() });
+  }
   async showInterior(id: StationModuleId = "node_1"): Promise<void> {
     const request = ++this.command;
     this.clearMotion();
@@ -139,8 +194,9 @@ export class StationEngine {
     if (this.state.mode !== "exterior") return;
     if (view === "sun") {
       // Offset the station so its truss does not cover the Sun in this preset.
-      const lateral = new Vector3().crossVectors(STATION_SUN_DIRECTION, new Vector3(0, 1, 0)).normalize();
-      this.camera.position.copy(STATION_SUN_DIRECTION).multiplyScalar(-135).addScaledVector(lateral, 55);
+      const sun = this.orbit.snapshot.sunDirection;
+      const lateral = new Vector3().crossVectors(sun, new Vector3(0, 1, 0)).normalize();
+      this.camera.position.copy(sun).multiplyScalar(-135).addScaledVector(lateral, 55);
     }
     else {
       const positions = { front: [0, 16, 125], arrays: [100, 120, 0], earth: [50, 90, 105] } as const;
@@ -194,7 +250,11 @@ export class StationEngine {
     this.frame = requestAnimationFrame(this.animate);
     if (document.hidden) return;
     const dt = this.lastTime ? Math.min((time - this.lastTime) / 1000, 0.05) : 0;
+    const orbitDt = this.lastTime ? Math.min((time - this.lastTime) / 1000, 1) : 0;
     this.lastTime = time;
+    if (this.orbitPlaying) this.orbitSeconds += orbitDt * this.orbitSpeed;
+    this.syncOrbit();
+    if (time - this.orbitReportTime > 500) { this.orbitReportTime = time; this.publish({ orbit: this.orbitTelemetry() }); }
     if (this.state.mode === "interior" && this.state.status === "ready") {
       this.camera.quaternion.setFromEuler(new Euler(this.pitch, this.yaw, 0, "YXZ"));
       const held = (motion: StationMotion) => Number(this.held.has(motion) || this.keyboard.has(motion));
@@ -217,7 +277,9 @@ export class StationEngine {
   private updateSunLabel(): void {
     if (this.state.mode !== "exterior") { this.sunLabel.hidden = true; return; }
     this.inverseCamera.copy(this.camera.quaternion).invert();
-    this.skyDirection.copy(STATION_SUN_DIRECTION).applyQuaternion(this.inverseCamera);
+    const sun = this.orbit.snapshot.sunDirection;
+    if (sun.y < -0.34) { this.sunLabel.hidden = true; return; }
+    this.skyDirection.copy(sun).applyQuaternion(this.inverseCamera);
     const direction = this.skyDirection;
     if (direction.z >= 0) { this.sunLabel.hidden = true; return; }
     const halfHeight = Math.tan(this.camera.fov * Math.PI / 360);
