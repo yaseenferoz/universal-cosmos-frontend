@@ -49,7 +49,18 @@ jobs:
       - name: Run tests
         run: npm test -- --run
 
-      # 7. Build frontend with live backend API
+      # 7. Validate SEO environment variables
+      - name: Validate SEO configuration
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          if [ -z "$SITE_URL" ]; then
+            echo "ERROR: SITE_URL is not configured"
+            exit 1
+          fi
+          echo "SITE_URL: $SITE_URL"
+
+      # 8. Build frontend with live backend API
       - name: Build frontend
         run: npm run build
         env:
@@ -58,7 +69,31 @@ jobs:
           SITE_URL: ${{ vars.SITE_URL }}
           GOOGLE_SITE_VERIFICATION: ${{ vars.GOOGLE_SITE_VERIFICATION }}
 
-      # 8. Authenticate to AWS using GitHub OIDC
+      # 9. Verify generated SEO files
+      - name: Verify generated SEO files
+        run: |
+          echo "Production build files:"
+          ls -lah dist/
+
+          if [ ! -s dist/sitemap.xml ]; then
+            echo "ERROR: sitemap.xml was not generated"
+            exit 1
+          fi
+
+          if [ ! -s dist/robots.txt ]; then
+            echo "ERROR: robots.txt was not generated"
+            exit 1
+          fi
+
+          echo "Sitemap content:"
+          cat dist/sitemap.xml
+
+          echo "Robots content:"
+          cat dist/robots.txt
+
+          echo "SEO files generated successfully"
+
+      # 10. Authenticate to AWS using GitHub OIDC
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -66,24 +101,37 @@ jobs:
           aws-region: ap-south-1
           role-session-name: UniversalCosmosFrontendDeploy
 
-      # 9. Verify AWS authentication
+      # 11. Verify AWS authentication
       - name: Verify AWS identity
         run: aws sts get-caller-identity
 
-      # 10. Upload production frontend to S3
+      # 12. Upload production frontend to S3
       - name: Upload frontend to S3
         run: |
           aws s3 sync dist/ s3://universal-cosmos-web-engine/ \
             --delete
 
-      # 11. Invalidate CloudFront cache
+      # 13. Verify SEO files in S3
+      - name: Verify SEO files in S3
+        run: |
+          aws s3api head-object \
+            --bucket universal-cosmos-web-engine \
+            --key sitemap.xml
+
+          aws s3api head-object \
+            --bucket universal-cosmos-web-engine \
+            --key robots.txt
+
+          echo "SEO files uploaded successfully"
+
+      # 14. Invalidate CloudFront cache
       - name: Invalidate CloudFront cache
         run: |
           aws cloudfront create-invalidation \
             --distribution-id E294OHDBEEQ0XC \
             --paths "/*"
 
-      # 12. Deployment summary
+      # 15. Deployment summary
       - name: Deployment summary
         if: success()
         run: |
@@ -96,4 +144,6 @@ jobs:
           echo "- API base URL: /" >> "$GITHUB_STEP_SUMMARY"
           echo "- S3 bucket: universal-cosmos-web-engine" >> "$GITHUB_STEP_SUMMARY"
           echo "- CloudFront: E294OHDBEEQ0XC" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Sitemap: Generated and uploaded" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Robots.txt: Generated and uploaded" >> "$GITHUB_STEP_SUMMARY"
           echo "- Commit: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
