@@ -1,0 +1,50 @@
+.guide-document {
+  min-height: 100%;
+  background: #05070b;
+  color: #e1eaf5;
+  color-scheme: dark;
+}
+
+.cosmos-guide {
+  box-sizing: border-box;
+  width: min(100%, 48rem);
+  margin: 0 auto;
+  padding: clamp(2rem, 8vw, 5rem) clamp(1rem, 5vw, 2rem);
+  background: #05070b;
+  color: #d6e0ed;
+  font: 1rem/1.65 system-ui, sans-serif;
+}
+
+.cosmos-guide h1 {
+  margin: 1rem 0;
+  color: #f2f7ff;
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  line-height: 1.12;
+}
+
+.cosmos-guide h2 {
+  margin: 2rem 0 0.5rem;
+  color: #f2f7ff;
+  font-size: 1.3rem;
+}
+
+.cosmos-guide p { margin: 0 0 1rem; }
+.cosmos-guide ol { padding-left: 1.5rem; }
+.cosmos-guide li + li { margin-top: 0.4rem; }
+.cosmos-guide a { color: #afd7ff; text-underline-offset: 0.2em; }
+.cosmos-guide a:focus-visible { outline: 2px solid #afd7ff; outline-offset: 4px; }
+.cosmos-guide .guide-brand { font-size: 0.9rem; font-weight: 700; }
+.cosmos-guide .guide-action {
+  display: inline-block;
+  padding: 0.6rem 1rem;
+  border: 1px solid #638cb3;
+  border-radius: 0.5rem;
+  background: #142338;
+  font-weight: 600;
+}
+.cosmos-guide .guide-links {
+  list-style: none;
+  margin: 2rem 0 0;
+  border-top: 1px solid #29384c;
+  padding: 1rem 0 0;
+}

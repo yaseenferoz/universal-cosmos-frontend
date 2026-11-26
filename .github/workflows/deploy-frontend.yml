@@ -55,6 +55,8 @@ jobs:
         env:
           VITE_DATA_SOURCE: http
           VITE_API_BASE_URL: /
+          SITE_URL: ${{ vars.SITE_URL }}
+          GOOGLE_SITE_VERIFICATION: ${{ vars.GOOGLE_SITE_VERIFICATION }}
 
       # 8. Authenticate to AWS using GitHub OIDC
       - name: Configure AWS credentials

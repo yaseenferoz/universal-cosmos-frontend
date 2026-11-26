@@ -36,6 +36,17 @@ npm run preview
 
 No backend, API key, paid service, or external texture download is required in local data mode. The backend integration below is opt-in through local environment configuration. For a phone on the same trusted local network, run `npm run dev -- --host 0.0.0.0` and open the development computer's LAN address and printed port. HTTP data mode also requires a backend URL reachable from the phone and a matching backend `FRONTEND_ORIGIN`; `localhost` on a phone refers to the phone itself.
 
+## Google Search setup
+
+The production build includes the homepage and three linked HTML guides at `/solar-system.html`, `/moon-landing.html`, and `/iss.html`. Each guide is readable without JavaScript or WebGL. The existing S3 deployment publishes these files from `dist/`.
+
+1. In the frontend GitHub repository, open **Settings → Secrets and variables → Actions → Variables → New repository variable**. Set `SITE_URL` to the exact public HTTPS origin visitors use, such as `https://cosmos.example.com`. If you build outside GitHub Actions, set it in the build environment or `.env.production.local`. The build uses it for the canonical links, homepage site-name data, and `dist/sitemap.xml`. It advertises the sitemap in `dist/robots.txt`.
+2. Add the live site to [Google Search Console](https://search.google.com/search-console). For a custom domain you control, choose **Domain** and add Google’s TXT record to the domain’s DNS settings. For an address such as a CloudFront hostname, choose **URL prefix** and use **HTML tag** verification. Put only the tag’s `content` value in the GitHub Actions variable `GOOGLE_SITE_VERIFICATION`, or in the build environment when deploying outside Actions. The build adds the tag to the homepage.
+3. Deploy through the existing frontend workflow. Open the live `/robots.txt`, `/sitemap.xml`, and all three guides to confirm the host serves the right files. If using the HTML tag, complete verification in Search Console after the build is live.
+4. In Search Console, open **Sitemaps** and submit `sitemap.xml` from your live origin. Use **URL Inspection → Test live URL → Request indexing** on the homepage, then check **Pages** for indexing status. Link to the live site from the GitHub repository’s About website field and from your portfolio project entry so visitors and crawlers have another way to find it.
+
+See [Google’s ownership verification instructions](https://support.google.com/webmasters/answer/9008080), [sitemap guidance](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap), and [recrawl guidance](https://developers.google.com/search/docs/crawling-indexing/ask-google-to-recrawl).
+
 ## Controls
 
 | Action                      | Desktop       | Touch                                     |

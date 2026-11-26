@@ -9,13 +9,28 @@
     <meta name="theme-color" content="#05070b" />
     <meta
       name="description"
-      content="Explore our Solar System in an immersive, interactive 3D universe. A scientific curiosity, a new perspective."
+      content="Explore the Solar System in 3D. Fly around planets and moons, land at Apollo 17’s Taurus–Littrow site, and watch Earth from the ISS Cupola."
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Universal Cosmos — Explore beyond</title>
+    <link rel="stylesheet" href="/guide.css" />
+    <title>Universal Cosmos | 3D Solar System Explorer</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <main class="cosmos-guide">
+        <p class="guide-brand">Universal Cosmos</p>
+        <h1>Explore the Solar System in 3D</h1>
+        <p>Fly around the eight planets, visit moons and asteroids, descend to the Apollo 17 landing region, or watch Earth turn beneath the International Space Station.</p>
+        <nav aria-label="Exploration guides">
+          <ul class="guide-links">
+            <li><a href="/solar-system.html">Explore the planets and moons</a></li>
+            <li><a href="/moon-landing.html">Land near Apollo 17</a></li>
+            <li><a href="/iss.html">Visit the International Space Station</a></li>
+          </ul>
+        </nav>
+        <noscript><p>Enable JavaScript and use a browser with WebGL 2 to open the 3D explorer. The guides work without JavaScript.</p></noscript>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

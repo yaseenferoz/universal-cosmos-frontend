@@ -1,5 +1,6 @@
 import {
   ArrowUpRight,
+  BookOpen,
   CircleDot,
   Compass,
   Eclipse,
@@ -50,6 +51,10 @@ export function ExplorationRail() {
             <ArrowUpRight size={12} className="future-arrow" />
           </button>
         ))}
+        <a className="rail-link" href="/solar-system.html">
+          <BookOpen size={18} aria-hidden="true" />
+          <span>Exploration guides</span>
+        </a>
       </nav>
       <div className="rail-location">
         <CircleDot size={14} />
