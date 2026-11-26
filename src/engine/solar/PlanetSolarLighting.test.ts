@@ -92,8 +92,10 @@ describe("planet solar material integration", () => {
     expect(coverageShader.fragmentShader).toContain("measuredAlbedo.a");
     expect(night.customProgramCacheKey()).toContain("cosmos-night-mask-v1");
     expect(coverage.customProgramCacheKey()).toContain(
-      "cosmos-observed-coverage-v2",
+      "cosmos-observed-coverage-v3",
     );
+    // The vertex stage carries body-space positions for the illustrative continuation.
+    expect(coverageShader.vertexShader).toContain("cosmosBodyPosition = position");
     expect(night.customProgramCacheKey()).not.toBe(
       coverage.customProgramCacheKey(),
     );

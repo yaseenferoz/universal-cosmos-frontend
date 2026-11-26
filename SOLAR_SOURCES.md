@@ -78,3 +78,23 @@ The visibility scalar is geometric rather than limb-weighted flux. The model exc
 No solar image, video, or observational texture is downloaded or redistributed by this milestone. The cited agency material supplies facts and interpretation; generated visual patterns remain explicitly illustrative. This document does not grant a project license or reuse rights to linked imagery.
 
 Meaningful automated checks cover angular size, inverse-square scaling, near-photosphere limits, invalid inputs, finite-disk overlap, foreground depth, overlapping occulting disks, observer independence, and frame-rate-independent exposure adaptation. Final check results and inspected browser screenshots belong in [VALIDATION.md](VALIDATION.md).
+
+
+## Appearance model (2026-11 revision)
+
+- **Limb darkening:** chromatic power law I(μ)/I(1) = μ^α, α(λ) = −0.023 + 0.292/λ[µm]
+  (Hestroffer & Magnan 1998, A&A 333, 338), at 650/550/450 nm; μ is clamped at 0.05,
+  the law's fitted range. The gray 0.6 linear coefficient remains for flux bookkeeping
+  (same disk mean as the green channel).
+- **Colour:** approximate linear-sRGB chromaticity of a 5772 K blackbody.
+- **Sunspots:** deterministic *illustrative* groups in the ±8–30° activity belts with
+  2,500–9,000 km umbrae, cooler (redder) umbrae, penumbrae and limb faculae. They are not
+  observed spots for the displayed date.
+- **Corona:** Baumbach (1937) radial profile, out to 6 R☉, with illustrative helmet
+  streamers and polar plumes. Like processed eclipse photographs it is radially compressed
+  (exponent 0.45) and shown at a fixed display level; the true corona is ~10⁻⁶ of the disk.
+- **Exposure:** when the Sun is the target and its disk fills the view (0.4–12 % of the
+  view's solid angle), auto-exposure blends toward metering on the disk so limb darkening
+  and granulation stay visible.
+- **Glare:** rotationally symmetric point-spread (compact core and θ^-2.5 scatter wing);
+  the former diffraction-like streak pattern was removed.

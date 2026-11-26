@@ -125,6 +125,11 @@ export class SolarMaterialLighting {
     },
   };
 
+  /** Shared relative-irradiance uniform (e.g. for atmospheric limbs of this body). */
+  get irradianceUniform(): { value: number } {
+    return this.uniforms.cosmosSolarIrradiance;
+  }
+
   constructor(readonly towardSun: Vector3) {
     this.uniforms.cosmosSolarFallbackDirection.value = towardSun;
   }

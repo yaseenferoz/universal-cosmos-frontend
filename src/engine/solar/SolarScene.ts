@@ -8,14 +8,14 @@ import {
   type WebGLRenderer,
 } from "three";
 import type { CelestialObject, ObjectId } from "../../types/celestial";
-import type { SolarTelemetry } from "../../types/solar";
+import { initialSolarTelemetry, type SolarTelemetry } from "../../types/solar";
 import type { Cartesian, ViewMode } from "../coordinates/CoordinateSystem";
 import { KM_PER_EXPLORATION_UNIT } from "../coordinates/CoordinateSystem";
 import type { FloatingOrigin } from "../coordinates/FloatingOrigin";
 import type { CelestialBody } from "../objects/CelestialBody";
 import { SolarExposure } from "./SolarExposure";
 import { solarDiameterPixels } from "./SunRenderer";
-import {
+import { eclipseState,
   ASTRONOMICAL_UNIT_KM,
   NOMINAL_SOLAR_RADIUS_KM,
   angularDiameterRad,
@@ -35,7 +35,12 @@ interface SolarFrame {
   viewportHeight: number;
   observerSurface?: { bodyId: ObjectId; radiusKm: number };
   localBodyId?: ObjectId;
+  /** Inspected body whose own sunlight (eclipse state) is reported in telemetry. */
+  targetId?: ObjectId;
 }
+
+/** Generated bodies smaller than this neither cast nor receive modeled eclipse shadows. */
+export const ECLIPSE_CASTER_MIN_RADIUS_KM = 150;
 
 /** Keeps scientific photometry and camera-relative rendering outside the UI/animation host. */
 export class SolarScene {
@@ -43,26 +48,37 @@ export class SolarScene {
   coronaEnabled = true;
   glareStrength = 0.35;
   lunarIlluminationFraction = 1;
-  telemetry: SolarTelemetry = {
-    distanceAu: 1,
-    angularDiameterDeg: 0.5329,
-    irradianceWm2: 1361,
-    visibleFraction: 1,
-    effectiveExposureEv: 0,
-    physicalScale: true,
-  };
+  telemetry: SolarTelemetry = { ...initialSolarTelemetry };
   private readonly sunRadiusKm: number;
   private readonly viewFrustum = new Frustum();
   private readonly viewProjection = new Matrix4();
   private readonly solarBounds = new Sphere();
+  /** Optically relevant bodies: curated or ≥ ECLIPSE_CASTER_MIN_RADIUS_KM. */
+  private readonly alwaysRelevant: CelestialObject[] = [];
+  /** Remaining (minor) bodies; relevant only while drawn. */
+  private readonly minorBodies: CelestialBody[] = [];
+  private readonly curatedBodies: CelestialBody[] = [];
   constructor(
-    private readonly objects: readonly CelestialObject[],
+    objects: readonly CelestialObject[],
     private readonly bodies: Map<ObjectId, CelestialBody>,
     private readonly renderer: WebGLRenderer,
   ) {
     this.sunRadiusKm =
       objects.find((body) => body.id === "sun")?.radiusKm ??
       NOMINAL_SOLAR_RADIUS_KM;
+    for (const object of objects) {
+      if (object.id === "sun") continue;
+      const body = bodies.get(object.id);
+      if (!body || body.curated || object.radiusKm >= ECLIPSE_CASTER_MIN_RADIUS_KM) this.alwaysRelevant.push(object);
+      else this.minorBodies.push(body);
+      if (body?.curated) this.curatedBodies.push(body);
+    }
+  }
+
+  /** Lit bodies that are drawn this frame: curated plus visible minor bodies. */
+  private *receivers(): Generator<CelestialBody> {
+    yield* this.curatedBodies;
+    for (const body of this.bodies.values()) if (!body.curated && !body.culled && body.data.id !== "sun") yield body;
   }
 
   update(frame: SolarFrame): void {
@@ -92,11 +108,11 @@ export class SolarScene {
     const diameter = angularDiameterRad(this.sunRadiusKm, distanceKm);
     // A measured valley can lie below the mean-radius sphere. Use its sampled local
     // radial ground for the analytic horizon; actual hills still occlude the rendered Sun.
-    const occluders = this.objects
-      .filter(
-        (object) =>
-          object.id !== "sun",
-      )
+    // Bodies that can matter optically: curated, ≥150 km, or currently drawn. Hundreds
+    // of hidden irregular moons cannot visibly occult the Sun from the camera.
+    const relevant = this.alwaysRelevant.slice();
+    for (const body of this.minorBodies) if (!body.culled) relevant.push(body.data);
+    const occluders = relevant
       .map((object) => ({
         positionKm: positionsKm.get(object.id)!,
         radiusKm: frame.observerSurface?.bodyId === object.id ? frame.observerSurface.radiusKm : object.radiusKm,
@@ -104,6 +120,14 @@ export class SolarScene {
     const visibleFraction = physical
       ? solarVisibility(cameraKm, sunKm, occluders, this.sunRadiusKm)
       : 1;
+    // Sunlight at the inspected body's center, e.g. Mimas inside Saturn's shadow.
+    const targetKm = frame.targetId ? positionsKm.get(frame.targetId) : undefined;
+    const eclipse = physical && frame.targetId && targetKm
+      ? eclipseState(targetKm, sunKm, relevant
+        .filter((object) => object.id !== frame.targetId)
+        .map((object) => ({ id: object.id, positionKm: positionsKm.get(object.id)!, radiusKm: object.radiusKm })),
+      this.sunRadiusKm)
+      : { sunlitFraction: 1, casterId: null };
     // The observer's own lunar horizon affects the image, never the light on the
     // whole terrain pass. Only external bodies attenuate that scene's source.
     const localBodyId = frame.localBodyId ?? "moon";
@@ -111,19 +135,22 @@ export class SolarScene {
     this.lunarIlluminationFraction = physical ? solarVisibility(
       lunarReceiver,
       sunKm,
-      this.objects.filter((object) => object.id !== "sun" && object.id !== localBodyId)
+      relevant.filter((object) => object.id !== localBodyId)
         .map((object) => ({ positionKm: positionsKm.get(object.id)!, radiusKm: object.radiusKm })),
       this.sunRadiusKm,
     ) : 1;
 
+    // Eclipse casters: curated bodies plus generated ones ≥150 km. Hundreds of small
+    // irregular moons cast sub-pixel shadows; scanning them for every receiver is O(n²).
+    const casters = physical ? this.alwaysRelevant : [];
     // Bounds include the receiver's full radius so a localized eclipse is not rejected at its center.
-    for (const body of this.bodies.values()) {
-      if (body.data.id === "sun") continue;
+    for (const body of this.receivers()) {
+      const receivesEclipses = body.curated || body.data.radiusKm >= ECLIPSE_CASTER_MIN_RADIUS_KM;
       const position = new Vector3().copy(positionsKm.get(body.data.id)!);
       const toSun = sunKm.clone().sub(position);
       const sunDistance = Math.max(this.sunRadiusKm, toSun.length());
-      const candidates = physical
-        ? this.objects
+      const candidates = physical && receivesEclipses
+        ? casters
             .filter((candidate) => {
               if (candidate.id === "sun" || candidate.id === body.data.id)
                 return false;
@@ -251,6 +278,8 @@ export class SolarScene {
       angularDiameterDeg: MathUtils.radToDeg(diameter),
       irradianceWm2: solarIrradianceWm2(distanceAu),
       visibleFraction,
+      targetSunlitFraction: eclipse.sunlitFraction,
+      targetShadowCasterId: eclipse.casterId,
       effectiveExposureEv: this.exposure.valueEv,
       physicalScale: physical,
     };

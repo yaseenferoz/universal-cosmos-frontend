@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { AdditiveBlending, Group, Mesh, PerspectiveCamera, Points, ShaderMaterial, Vector3 } from "three";
-import { SunRenderer, solarDiameterPixels, sunQualityBudget, unresolvedSolarWeight } from "./SunRenderer";
-import { SOLAR_DISPLAY_RADIANCE, SOLAR_LIMB_DARKENING } from "./solarMath";
+import { SunRenderer, illustrativeSunspots, solarDiameterPixels, sunQualityBudget, unresolvedSolarWeight } from "./SunRenderer";
+import { SOLAR_DISPLAY_RADIANCE, SOLAR_LIMB_DARKENING, baumbachCorona, powerLawDiskMean } from "./solarMath";
 
 function cameraAt(distance: number): PerspectiveCamera {
   const camera = new PerspectiveCamera(50, 1, 0.001, 1_000_000);
@@ -36,7 +36,11 @@ describe("dedicated solar rendering resources and physical geometry", () => {
     const sun = new SunRenderer(1, "low");
     const material = sun.pickables[0].material;
     expect(material.uniforms.solarRadiance.value).toBe(SOLAR_DISPLAY_RADIANCE);
-    expect(material.uniforms.solarLimbCoefficient.value).toBe(SOLAR_LIMB_DARKENING);
+    // Chromatic power law: blue darkens toward the limb more than red.
+    const alpha = material.uniforms.solarLimbAlpha.value;
+    expect(alpha.z).toBeGreaterThan(alpha.y);
+    expect(alpha.y).toBeGreaterThan(alpha.x);
+    expect(powerLawDiskMean(alpha.y)).toBeCloseTo(1 - SOLAR_LIMB_DARKENING / 3, 2);
     expect(material.toneMapped).toBe(true);
     expect(material.fragmentShader.match(/#include <tonemapping_fragment>/g)).toHaveLength(1);
     expect(material.fragmentShader.match(/#include <colorspace_fragment>/g)).toHaveLength(1);
@@ -115,5 +119,25 @@ describe("dedicated solar rendering resources and physical geometry", () => {
     expect(unresolvedSolarWeight(neptunePixels)).toBe(1);
     expect(unresolvedSolarWeight(1.5)).toBe(0);
     expect(unresolvedSolarWeight(1.125)).toBeCloseTo(0.5);
+  });
+});
+
+describe("solar appearance models", () => {
+  it("follows the Baumbach corona profile: ~4e-6 of disk at the limb, steep inner falloff", () => {
+    expect(baumbachCorona(1)).toBeCloseTo(4.0432e-6, 9);
+    expect(baumbachCorona(2) / baumbachCorona(1)).toBeLessThan(0.01);
+    expect(baumbachCorona(0.5)).toBe(0);
+  });
+  it("places illustrative sunspots only in the activity belts, at realistic umbra sizes", () => {
+    const spots = illustrativeSunspots();
+    expect(spots.length).toBeGreaterThan(4);
+    for (const spot of spots) {
+      const latitude = Math.abs(Math.asin(spot.y)) * 180 / Math.PI;
+      expect(latitude).toBeGreaterThan(7);
+      expect(latitude).toBeLessThan(33);
+      expect(Math.hypot(spot.x, spot.y, spot.z)).toBeCloseTo(1, 10);
+      expect(spot.w * 695_700).toBeLessThan(10_000);
+    }
+    expect(illustrativeSunspots()).toEqual(spots);
   });
 });

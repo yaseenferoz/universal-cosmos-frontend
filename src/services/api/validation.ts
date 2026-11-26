@@ -74,8 +74,13 @@ export function parseObject(value: unknown): CelestialObject {
   if (!/^#[0-9a-f]{6}$/i.test(color)) invalid("color");
   const period = number(data.orbitalPeriodDays, "orbital period", 0);
   if (parentId !== null && period === 0) invalid("orbital period");
+  // Placeholders (zero spin/mass) are accepted only when explicitly declared unmeasured.
+  const unmeasured = data.unmeasured === undefined ? undefined
+    : Array.isArray(data.unmeasured) && data.unmeasured.every((item: unknown) => item === "radius" || item === "mass" || item === "rotation")
+      ? (data.unmeasured as NonNullable<CelestialObject["unmeasured"]>) : invalid("unmeasured quantities");
   const rotation = number(data.rotationPeriodHours, "rotation period");
-  if (rotation === 0) invalid("rotation period");
+  if (rotation === 0 && !unmeasured?.includes("rotation")) invalid("rotation period");
+  const massKg = number(data.massKg, "mass", unmeasured?.includes("mass") ? 0 : Number.MIN_VALUE);
   return {
     id: objectId,
     name: string(data.name, "name"),
@@ -83,7 +88,7 @@ export function parseObject(value: unknown): CelestialObject {
     description: string(data.description, "description"),
     parentId,
     radiusKm: number(data.radiusKm, "radius", Number.MIN_VALUE),
-    massKg: number(data.massKg, "mass", Number.MIN_VALUE),
+    massKg,
     gravityMs2: number(data.gravityMs2, "gravity", 0),
     orbitalPeriodDays: period,
     rotationPeriodHours: rotation,
@@ -107,6 +112,7 @@ export function parseObject(value: unknown): CelestialObject {
         value: string(item.value, "fact value"),
       };
     }),
+    ...(unmeasured ? { unmeasured: [...unmeasured] } : {}),
   };
 }
 

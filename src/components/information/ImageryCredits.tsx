@@ -1,11 +1,13 @@
 import { ArrowUpRight } from "lucide-react";
-import { imageryById } from "../../data/imagery";
+import { imageryFor } from "../../data/imagery";
+import { shapeModelFor } from "../../data/shapeModels";
 import type { ObjectId } from "../../types/celestial";
 import { useExplorationStore } from "../../stores/explorationStore";
 
 export function ImageryCredits({ id }: { id: ObjectId }) {
   const status = useExplorationStore((state) => state.imageryStatus);
-  const imagery = imageryById[id];
+  const imagery = imageryFor(id);
+  const model = shapeModelFor(id);
   const loadMessages =
     status?.objectId === id
       ? status.messages.filter((message) => !imagery.missing.includes(message))
@@ -23,14 +25,18 @@ export function ImageryCredits({ id }: { id: ObjectId }) {
         Images are historical composites or maps, not live observations.
         Lighting and atmosphere are rendering approximations.
       </p>
-      {id === "deimos" && (
+      {model && (
         <div className="imagery-credit">
           <span>SHAPE + ATLAS · NASA MODEL</span>
-          <a href="https://science.nasa.gov/resource/deimos-mars-moon-3d-model/" target="_blank" rel="noreferrer">
-            NASA/JPL-Caltech Deimos 3D model
+          <a href={model.sourceUrl} target="_blank" rel="noreferrer">
+            {model.title} ({model.credit})
             <ArrowUpRight size={12} />
           </a>
-          <p>Local 1.6 MB GLB with a 1024 px texture atlas. Its irregular outline is scaled to the catalog mean radius; orientation and baked lighting are approximate.</p>
+          <p>
+            Local {(model.bytes / 1e6).toFixed(1)} MB GLB, {model.triangles.toLocaleString("en-US")} triangles.
+            Scaled to the catalog mean radius and aligned to its principal axes; prime meridian,
+            spin phase and baked lighting are approximate. {model.notes}
+          </p>
         </div>
       )}
       {id === "iss" && <div className="imagery-credit">
@@ -47,7 +53,7 @@ export function ImageryCredits({ id }: { id: ObjectId }) {
               : "DERIVED MAP"}
           </span>
           <a href={asset.sourceUrl} target="_blank" rel="noreferrer">
-            {asset.title}{id === "deimos" && layer === "surface" ? " (fallback only)" : ""}
+            {asset.title}{model && layer === "surface" ? " (fallback only)" : ""}
             <ArrowUpRight size={12} />
           </a>
           <p>
@@ -77,8 +83,8 @@ export function ImageryCredits({ id }: { id: ObjectId }) {
         </div>
       )}
       <p>
-        Background stars are procedural. Orbital phases are chosen for this
-        model; the clock is not a scientific ephemeris.
+        Background stars are procedural. Planets, moons and small bodies use
+        JPL-based positions; the ISS uses a circular model orbit. Not suitable for observation planning.
       </p>
     </details>
   );

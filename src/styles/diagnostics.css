@@ -69,6 +69,8 @@
   .view-exploration .scene-caption h1 { font-size: 23px; margin: 5px 0; }
   .view-exploration .scene-caption > p,
   .view-exploration .asset-notice { display: none; }
+  /* Eclipse state explains a dark body; keep it on narrow screens. */
+  .view-exploration .scene-caption > p.eclipse-notice { display: flex; }
   .reopen-information {
     top: 119px; bottom: auto; right: 16px; left: auto;
     width: 44px; height: 44px; padding: 0;

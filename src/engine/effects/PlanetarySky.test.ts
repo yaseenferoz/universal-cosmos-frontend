@@ -60,7 +60,8 @@ describe("landing sky", () => {
     expect(localStarVisibility(1, planetaryEnvironments.mars)).toBeCloseTo(0.01);
     expect(localStarVisibility(-1, planetaryEnvironments.venus)).toBe(0);
     expect(localStarVisibility(1, planetaryEnvironments.venus)).toBe(0);
-    expect(localStarVisibility(-1, planetaryEnvironments.jupiter)).toBe(0);
+    // Above Jupiter's cloud deck the night sky is clear enough for stars.
+    expect(localStarVisibility(-1, planetaryEnvironments.jupiter)).toBeCloseTo(0.75);
   });
 
   it("shows analytic haze only within its modeled layer", () => {

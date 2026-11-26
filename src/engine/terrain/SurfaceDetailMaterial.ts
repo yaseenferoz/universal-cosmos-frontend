@@ -3,6 +3,7 @@ import type { ObjectId } from "../../types/celestial";
 import { SurfaceDetailMaps } from "./SurfaceDetailMaps";
 export { SurfaceDetailMaps } from "./SurfaceDetailMaps";
 import { LUNAR_DISPLAY_DARK, LUNAR_DISPLAY_RANGE } from "./lunarAppearance";
+import { environmentFor } from "../../data/planetaryEnvironments";
 
 /** A power-of-two period shared by every texture octave, in body-fixed meters. */
 export const DETAIL_PERIOD_M = 4096;
@@ -15,7 +16,13 @@ export function configureSurfaceDetail(material: MeshStandardMaterial, maps: Sur
   originM: Vector3, bodyId: ObjectId, rock = false, measured = false): void {
   const previous = material.onBeforeCompile;
   const previousKey = material.customProgramCacheKey();
-  const tint = new Color(bodyId === "mars" ? "#c69576" : bodyId === "venus" ? "#ac9679" : "#a5a3a0").multiplyScalar(3.2);
+  // Worlds without a dedicated palette take their environment's ground colour (from the
+  // measured albedo/colour), normalized by the detail photographs' mean luminance (~0.22).
+  const dedicated = ["mars", "venus", "earth", "mercury", "moon"].includes(bodyId);
+  const ground = dedicated ? undefined : environmentFor(bodyId)?.groundColor;
+  const tint = ground
+    ? new Color(ground).multiplyScalar(1 / 0.22)
+    : new Color(bodyId === "mars" ? "#c69576" : bodyId === "venus" ? "#ac9679" : "#a5a3a0").multiplyScalar(3.2);
   const soil = new Color(bodyId === "mercury" ? "#696663" : "#80756a");
   const outcrop = new Color(bodyId === "mercury" ? "#545252" : "#625e59");
   material.onBeforeCompile = (shader, renderer) => {

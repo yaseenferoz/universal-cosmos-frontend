@@ -186,6 +186,13 @@
   text-decoration: underline;
   color: #8a98aa;
 }
+.scene-caption > p.eclipse-notice {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+  color: #c9b98f;
+}
 .model-context {
   position: absolute;
   z-index: 3;

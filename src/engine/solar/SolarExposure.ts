@@ -44,7 +44,17 @@ export function meteredExposureEv(meter: ExposureMeter, solarFilter = false): nu
   const surfaceMeter = Math.max(0.00025, meter.surfaceIrradiance);
   // Ordinary viewing prioritizes the selected world's illumination. A tiny Sun
   // in the viewport may reduce that exposure by at most1EV, never black out a planet.
-  const brightness = Math.max(surfaceMeter, solarFilter ? sunMeter : Math.min(sunMeter, surfaceMeter * 2));
+  let brightness = Math.max(surfaceMeter, solarFilter ? sunMeter : Math.min(sunMeter, surfaceMeter * 2));
+  if (!solarFilter && meter.solarTarget && meter.sunInView && meter.solarVisibleFraction > 0) {
+    // Approaching the Sun, adapt to the disk as an eye or camera would: blend toward
+    // metering on mean disk radiance as the disk fills more of the view (log space).
+    const fill = Math.min(1, meter.solarDiskSolidAngle / Math.max(0.001, meter.viewSolidAngle));
+    const t = Math.max(0, Math.min(1, (fill - 0.004) / (0.12 - 0.004)));
+    const adapt = t * t * (3 - 2 * t);
+    // Disk centre lands mid-curve so the ~60% centre-to-limb falloff stays visible.
+    const diskMeter = SOLAR_DISPLAY_RADIANCE * (1 - SOLAR_LIMB_DARKENING / 3) * 1.8;
+    brightness = 2 ** ((1 - adapt) * Math.log2(brightness) + adapt * Math.log2(Math.max(brightness, diskMeter)));
+  }
   return Math.max(-20, Math.min(12, -Math.log2(brightness)));
 }
 

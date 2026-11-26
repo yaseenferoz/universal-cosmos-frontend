@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Vector3 } from "three";
 import { objectById } from "../../data/catalog";
 import { explorationProfile } from "../../data/explorationProfiles";
-import { planetaryEnvironments } from "../../data/planetaryEnvironments";
+import { environmentFor } from "../../data/planetaryEnvironments";
 import { ReconstructedTerrainProvider } from "../../services/terrain/ReconstructedTerrainProvider";
 import { LunarNavigationController } from "./LunarNavigationController";
 import { fromMoonFixedMeters, toMoonFixedMeters } from "../coordinates/LunarFrame";
@@ -13,7 +13,7 @@ describe("catalog planetary descent", () => {
   afterEach(() => vi.unstubAllGlobals());
   it.each(["mercury", "venus", "earth", "mars", "jupiter", "saturn", "uranus", "neptune"] as const)("enters, moves and returns from %s without crossing its reference ground", id => {
     const body = objectById[id];
-    const atmospheric = planetaryEnvironments[id]!.mode === "atmosphere";
+    const atmospheric = environmentFor(id)!.mode === "atmosphere";
     const provider = new ReconstructedTerrainProvider(body, { latDeg: 0, lonDeg: 0, radiusM: 1000 });
     const navigation = new LunarNavigationController(new EventTarget() as HTMLElement, (lat, lon) => provider.sampleHeight(lat, lon), {
       radiusM: provider.manifest.radiusM, reconstruction: true, hoverHeightM: atmospheric ? 25000 : undefined,

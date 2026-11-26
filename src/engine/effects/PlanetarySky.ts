@@ -1,5 +1,6 @@
 import { BackSide, Color, Mesh, ShaderMaterial, SphereGeometry, Vector3 } from "three";
 import type { PlanetaryEnvironment } from "../../data/planetaryEnvironments";
+import { SKY_SUN_GLARE, SOLAR_ANGULAR_RADIUS_1AU } from "./ScatteringSky";
 
 /** Visual adaptation, not photometric radiance. Dense cloud-level views hide the star map. */
 export function localStarVisibility(solarCosine: number, environment?: PlanetaryEnvironment): number {
@@ -34,6 +35,9 @@ export class PlanetarySky {
         daylight: { value: 0 },
         twilightColor: { value: new Color(profile.twilightColor ?? profile.horizonColor) },
         twilightStrength: { value: profile.twilightColor ? 1 : 0 },
+        sunAngularRadius: { value: SOLAR_ANGULAR_RADIUS_1AU },
+        solarDepth: { value: profile.solarOpticalDepth },
+        sunGlare: { value: SKY_SUN_GLARE * 7 },
       },
       vertexShader: `varying vec3 sightline;
         void main() { sightline = position; vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position = p.xyww; }`,
@@ -42,6 +46,7 @@ export class PlanetarySky {
         uniform vec3 upDirection, sunDirection, zenithColor, horizonColor, twilightColor;
         uniform float density, irradiance, opaqueHaze, nightTransmission, cloudStructure, daylight, twilightStrength;
         uniform float asymmetry;
+        uniform float sunAngularRadius, solarDepth, sunGlare;
         float cloudHash(vec3 p) {
           p = fract(p * 0.1031);
           p += dot(p, p.yzx + 33.33);
@@ -92,6 +97,21 @@ export class PlanetarySky {
           alpha *= mix(nightExtinction, 1.0, day);
           alpha = mix(alpha, clamp(density, 0.0, 1.0), opaqueHaze);
           alpha *= 1.0 - (1.0 - opaqueHaze) * 0.75 * pow(max(0.0, cosine), 128.0) * day;
+          // The Sun seen through the haze: disk dimmed by exp(−τ·airmass) (none through
+          // Venus's clouds), plus the same eye-glare PSF used in space.
+          if (solarHeight > -0.02) {
+            float airmass = 1.0 / max(0.035, solarHeight + 0.025);
+            float transmittance = exp(-solarDepth * airmass);
+            float theta = acos(clamp(cosine, -1.0, 1.0));
+            float disk = 1.0 - smoothstep(sunAngularRadius * 0.9, sunAngularRadius * 1.1, theta);
+            float solidAngle = 6.2831853 * (1.0 - cos(sunAngularRadius));
+            float sunRadiance = min(60000.0, 3.1 * irradiance / max(solidAngle, 1e-9));
+            float thetaDeg = degrees(max(theta, sunAngularRadius)) + 0.02;
+            float psf = 0.478 * 20.91 / (thetaDeg * thetaDeg * thetaDeg) + 0.138 * 72.37 / (thetaDeg * thetaDeg);
+            float sunLight = transmittance * (sunRadiance * disk + 3.1 * irradiance * psf * sunGlare);
+            color += vec3(1.0, 0.95, 0.88) * sunLight;
+            alpha = max(alpha, clamp(sunLight, 0.0, 1.0));
+          }
           gl_FragColor = vec4(color, alpha);
           #include <tonemapping_fragment>
           #include <colorspace_fragment>
@@ -113,6 +133,10 @@ export class PlanetarySky {
     // Match the terrain's linear solar scale. Global exposure already compensates
     // for distance; a minimum brightness or sqrt here blows out outer-planet haze.
     this.material.uniforms.irradiance.value = Number.isFinite(irradiance) ? Math.max(0, irradiance) : 0;
+    // Irradiance ∝ 1/d², so the Sun's angular radius scales with sqrt(irradiance).
+    this.material.uniforms.sunAngularRadius.value = SOLAR_ANGULAR_RADIUS_1AU * Math.sqrt(Math.max(this.material.uniforms.irradiance.value, 1e-6));
+    // Less air above an observer high in the haze (descent, giant-planet cloud deck).
+    this.material.uniforms.solarDepth.value = this.profile.solarOpticalDepth * depth;
     this.mesh.visible = this.profile.hazeHeightM > 0 && depth > 0;
   }
   dispose(): void { this.mesh.geometry.dispose(); this.material.dispose(); }

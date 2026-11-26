@@ -57,7 +57,7 @@ export function TopBar() {
       </div>
       <div className="top-actions">
         <div className="simulation-date">
-          <span>{playing && speed === REAL_TIME_DAYS_PER_SECOND ? "CURRENT UTC · MODELED ORBITS" : "SIMULATED UTC · MODELED ORBITS"}</span>
+          <span>{playing && speed === REAL_TIME_DAYS_PER_SECOND ? "CURRENT UTC · JPL-BASED POSITIONS" : "SIMULATED UTC · JPL-BASED POSITIONS"}</span>
           <time>
             {formatSimulationDate(days, epoch)}
             <span className="clock-time">

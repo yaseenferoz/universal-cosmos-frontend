@@ -19,7 +19,7 @@ import { useExplorationStore } from "../stores/explorationStore";
 import { useRenderingStore } from "../stores/renderingStore";
 import { ViewingActions } from "../components/controls/ViewingActions";
 import { RenderingDiagnostics } from "../components/panels/RenderingDiagnostics";
-import { planetaryEnvironments } from "../data/planetaryEnvironments";
+import { environmentFor } from "../data/planetaryEnvironments";
 import { useStationStore } from "../stores/stationStore";
 import { StationExperience } from "../features/station/StationExperience";
 
@@ -32,7 +32,7 @@ export function App() {
   const lunarActive = !["orbit", "error"].includes(lunarPhase);
   const diagnostics = useRenderingStore((s) => s.diagnosticsEnabled);
   const hasExplorationControls = viewMode === "exploration" && selectedId !== null &&
-    (selectedId === "moon" || planetaryEnvironments[selectedId] !== undefined);
+    (selectedId === "moon" || environmentFor(selectedId) !== undefined);
   useExplorationShortcuts(!stationActive);
   if (stationActive) return <StationExperience />;
   return (

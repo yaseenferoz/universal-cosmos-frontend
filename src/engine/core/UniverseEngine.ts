@@ -12,8 +12,10 @@ import {
 } from "three";
 import type { CelestialObject, ObjectId, Quality } from "../../types/celestial";
 import {
+  displayOrbitAt,
   explorationPosition,
   modeledPositionsKm,
+  modeledRelativePositionKm,
   overviewPositions,
   renderRadiusFor,
   type ViewMode,
@@ -42,7 +44,8 @@ import { advanceSimulationDays } from "../../utils/simulationTime";
 import type { SolarTelemetry } from "../../types/solar";
 import { LunarExploration } from "./LunarExploration";
 import { explorationProfile } from "../../data/explorationProfiles";
-import { planetaryEnvironments } from "../../data/planetaryEnvironments";
+import { loadBodySamples } from "../ephemeris/generatedEphemeris";
+import { environmentFor } from "../../data/planetaryEnvironments";
 import { initialLunarTelemetry, type LunarTelemetry } from "../../types/lunar";
 import {
   fromMoonFixedMeters,
@@ -76,6 +79,28 @@ export interface EngineOptions {
   }) => void;
 }
 
+interface MinorBodyRecord {
+  object: CelestialObject;
+  body: CelestialBody;
+  label: HTMLButtonElement | undefined;
+  /** Whether this frame recomputes the offset and re-tests culling. */
+  evaluate: boolean;
+  offsetKm: Cartesian | null;
+  displayOffset: Cartesian | null;
+  /** Reused per-frame outputs (no allocation per body per frame). */
+  km: Cartesian;
+  display: Cartesian;
+}
+
+/** Minor-body offsets refreshed per frame while hidden (~8 frames for a full pass). */
+const MINOR_REFRESH_PER_FRAME = 64;
+const ORIGIN: Cartesian = { x: 0, y: 0, z: 0 };
+/** Exploration render units (10,000 km): minimum camera bound and base far plane. */
+const EXPLORATION_MIN_BOUND = 1_000_000;
+const EXPLORATION_FAR = 1_200_000;
+/** Generated Sun-orbiters at least this large (dwarf planets) get Overview labels and orbits. */
+const OVERVIEW_MINOR_MIN_RADIUS_KM = 400;
+
 export class UniverseEngine {
   private readonly scene = new Scene();
   private readonly solarRoot = new Group();
@@ -94,6 +119,15 @@ export class UniverseEngine {
   private readonly asteroidBelt = new AsteroidBelt();
   private readonly bodies = new Map<ObjectId, CelestialBody>();
   private readonly labels = new Map<ObjectId, HTMLButtonElement>();
+  private readonly labelScratch = new Vector3();
+  /** Hand-curated bodies: positions, spin and labels every frame. */
+  private curatedObjects: CelestialObject[] = [];
+  private curatedBodies: CelestialBody[] = [];
+  /** JPL-generated minor bodies, parents before children (e.g. Pluto before Charon). */
+  private readonly minor: MinorBodyRecord[] = [];
+  private minorCursor = 0;
+  private minorMode: ViewMode | null = null;
+  private readonly labelDirection = new Vector3();
   private readonly labelRoot = document.createElement("div");
   private readonly observer: ResizeObserver;
   private readonly abort = new AbortController();
@@ -168,10 +202,14 @@ export class UniverseEngine {
     this.sunlight.shadow.bias = -0.00008;
     for (const object of options.objects)
       this.bodies.set(object.id, new CelestialBody(object));
+    // ~1 MB of sampled Horizons positions for irregular moons; elements until it arrives.
+    void loadBodySamples();
+    this.partitionBodies(options.objects);
     for (const body of this.bodies.values()) {
       // Hierarchy is resolved in CPU kilometers; mesh scaling cannot alter child orbits.
       this.solarRoot.add(body.anchor);
-      if (body.orbit) this.solarRoot.add(body.orbit);
+      // Minor-body orbit lines join the scene only while shown (see applyRelativePositions).
+      if (body.curated && body.orbit) this.solarRoot.add(body.orbit);
       body.setRenderRadius(renderRadiusFor(body.data, this.viewMode));
     }
     this.solar = new SolarScene(
@@ -188,6 +226,7 @@ export class UniverseEngine {
     });
     container.appendChild(this.labelRoot);
     for (const body of this.bodies.values()) this.createLabel(body);
+    for (const record of this.minor) record.label = this.labels.get(record.object.id);
     this.updateBodies();
     this.observer = new ResizeObserver(() => this.resize());
     this.observer.observe(container);
@@ -245,45 +284,162 @@ export class UniverseEngine {
     this.labelRoot.appendChild(label);
   }
 
+  /**
+   * Split bodies into curated (updated every frame) and JPL-generated minor bodies,
+   * ordered parent-first so each offset is added to an already-resolved parent.
+   */
+  private partitionBodies(objects: readonly CelestialObject[]): void {
+    this.curatedObjects = objects.filter(({ id }) => this.bodies.get(id)?.curated);
+    this.curatedBodies = this.curatedObjects.map(({ id }) => this.bodies.get(id)!);
+    this.minor.length = 0;
+    const placed = new Set(this.curatedObjects.map(({ id }) => id));
+    const pending = objects.filter(({ id }) => !placed.has(id) && this.bodies.has(id));
+    while (pending.length) {
+      const index = pending.findIndex(({ parentId }) => !parentId || placed.has(parentId));
+      if (index < 0) break; // orphans are not rendered (catalog tests forbid them)
+      const [object] = pending.splice(index, 1);
+      placed.add(object.id);
+      this.minor.push({
+        object, body: this.bodies.get(object.id)!, label: this.labels.get(object.id), evaluate: true,
+        offsetKm: null, displayOffset: null, km: { x: 0, y: 0, z: 0 }, display: { x: 0, y: 0, z: 0 },
+      });
+    }
+  }
+
   private updateBodies(): void {
-    const modeledKm = modeledPositionsKm(this.options.objects, this.days, this.options.simulationEpoch);
+    const epoch = this.options.simulationEpoch;
+    const modeledKm = modeledPositionsKm(this.curatedObjects, this.days, epoch);
     this.modeledKm = modeledKm;
     const overview =
       this.viewMode === "overview"
-        ? overviewPositions(this.options.objects, this.days)
+        ? overviewPositions(this.curatedObjects, this.days, epoch)
         : null;
-    for (const body of this.bodies.values()) {
+    const sun = modeledKm.get("sun");
+    for (const body of this.curatedBodies) {
       const kilometerPosition = modeledKm.get(body.data.id)!;
       const position =
         overview?.get(body.data.id) ?? explorationPosition(kilometerPosition);
-      const global = this.globalPositions.get(body.data.id) ?? new Vector3();
-      global.set(position.x, position.y, position.z);
-      this.globalPositions.set(body.data.id, global);
-      const sun = modeledKm.get("sun");
-      body.rotate(this.days, this.options.simulationEpoch,
+      this.globalVector(body.data.id).set(position.x, position.y, position.z);
+      body.rotate(this.days, epoch,
         body.data.id === "earth" && sun
           ? new Vector3(sun.x - kilometerPosition.x, sun.y - kilometerPosition.y, sun.z - kilometerPosition.z).normalize()
           : undefined);
     }
+    this.updateMinorPositions(modeledKm, overview);
     this.applyRelativePositions();
   }
 
-  private applyRelativePositions(): void {
-    for (const body of this.bodies.values()) {
-      this.origin.toLocal(
-        this.globalPositions.get(body.data.id)!,
-        body.anchor.position,
-      );
-      if (body.orbit) {
-        const parent = body.data.parentId
-          ? this.globalPositions.get(body.data.parentId)
-          : undefined;
-        this.origin.toLocal(parent ?? new Vector3(), body.orbit.position);
-        body.orbit.visible = this.viewMode === "overview" && this.orbitsVisible &&
-          (body.data.parentId === "sun" || body.data.id === this.selected);
+  private globalVector(id: ObjectId): Vector3 {
+    let global = this.globalPositions.get(id);
+    if (!global) {
+      global = new Vector3();
+      this.globalPositions.set(id, global);
+    }
+    return global;
+  }
+
+  /**
+   * Minor bodies: offsets from their parent are recomputed round-robin
+   * (MINOR_REFRESH_PER_FRAME per frame) unless drawn or focused, then added to the
+   * parent's current position. Hidden bodies are at most a few frames stale.
+   */
+  private updateMinorPositions(modeledKm: Map<ObjectId, Cartesian>, overview: Map<ObjectId, Cartesian> | null): void {
+    const count = this.minor.length;
+    if (!count) return;
+    const epoch = this.options.simulationEpoch;
+    if (this.minorMode !== this.viewMode) {
+      this.minorMode = this.viewMode;
+      for (const record of this.minor) record.displayOffset = null;
+    }
+    for (let index = 0; index < count; index++) {
+      const record = this.minor[index];
+      const { object, body } = record;
+      const inSlice = (index - this.minorCursor + count) % count < MINOR_REFRESH_PER_FRAME;
+      record.evaluate = !body.culled || inSlice || record.offsetKm === null
+        || object.id === this.selected || object.id === this.followed;
+      if (record.evaluate || record.offsetKm === null)
+        record.offsetKm = modeledRelativePositionKm(object, this.days, epoch);
+      if (overview && (record.evaluate || record.displayOffset === null))
+        record.displayOffset = displayOrbitAt(object, this.days, epoch);
+      const parentKm = modeledKm.get(object.parentId!) ?? ORIGIN;
+      const offset = record.offsetKm;
+      record.km.x = parentKm.x + offset.x;
+      record.km.y = parentKm.y + offset.y;
+      record.km.z = parentKm.z + offset.z;
+      modeledKm.set(object.id, record.km);
+      const global = this.globalVector(object.id);
+      if (overview) {
+        const parentDisplay = overview.get(object.parentId!) ?? ORIGIN;
+        const display = record.displayOffset!;
+        record.display.x = parentDisplay.x + display.x;
+        record.display.y = parentDisplay.y + display.y;
+        record.display.z = parentDisplay.z + display.z;
+        overview.set(object.id, record.display);
+        global.set(record.display.x, record.display.y, record.display.z);
+      } else {
+        global.set(record.km.x / KM_PER_EXPLORATION_UNIT, record.km.y / KM_PER_EXPLORATION_UNIT, record.km.z / KM_PER_EXPLORATION_UNIT);
       }
+      if (!body.culled) body.rotate(this.days, epoch);
+    }
+    this.minorCursor = (this.minorCursor + MINOR_REFRESH_PER_FRAME) % count;
+  }
+
+  private applyRelativePositions(): void {
+    for (const body of this.curatedBodies) {
+      this.origin.toLocal(this.globalPositions.get(body.data.id)!, body.anchor.position);
+      this.updateOrbitLine(body);
+    }
+    const pixelScale = this.height / (2 * Math.tan(MathUtils.degToRad(this.camera.fov) / 2));
+    for (const record of this.minor) {
+      const { body, object } = record;
+      if (record.evaluate) {
+        this.origin.toLocal(this.globalPositions.get(object.id)!, body.anchor.position);
+        const distance = Math.max(1e-9, body.anchor.position.distanceTo(this.camera.position));
+        const focused = object.id === this.selected || object.id === this.followed;
+        // Overview shows Sun-orbiting minor bodies only; the hundreds of small moons
+        // appear in Exploration (selecting any body switches to Exploration).
+        const inContext = this.viewMode !== "overview" || object.parentId === "sun";
+        const culled = !(focused || (inContext && (body.renderRadius / distance) * pixelScale > 0.25));
+        // Culled bodies leave the scene graph (no matrix updates, traversal, picking or
+        // labels); they rejoin with a fresh position, never a stale world matrix.
+        if (culled) {
+          if (body.anchor.parent) this.solarRoot.remove(body.anchor);
+          if (record.label && !record.label.hidden) record.label.hidden = true;
+        } else if (!body.anchor.parent) this.solarRoot.add(body.anchor);
+        body.culled = culled;
+      }
+      if (object.parentId === "sun" || object.id === this.selected || body.hasOrbitLine)
+        this.updateOrbitLine(body);
     }
     this.solarRoot.updateMatrixWorld(true);
+  }
+
+  /** Orbit lines are shown in Overview; minor bodies build theirs on first use. */
+  private updateOrbitLine(body: CelestialBody): void {
+    const parentId = body.data.parentId;
+    if (!parentId) return;
+    // Like labels: planets/curated bodies and dwarf planets (≥400 km). Small asteroids,
+    // comets and minor moons get no Overview orbit, so the view stays legible.
+    const shown = this.viewMode === "overview" && this.orbitsVisible &&
+      (body.data.id === this.selected
+        || (parentId === "sun" && (body.curated || body.data.radiusKm >= OVERVIEW_MINOR_MIN_RADIUS_KM)));
+    if (!body.curated && !shown && !body.hasOrbitLine) return;
+    const orbit = body.orbit;
+    if (!orbit) return;
+    if (!body.curated) {
+      if (shown && !orbit.parent) this.solarRoot.add(orbit);
+      else if (!shown && orbit.parent) this.solarRoot.remove(orbit);
+    }
+    if (shown || body.curated)
+      this.origin.toLocal(this.globalPositions.get(parentId) ?? this.labelScratch.set(0, 0, 0), orbit.position);
+    orbit.visible = shown;
+  }
+
+  /** Camera bound in exploration: the classic 1,000,000 units, or 1.25 × the focus distance. */
+  private explorationBound(): number {
+    const focus = this.followed ?? this.selected;
+    const position = focus ? this.globalPositions.get(focus) : undefined;
+    return Math.max(EXPLORATION_MIN_BOUND, position ? position.length() * 1.25 : 0);
   }
 
   private getGlobalPosition(id: ObjectId, target = new Vector3()): Vector3 {
@@ -401,6 +557,7 @@ export class UniverseEngine {
       viewportHeight: this.height,
       observerSurface: this.lunar?.observerSurface,
       localBodyId: this.lunar?.bodyId,
+      targetId: this.viewMode === "exploration" && !this.lunar && this.selected ? this.selected : undefined,
     });
     this.lunar?.setSolarVisibility(this.solar.lunarIlluminationFraction);
     this.stars.update(
@@ -422,11 +579,15 @@ export class UniverseEngine {
       skyExposure,
       skyAdaptation,
     );
+    // Seeded placeholder points only until the map glow and its measured star layer load.
     this.stars.points.visible = !this.deepSky.ready || !this.brightStars.ready;
     if (this.lunar?.ready && this.stars.points.visible)
       this.stars.points.material.uniforms.exposureVisibility.value *= this.lunar.backgroundVisibility * skyAdaptation;
-    for (const body of this.bodies.values())
-      body.anchor.visible = !(this.lunar?.ready && !this.lunar.atmospheric && body.data.id === this.lunar.bodyId);
+    for (const body of this.curatedBodies) {
+      const local = !!this.lunar?.ready && body.data.id === this.lunar.bodyId;
+      body.anchor.visible = !(local && !this.lunar?.atmospheric);
+      body.setAtmosphericInterior(local && !!this.lunar?.atmospheric);
+    }
     this.renderManager.beginFrame();
     try {
       this.renderManager.renderer.render(this.scene, this.camera);
@@ -439,9 +600,19 @@ export class UniverseEngine {
         label.hidden = true;
       });
     else this.updateLabels();
+    // Seeded small-body shapes replace placeholder spheres once they span a few
+    // pixels; at most one synchronous build per frame.
+    const shapeScale = this.height / (2 * Math.tan(MathUtils.degToRad(this.camera.fov) / 2));
+    for (const body of this.bodies.values()) {
+      if (body.culled || !body.hasIrregularShape) continue;
+      body.anchor.getWorldPosition(this.world);
+      const distance = Math.max(1e-9, this.camera.position.distanceTo(this.world));
+      if (body.ensureShape((body.renderRadius / distance) * shapeScale, body.data.id === this.selected)) break;
+    }
     // Only the primary body receives a high resolution map. Other visible worlds
     // use the small verified variant; loading is asynchronous, never pixel work per frame.
     for (const body of this.bodies.values()) {
+      if (body.culled) continue;
       body.anchor.getWorldPosition(this.world);
       const textureSize =
         body.data.id === this.selected && this.viewMode === "exploration"
@@ -476,8 +647,12 @@ export class UniverseEngine {
         quality: this.renderManager.qualityLabel,
       });
       if (now - this.lastAdapt > 5000) {
-        this.renderManager.adapt(this.fps);
-        this.lunar?.adapt(this.fps);
+        // Descents/ascents (loading, scripted flight) are not representative frames.
+        const transitioning = !!this.lunar && !this.lunar.onSurface;
+        if (!transitioning) {
+          this.renderManager.adapt(this.fps);
+          this.lunar?.adapt(this.fps);
+        }
         this.lastAdapt = now;
       }
     }
@@ -489,9 +664,13 @@ export class UniverseEngine {
       // Translation can move the orbit pivot as well as the eye; prevent either
       // keyboard movement or free-flight dolly from crossing a solid surface.
       for (const body of this.bodies.values()) {
+        // A culled minor body is sub-pixel, so the camera cannot be inside it.
+        if (body.culled) continue;
+        const minimum = body.outerRenderRadius * 1.025;
+        const known = this.globalPositions.get(body.data.id);
+        if (known && known.distanceToSquared(global) >= minimum * minimum) continue;
         const center = this.getGlobalPosition(body.data.id);
         const displacement = global.clone().sub(center);
-        const minimum = body.outerRenderRadius * 1.025;
         if (displacement.lengthSq() >= minimum * minimum) continue;
         if (displacement.lengthSq() < 1e-12) displacement.set(1, 0, 0);
         const correction = center
@@ -502,7 +681,8 @@ export class UniverseEngine {
         this.controller.controls.target.add(correction);
       }
     }
-    const boundary = this.viewMode === "overview" ? 1000 : 1_000_000;
+    // Exploration reaches the focused body even beyond ~67 AU (Eris, Gonggong, Sedna).
+    const boundary = this.viewMode === "overview" ? 1000 : this.explorationBound();
     if (global.length() > boundary) {
       const bounded = global.clone().clampLength(0, boundary);
       const delta = bounded.sub(global);
@@ -564,6 +744,7 @@ export class UniverseEngine {
     this.sunlight.target.updateMatrixWorld();
     this.sunlight.updateMatrixWorld();
     for (const body of this.bodies.values()) {
+      if (body.culled) continue; // refreshed in the frame it becomes visible
       const bodyPosition = this.getGlobalPosition(body.data.id);
       body.updateLighting(
         bodyPosition.distanceToSquared(sunPosition) > 0.001
@@ -575,31 +756,39 @@ export class UniverseEngine {
 
   private updateLabels(): void {
     this.camera.updateMatrixWorld();
-    const cameraDirection = this.camera.getWorldDirection(new Vector3());
-    for (const [id, label] of this.labels) {
-      const body = this.bodies.get(id);
-      if (!body) continue;
-      body.anchor.getWorldPosition(this.world);
-      const distance = this.camera.position.distanceTo(this.world);
-      const behind =
-        this.world.clone().sub(this.camera.position).dot(cameraDirection) <= 0;
-      this.projected.copy(this.world).project(this.camera);
-      const radiusPixels =
-        ((body.renderRadius / Math.max(distance, 0.00001)) * this.height) /
-        (2 * Math.tan(MathUtils.degToRad(this.camera.fov) / 2));
-      const show =
-        this.labelsVisible &&
-        !behind &&
-        this.projected.z < 1 &&
-        Math.abs(this.projected.x) < 1.1 &&
-        Math.abs(this.projected.y) < 1.1 &&
-        (this.viewMode === "overview"
-          ? body.data.parentId === "sun" || id === this.selected || distance < 25
-          : radiusPixels > 2 && radiusPixels < 65);
-      label.hidden = !show;
-      if (show)
-        label.style.transform = `translate(${((this.projected.x + 1) * this.width) / 2 + radiusPixels + 12}px,${((1 - this.projected.y) * this.height) / 2 - 8}px)`;
-    }
+    const cameraDirection = this.camera.getWorldDirection(this.labelDirection);
+    const pixelScale = this.height / (2 * Math.tan(MathUtils.degToRad(this.camera.fov) / 2));
+    for (const body of this.curatedBodies)
+      this.updateLabel(body, this.labels.get(body.data.id), cameraDirection, pixelScale);
+    // Culled minor bodies were hidden when they were culled; skip them entirely.
+    for (const record of this.minor)
+      if (!record.body.culled) this.updateLabel(record.body, record.label, cameraDirection, pixelScale);
+  }
+
+  private updateLabel(body: CelestialBody, label: HTMLButtonElement | undefined, cameraDirection: Vector3, pixelScale: number): void {
+    if (!label) return;
+    const id = body.data.id;
+    body.anchor.getWorldPosition(this.world);
+    const distance = this.camera.position.distanceTo(this.world);
+    const behind =
+      this.labelScratch.copy(this.world).sub(this.camera.position).dot(cameraDirection) <= 0;
+    this.projected.copy(this.world).project(this.camera);
+    const radiusPixels = (body.renderRadius / Math.max(distance, 0.00001)) * pixelScale;
+    const show =
+      this.labelsVisible &&
+      !behind &&
+      this.projected.z < 1 &&
+      Math.abs(this.projected.x) < 1.1 &&
+      Math.abs(this.projected.y) < 1.1 &&
+      (this.viewMode === "overview"
+        ? id === this.selected || (body.curated
+          ? body.data.parentId === "sun" || distance < 25
+          // Hundreds of generated moons/small bodies: only large Sun-orbiters by default.
+          : body.data.parentId === "sun" && body.data.radiusKm >= OVERVIEW_MINOR_MIN_RADIUS_KM)
+        : radiusPixels > 2 && radiusPixels < 65);
+    if (label.hidden === show) label.hidden = !show;
+    if (show)
+      label.style.transform = `translate(${((this.projected.x + 1) * this.width) / 2 + radiusPixels + 12}px,${((1 - this.projected.y) * this.height) / 2 - 8}px)`;
   }
 
   private installPicking(): void {
@@ -662,7 +851,7 @@ export class UniverseEngine {
           this.camera,
         );
         const meshes = [...this.bodies.values()].flatMap((body) =>
-          body.pickables.filter((mesh) => mesh.visible),
+          body.culled ? [] : body.pickables.filter((mesh) => mesh.visible),
         );
         const picked = this.raycaster.intersectObjects(meshes, false)[0]?.object
           .userData.objectId as ObjectId | undefined;
@@ -847,6 +1036,10 @@ export class UniverseEngine {
       void previous.ensureTexture(512);
     this.selected = id;
     this.referenceId = id;
+    // Build the inspected shape now so framing and clearance use its true extent, and
+    // refresh its orientation: a previously culled body was not rotated while hidden.
+    body.ensureShape(Number.POSITIVE_INFINITY, true);
+    if (body.hasIrregularShape) body.rotate(this.days, this.options.simulationEpoch);
     this.controller.setReferenceRadius(body.outerRenderRadius);
     this.controller.setMode("orbit");
     this.followed = id;
@@ -871,9 +1064,9 @@ export class UniverseEngine {
       id === "saturn",
       new Vector3(0, 1, 0).applyQuaternion(body.tilted.quaternion),
     );
-    if (id === "deimos") {
-      // The visual model has an uncalibrated prime meridian. Start beside its
-      // long axis so its modeled non-spherical outline is actually visible.
+    if (body.hasIrregularShape) {
+      // Start beside the long axis so a non-spherical outline is actually visible
+      // (shape models' prime meridians are approximate).
       const longAxis = new Vector3(1, 0, 0).applyQuaternion(
         body.surface.getWorldQuaternion(new Quaternion()),
       );
@@ -886,7 +1079,8 @@ export class UniverseEngine {
     this.pendingMinimum = body.outerRenderRadius * (id === "saturn" ? 2.5 : 1.07);
     // Sub-kilometer bodies need a near plane closer than the default 1 km.
     this.camera.near = Math.max(body.renderRadius * 0.005, 1e-7);
-    this.camera.far = 1_200_000;
+    // Keep the Sun and planets inside the frustum when looking back from ~100 AU.
+    this.camera.far = EXPLORATION_FAR + destination.length();
     this.camera.updateProjectionMatrix();
     const instantaneous =
       instant || matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1010,7 +1204,7 @@ export class UniverseEngine {
     const body = this.bodies.get(this.selected);
     if (!body) return;
     const profile = explorationProfile(body.data.id);
-    const environment = planetaryEnvironments[body.data.id];
+    const environment = environmentFor(body.data.id);
     if (profile.classification === "STAR" || (body.data.id !== "moon" && !environment)) return;
     this.look.cancel();
     if (this.flight.flying) this.focusObject(body.data.id, true);
@@ -1043,6 +1237,8 @@ export class UniverseEngine {
       onTelemetry: (telemetry) => this.options.onLunarTelemetry?.(telemetry),
     });
     this.camera.clearViewOffset();
+    // Loading and descending are not representative frame rates.
+    this.renderManager.restartAdaptiveGrace();
     void this.lunar.prepare(pose, this.camera.aspect, this.height);
   }
 
@@ -1116,7 +1312,58 @@ export class UniverseEngine {
   }
 
   /** Rotate in place; selecting a planet and its physical illumination are unchanged. */
+  /**
+   * Advance the clock to the next time the Sun stands at least `altitudeDeg`
+   * above the local horizon at the surface site (searching up to 60 days in
+   * one-hour steps with the same ephemeris and spin models). Returns success.
+   */
+  skipToSurfaceDaylight(altitudeDeg = 20): boolean {
+    if (!this.lunar?.onSurface) return false;
+    const body = this.bodies.get(this.lunar.bodyId);
+    if (!body) return false;
+    const up = this.lunar.navigation.positionM.clone().normalize();
+    const target = Math.sin(MathUtils.degToRad(altitudeDeg));
+    const epoch = this.options.simulationEpoch;
+    const toSun = new Vector3();
+    for (let hours = 1; hours <= 24 * 60; hours++) {
+      const days = this.days + hours / 24;
+      const positions = modeledPositionsKm(this.curatedObjects, days, epoch);
+      const bodyKm = positions.get(body.data.id);
+      const sunKm = positions.get("sun");
+      if (!bodyKm || !sunKm) return false;
+      toSun.set(sunKm.x - bodyKm.x, sunKm.y - bodyKm.y, sunKm.z - bodyKm.z).normalize();
+      const local = toSun.clone().applyQuaternion(body.rotationAt(days, epoch, toSun).invert());
+      if (local.dot(up) >= target) {
+        this.setTime(days);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /** True while standing on a planetary/lunar surface. */
+  get isOnSurface(): boolean {
+    return !!this.lunar?.onSurface;
+  }
+
+  /**
+   * From a moon's surface, turn toward its planet. Tidally locked moons keep the planet
+   * fixed in their sky; from the far hemisphere it never rises, and the view turns to
+   * its bearing on the horizon instead.
+   */
+  lookAtParent(): boolean {
+    if (!this.lunar?.onSurface) return false;
+    const body = this.bodies.get(this.lunar.bodyId);
+    const parentId = body?.data.parentId;
+    if (!body || !parentId || parentId === "sun") return false;
+    const direction = this.getGlobalPosition(parentId).sub(this.getGlobalPosition(body.data.id));
+    if (direction.lengthSq() === 0) return false;
+    direction.normalize().applyQuaternion(this.bodyRotation(body.data.id).invert());
+    return this.lunar.lookToward(direction);
+  }
+
   lookAtSun(): boolean {
+    if (this.lunar) return this.lunar.lookAtSun();
     if (
       this.disposed ||
       this.failed ||
@@ -1200,6 +1447,7 @@ export class UniverseEngine {
 
   private stopLunar(report = true): void {
     if (!this.lunar) return;
+    this.renderManager.restartAdaptiveGrace();
     const bodyId = this.lunar.bodyId;
     this.lunar.dispose();
     this.lunar = null;

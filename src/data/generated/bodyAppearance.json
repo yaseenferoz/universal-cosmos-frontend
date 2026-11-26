@@ -1,0 +1,1148 @@
+{
+ "generated": "2026-11-26",
+ "note": "Measured inputs only; renderer defaults for missing values are illustrative.",
+ "bodies": {
+  "adrastea": {
+   "albedo": 0.1,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "aegaeon": {},
+  "aegir": {},
+  "aitne": {},
+  "albiorix": {
+   "bv": 0.83,
+   "vr": 0.49,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "alvaldi": {},
+  "amalthea": {
+   "albedo": 0.09,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "ananke": {},
+  "angrboda": {},
+  "annefrank": {
+   "albedo": 0.311,
+   "albedoSource": "JPL Small-Body Database",
+   "axes": [
+    6.6,
+    5.0,
+    3.4
+   ],
+   "axesSource": "JPL Small-Body Database (extent)"
+  },
+  "anthe": {},
+  "aoede": {},
+  "apophis": {
+   "albedo": 0.35,
+   "albedoSource": "JPL Small-Body Database",
+   "taxonomy": "Sq",
+   "taxonomySource": "JPL SBDB SMASSII (spec_B)"
+  },
+  "arche": {},
+  "ariel": {
+   "albedo": 0.34,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "arrokoth": {
+   "albedo": 0.21,
+   "albedoSource": "Hofgartner et al. 2021, Icarus 356:113723",
+   "axes": [
+    36,
+    20,
+    10
+   ],
+   "axesSource": "Spencer et al. 2020, Science 367:eaay3999",
+   "colorClass": "very red",
+   "colorSource": "Grundy et al. 2020, Science 367:eaay3705"
+  },
+  "atlas": {
+   "axes": [
+    20.5,
+    17.8,
+    9.4
+   ],
+   "axesSource": "JPL Horizons satellite physical data",
+   "albedo": 0.5,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "autonoe": {
+   "bv": 0.77,
+   "vr": 0.49,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "bebhionn": {
+   "bv": 0.6,
+   "vr": 0.51,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "beli": {},
+  "belinda": {
+   "albedo": 0.07,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "bennu": {
+   "albedo": 0.044,
+   "albedoSource": "Lauretta et al. 2019, Nature 568:55",
+   "axes": [
+    565,
+    535,
+    508
+   ],
+   "axesSource": "Barnouin et al. 2019, Nat. Geosci. 12:247",
+   "taxonomy": "B",
+   "taxonomySource": "JPL SBDB SMASSII (spec_B)",
+   "bv": 0.64,
+   "colorSource": "JPL Small-Body Database (B-V)"
+  },
+  "bergelmir": {},
+  "bestla": {},
+  "bianca": {
+   "albedo": 0.07,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "borrelly": {
+   "albedo": 0.022,
+   "albedoSource": "JPL Small-Body Database"
+  },
+  "braille": {
+   "axes": [
+    2.1,
+    1.0,
+    1.0
+   ],
+   "axesSource": "JPL Small-Body Database (extent)",
+   "taxonomy": "Q",
+   "taxonomySource": "JPL SBDB SMASSII (spec_B)"
+  },
+  "caliban": {
+   "bv": 0.8,
+   "vr": 0.47,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "callirrhoe": {
+   "bv": 0.8,
+   "vr": 0.24,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "callisto": {
+   "albedo": 0.17,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "calypso": {
+   "axes": [
+    15.3,
+    9.3,
+    6.3
+   ],
+   "axesSource": "JPL Horizons satellite physical data",
+   "albedo": 0.7,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "carme": {
+   "bv": 0.76,
+   "vr": 0.48,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "carpo": {},
+  "ceres": {
+   "albedo": 0.09,
+   "albedoSource": "JPL Small-Body Database",
+   "axes": [
+    964.4,
+    964.2,
+    891.8
+   ],
+   "axesSource": "JPL Small-Body Database (extent)",
+   "taxonomy": "C",
+   "taxonomySource": "JPL SBDB SMASSII (spec_B)",
+   "bv": 0.713,
+   "colorSource": "JPL Small-Body Database (B-V)"
+  },
+  "chaldene": {
+   "bv": 0.82,
+   "vr": 0.5,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "charon": {
+   "albedo": 0.38,
+   "albedoSource": "Buratti et al. 2017, Icarus 287:207"
+  },
+  "churyumov-gerasimenko": {},
+  "cordelia": {
+   "albedo": 0.07,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "cressida": {
+   "albedo": 0.07,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "cupid": {},
+  "cyllene": {
+   "bv": 0.73,
+   "vr": 0.47,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "deimos": {
+   "axes": [
+    7.8,
+    6.0,
+    5.1
+   ],
+   "axesSource": "JPL Horizons satellite physical data",
+   "albedo": 0.06,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "desdemona": {
+   "albedo": 0.07,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "despina": {
+   "albedo": 0.06,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "dia": {},
+  "didymos": {
+   "axes": [
+    0.797,
+    0.783,
+    0.761
+   ],
+   "axesSource": "JPL Small-Body Database (extent)",
+   "taxonomy": "S",
+   "taxonomySource": "JPL SBDB SMASSII (spec_B)"
+  },
+  "dinkinesh": {},
+  "dione": {
+   "albedo": 0.6,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "donaldjohanson": {
+   "albedo": 0.103,
+   "albedoSource": "JPL Small-Body Database"
+  },
+  "eggther": {},
+  "eirene": {},
+  "elara": {
+   "albedo": 0.03,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "enceladus": {
+   "albedo": 1.04,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "encke": {
+   "albedo": 0.046,
+   "albedoSource": "JPL Small-Body Database"
+  },
+  "epimetheus": {
+   "axes": [
+    64.9,
+    57.3,
+    53.0
+   ],
+   "axesSource": "JPL Horizons satellite physical data",
+   "albedo": 0.5,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "erinome": {
+   "bv": 0.72,
+   "vr": 0.43,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "eris": {
+   "bv": 0.805,
+   "vr": 0.389,
+   "colorSource": "Hainaut et al. 2012, A&A 546:A115 (MBOSS-2)",
+   "albedo": 0.96,
+   "albedoSource": "Sicardy et al. 2011, Nature 478:493"
+  },
+  "eros": {
+   "albedo": 0.25,
+   "albedoSource": "JPL Small-Body Database",
+   "axes": [
+    34.4,
+    11.2,
+    11.2
+   ],
+   "axesSource": "JPL Small-Body Database (extent)",
+   "taxonomy": "S",
+   "taxonomySource": "JPL SBDB SMASSII (spec_B)",
+   "bv": 0.921,
+   "colorSource": "JPL Small-Body Database (B-V)"
+  },
+  "erriapus": {
+   "bv": 0.77,
+   "vr": 0.42,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "ersa": {},
+  "euanthe": {},
+  "eukelade": {
+   "bv": 0.78,
+   "vr": 0.5,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "eupheme": {},
+  "euporie": {},
+  "europa": {
+   "albedo": 0.67,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "eurydome": {},
+  "farbauti": {},
+  "fenrir": {},
+  "ferdinand": {},
+  "fornjot": {},
+  "francisco": {},
+  "galatea": {
+   "albedo": 0.06,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "ganymede": {
+   "albedo": 0.43,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "gaspra": {
+   "albedo": 0.246,
+   "albedoSource": "JPL Small-Body Database",
+   "axes": [
+    18.2,
+    10.5,
+    8.9
+   ],
+   "axesSource": "JPL Small-Body Database (extent)",
+   "taxonomy": "S",
+   "taxonomySource": "JPL SBDB SMASSII (spec_B)",
+   "bv": 0.87,
+   "colorSource": "JPL Small-Body Database (B-V)"
+  },
+  "geirrod": {},
+  "gerd": {},
+  "gonggong": {
+   "albedo": 0.14,
+   "albedoSource": "Kiss et al. 2019, Icarus 334:3",
+   "colorClass": "very red",
+   "colorSource": "Kiss et al. 2019 (one of the reddest TNOs)"
+  },
+  "greip": {},
+  "gridr": {},
+  "gunnlod": {},
+  "halimede": {
+   "bv": 0.88,
+   "vr": 0.55,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "halley": {
+   "albedo": 0.04,
+   "albedoSource": "JPL Small-Body Database"
+  },
+  "harpalyke": {
+   "bv": 0.7,
+   "vr": 0.42,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "hartley-2": {},
+  "hati": {},
+  "haumea": {
+   "bv": 0.631,
+   "vr": 0.37,
+   "colorSource": "Hainaut et al. 2012, A&A 546:A115 (MBOSS-2)",
+   "albedo": 0.51,
+   "albedoSource": "Ortiz et al. 2017, Nature 550:219",
+   "axes": [
+    2322,
+    1704,
+    1026
+   ],
+   "axesSource": "Ortiz et al. 2017, Nature 550:219 (occultation)"
+  },
+  "hegemone": {},
+  "helene": {
+   "albedo": 0.6,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "helike": {},
+  "hermippe": {
+   "bv": 0.72,
+   "vr": 0.49,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "herse": {},
+  "himalia": {
+   "albedo": 0.04,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "hippocamp": {},
+  "hydra": {},
+  "hygiea": {
+   "albedo": 0.0717,
+   "albedoSource": "JPL Small-Body Database",
+   "taxonomy": "C",
+   "taxonomySource": "JPL SBDB SMASSII (spec_B)",
+   "bv": 0.696,
+   "colorSource": "JPL Small-Body Database (B-V)",
+   "axes": [
+    450,
+    430,
+    424
+   ],
+   "axesSource": "Vernazza et al. 2020, Nat. Astron. 4:136"
+  },
+  "hyperion": {
+   "albedo": 0.25,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "hyrrokkin": {},
+  "iapetus": {
+   "albedo": 0.6,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "ida": {
+   "albedo": 0.262,
+   "albedoSource": "JPL Small-Body Database",
+   "axes": [
+    59.8,
+    25.4,
+    18.6
+   ],
+   "axesSource": "JPL Small-Body Database (extent)",
+   "taxonomy": "S",
+   "taxonomySource": "JPL SBDB SMASSII (spec_B)",
+   "bv": 0.802,
+   "colorSource": "JPL Small-Body Database (B-V)"
+  },
+  "ijiraq": {},
+  "io": {
+   "albedo": 0.63,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "iocaste": {
+   "bv": 0.86,
+   "vr": 0.38,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "isonoe": {
+   "bv": 0.78,
+   "vr": 0.53,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "itokawa": {
+   "axes": [
+    0.535,
+    0.294,
+    0.209
+   ],
+   "axesSource": "JPL Small-Body Database (extent)",
+   "taxonomy": "S(IV)",
+   "taxonomySource": "JPL SBDB SMASSII (spec_B)"
+  },
+  "janus": {
+   "axes": [
+    101.7,
+    93.0,
+    76.3
+   ],
+   "axesSource": "JPL Horizons satellite physical data",
+   "albedo": 0.5,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "jarnsaxa": {},
+  "juliet": {
+   "albedo": 0.07,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "juno": {
+   "albedo": 0.214,
+   "albedoSource": "JPL Small-Body Database",
+   "taxonomy": "Sk",
+   "taxonomySource": "JPL SBDB SMASSII (spec_B)",
+   "bv": 0.824,
+   "colorSource": "JPL Small-Body Database (B-V)"
+  },
+  "kale": {},
+  "kallichore": {},
+  "kalyke": {
+   "bv": 0.69,
+   "vr": 0.46,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "kari": {},
+  "kerberos": {},
+  "kiviuq": {},
+  "kleopatra": {
+   "albedo": 0.1164,
+   "albedoSource": "JPL Small-Body Database",
+   "axes": [
+    276.0,
+    94.0,
+    78.0
+   ],
+   "axesSource": "JPL Small-Body Database (extent)",
+   "taxonomy": "Xe",
+   "taxonomySource": "JPL SBDB SMASSII (spec_B)",
+   "bv": 0.713,
+   "colorSource": "JPL Small-Body Database (B-V)"
+  },
+  "kore": {},
+  "laomedeia": {},
+  "larissa": {
+   "albedo": 0.06,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "leda": {
+   "bv": 0.69,
+   "vr": 0.36,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "loge": {},
+  "lutetia": {
+   "albedo": 0.19,
+   "albedoSource": "JPL Small-Body Database",
+   "axes": [
+    121.0,
+    101.0,
+    75.0
+   ],
+   "axesSource": "JPL Small-Body Database (extent)",
+   "taxonomy": "Xk",
+   "taxonomySource": "JPL SBDB SMASSII (spec_B)",
+   "bv": 0.686,
+   "colorSource": "JPL Small-Body Database (B-V)"
+  },
+  "lysithea": {
+   "bv": 0.72,
+   "vr": 0.4,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "mab": {},
+  "magaclite": {},
+  "makemake": {
+   "bv": 0.828,
+   "colorSource": "Hainaut et al. 2012, A&A 546:A115 (MBOSS-2)",
+   "albedo": 0.77,
+   "albedoSource": "Ortiz et al. 2012, Nature 491:566"
+  },
+  "margaret": {},
+  "mathilde": {
+   "albedo": 0.0436,
+   "albedoSource": "JPL Small-Body Database",
+   "taxonomy": "Cb",
+   "taxonomySource": "JPL SBDB SMASSII (spec_B)"
+  },
+  "methone": {},
+  "metis": {
+   "albedo": 0.061,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "mimas": {
+   "albedo": 0.6,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "miranda": {
+   "axes": [
+    240.0,
+    234.2,
+    232.9
+   ],
+   "axesSource": "JPL Horizons satellite physical data",
+   "albedo": 0.27,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "mneme": {},
+  "mundilfari": {},
+  "naiad": {
+   "albedo": 0.06,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "narvi": {},
+  "nereid": {
+   "albedo": 0.2,
+   "albedoSource": "JPL Horizons satellite physical data",
+   "bv": 0.67,
+   "vr": 0.38,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "neso": {
+   "vr": 0.575,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "nix": {},
+  "oberon": {
+   "albedo": 0.24,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "ophelia": {
+   "albedo": 0.07,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "orcus": {
+   "bv": 0.664,
+   "vr": 0.37,
+   "colorSource": "Hainaut et al. 2012, A&A 546:A115 (MBOSS-2)",
+   "albedo": 0.23,
+   "albedoSource": "Fornasier et al. 2013, A&A 555:A15"
+  },
+  "orthosie": {},
+  "paaliaq": {},
+  "pallas": {
+   "albedo": 0.155,
+   "albedoSource": "JPL Small-Body Database",
+   "axes": [
+    568.0,
+    532.0,
+    448.0
+   ],
+   "axesSource": "JPL Small-Body Database (extent)",
+   "taxonomy": "B",
+   "taxonomySource": "JPL SBDB SMASSII (spec_B)",
+   "bv": 0.635,
+   "colorSource": "JPL Small-Body Database (B-V)"
+  },
+  "pallene": {},
+  "pan": {
+   "axes": [
+    17.2,
+    15.4,
+    10.4
+   ],
+   "axesSource": "JPL Horizons satellite physical data",
+   "albedo": 0.5,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "pandia": {},
+  "pandora": {
+   "axes": [
+    52.2,
+    40.8,
+    31.5
+   ],
+   "axesSource": "JPL Horizons satellite physical data",
+   "albedo": 0.5,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "pasiphae": {},
+  "pasithee": {},
+  "perdita": {},
+  "philophrosyn": {},
+  "phobos": {
+   "axes": [
+    13.1,
+    11.1,
+    9.3
+   ],
+   "axesSource": "JPL Horizons satellite physical data",
+   "albedo": 0.06,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "phoebe": {
+   "albedo": 0.081,
+   "albedoSource": "JPL Horizons satellite physical data",
+   "bv": 0.58,
+   "vr": 0.34,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "pluto": {
+   "bv": 0.867,
+   "vr": 0.515,
+   "colorSource": "Hainaut et al. 2012, A&A 546:A115 (MBOSS-2)",
+   "albedo": 0.52,
+   "albedoSource": "Buratti et al. 2017, Icarus 287:207"
+  },
+  "polydeuces": {},
+  "portia": {
+   "albedo": 0.07,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "praxidike": {
+   "bv": 0.71,
+   "vr": 0.32,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "prometheus": {
+   "axes": [
+    68.2,
+    41.6,
+    28.2
+   ],
+   "axesSource": "JPL Horizons satellite physical data",
+   "albedo": 0.5,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "prospero": {
+   "bv": 0.813,
+   "vr": 0.503,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "proteus": {
+   "albedo": 0.06,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "psamathe": {},
+  "psyche": {
+   "albedo": 0.1203,
+   "albedoSource": "JPL Small-Body Database",
+   "axes": [
+    278.0,
+    238.0,
+    171.0
+   ],
+   "axesSource": "JPL Small-Body Database (extent)",
+   "taxonomy": "X",
+   "taxonomySource": "JPL SBDB SMASSII (spec_B)",
+   "bv": 0.729,
+   "colorSource": "JPL Small-Body Database (B-V)"
+  },
+  "puck": {
+   "albedo": 0.07,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "quaoar": {
+   "bv": 0.958,
+   "vr": 0.65,
+   "colorSource": "Hainaut et al. 2012, A&A 546:A115 (MBOSS-2)",
+   "albedo": 0.12,
+   "albedoSource": "Braga-Ribas et al. 2013, ApJ 773:26"
+  },
+  "rhea": {
+   "albedo": 0.6,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "rosalind": {
+   "albedo": 0.07,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "ryugu": {
+   "albedo": 0.045,
+   "albedoSource": "JPL Small-Body Database",
+   "taxonomy": "Cb",
+   "taxonomySource": "JPL SBDB SMASSII (spec_B)"
+  },
+  "s2002-n5": {},
+  "s2003-j-10": {},
+  "s2003-j-12": {},
+  "s2003-j-16": {},
+  "s2003-j-18": {},
+  "s2003-j-19": {},
+  "s2003-j-2": {},
+  "s2003-j-23": {},
+  "s2003-j-24": {},
+  "s2003-j-4": {},
+  "s2003-j-9": {},
+  "s2004-s-12": {},
+  "s2004-s-13": {},
+  "s2004-s-17": {},
+  "s2004-s-21": {},
+  "s2004-s-24": {},
+  "s2004-s-26": {},
+  "s2004-s-28": {},
+  "s2004-s-29": {},
+  "s2004-s-31": {},
+  "s2004-s-34": {},
+  "s2004-s-36": {},
+  "s2004-s-37": {},
+  "s2004-s-39": {},
+  "s2004-s-40": {},
+  "s2004-s-41": {},
+  "s2004-s-42": {},
+  "s2004-s-43": {},
+  "s2004-s-44": {},
+  "s2004-s-45": {},
+  "s2004-s-46": {},
+  "s2004-s-47": {},
+  "s2004-s-48": {},
+  "s2004-s-49": {},
+  "s2004-s-50": {},
+  "s2004-s-51": {},
+  "s2004-s-52": {},
+  "s2004-s-53": {},
+  "s2004-s-54": {},
+  "s2004-s-55": {},
+  "s2004-s-56": {},
+  "s2004-s-57": {},
+  "s2004-s-58": {},
+  "s2004-s-59": {},
+  "s2004-s-60": {},
+  "s2004-s-61": {},
+  "s2004-s-7": {},
+  "s2005-s-4": {},
+  "s2005-s-5": {},
+  "s2005-s-6": {},
+  "s2005-s-7": {},
+  "s2006-s-1": {},
+  "s2006-s-10": {},
+  "s2006-s-11": {},
+  "s2006-s-12": {},
+  "s2006-s-13": {},
+  "s2006-s-14": {},
+  "s2006-s-15": {},
+  "s2006-s-16": {},
+  "s2006-s-17": {},
+  "s2006-s-18": {},
+  "s2006-s-19": {},
+  "s2006-s-20": {},
+  "s2006-s-21": {},
+  "s2006-s-22": {},
+  "s2006-s-23": {},
+  "s2006-s-24": {},
+  "s2006-s-25": {},
+  "s2006-s-26": {},
+  "s2006-s-27": {},
+  "s2006-s-28": {},
+  "s2006-s-29": {},
+  "s2006-s-3": {},
+  "s2006-s-9": {},
+  "s2007-s-10": {},
+  "s2007-s-11": {},
+  "s2007-s-2": {},
+  "s2007-s-3": {},
+  "s2007-s-5": {},
+  "s2007-s-6": {},
+  "s2007-s-7": {},
+  "s2007-s-8": {},
+  "s2007-s-9": {},
+  "s2009-s-2": {},
+  "s2010-j-1": {},
+  "s2010-j-2": {},
+  "s2010-j-3": {},
+  "s2010-j-4": {},
+  "s2010-j-5": {},
+  "s2010-j-6": {},
+  "s2011-j-1": {},
+  "s2011-j-2": {},
+  "s2011-j-3": {},
+  "s2011-j-4": {},
+  "s2011-j-5": {},
+  "s2011-j-6": {},
+  "s2016-j-1": {},
+  "s2016-j-3": {},
+  "s2016-j-4": {},
+  "s2017-j-1": {},
+  "s2017-j-10": {},
+  "s2017-j-11": {},
+  "s2017-j-12": {},
+  "s2017-j-13": {},
+  "s2017-j-14": {},
+  "s2017-j-15": {},
+  "s2017-j-16": {},
+  "s2017-j-17": {},
+  "s2017-j-18": {},
+  "s2017-j-2": {},
+  "s2017-j-3": {},
+  "s2017-j-5": {},
+  "s2017-j-6": {},
+  "s2017-j-7": {},
+  "s2017-j-8": {},
+  "s2017-j-9": {},
+  "s2018-j-2": {},
+  "s2018-j-3": {},
+  "s2018-j-4": {},
+  "s2018-j-5": {},
+  "s2019-s-1": {},
+  "s2019-s-10": {},
+  "s2019-s-11": {},
+  "s2019-s-12": {},
+  "s2019-s-13": {},
+  "s2019-s-14": {},
+  "s2019-s-15": {},
+  "s2019-s-16": {},
+  "s2019-s-17": {},
+  "s2019-s-18": {},
+  "s2019-s-19": {},
+  "s2019-s-2": {},
+  "s2019-s-20": {},
+  "s2019-s-21": {},
+  "s2019-s-22": {},
+  "s2019-s-23": {},
+  "s2019-s-24": {},
+  "s2019-s-25": {},
+  "s2019-s-26": {},
+  "s2019-s-27": {},
+  "s2019-s-28": {},
+  "s2019-s-29": {},
+  "s2019-s-3": {},
+  "s2019-s-30": {},
+  "s2019-s-31": {},
+  "s2019-s-32": {},
+  "s2019-s-33": {},
+  "s2019-s-34": {},
+  "s2019-s-35": {},
+  "s2019-s-36": {},
+  "s2019-s-37": {},
+  "s2019-s-38": {},
+  "s2019-s-39": {},
+  "s2019-s-4": {},
+  "s2019-s-40": {},
+  "s2019-s-41": {},
+  "s2019-s-42": {},
+  "s2019-s-43": {},
+  "s2019-s-44": {},
+  "s2019-s-5": {},
+  "s2019-s-6": {},
+  "s2019-s-7": {},
+  "s2019-s-8": {},
+  "s2019-s-9": {},
+  "s2020-s-1": {},
+  "s2020-s-10": {},
+  "s2020-s-11": {},
+  "s2020-s-12": {},
+  "s2020-s-13": {},
+  "s2020-s-14": {},
+  "s2020-s-15": {},
+  "s2020-s-16": {},
+  "s2020-s-17": {},
+  "s2020-s-18": {},
+  "s2020-s-19": {},
+  "s2020-s-2": {},
+  "s2020-s-20": {},
+  "s2020-s-21": {},
+  "s2020-s-22": {},
+  "s2020-s-23": {},
+  "s2020-s-24": {},
+  "s2020-s-25": {},
+  "s2020-s-26": {},
+  "s2020-s-27": {},
+  "s2020-s-28": {},
+  "s2020-s-29": {},
+  "s2020-s-3": {},
+  "s2020-s-30": {},
+  "s2020-s-31": {},
+  "s2020-s-32": {},
+  "s2020-s-33": {},
+  "s2020-s-34": {},
+  "s2020-s-35": {},
+  "s2020-s-36": {},
+  "s2020-s-37": {},
+  "s2020-s-38": {},
+  "s2020-s-39": {},
+  "s2020-s-4": {},
+  "s2020-s-40": {},
+  "s2020-s-41": {},
+  "s2020-s-42": {},
+  "s2020-s-43": {},
+  "s2020-s-44": {},
+  "s2020-s-45": {},
+  "s2020-s-46": {},
+  "s2020-s-47": {},
+  "s2020-s-48": {},
+  "s2020-s-49": {},
+  "s2020-s-5": {},
+  "s2020-s-6": {},
+  "s2020-s-7": {},
+  "s2020-s-8": {},
+  "s2020-s-9": {},
+  "s2021-j-1": {},
+  "s2021-j-2": {},
+  "s2021-j-3": {},
+  "s2021-j-4": {},
+  "s2021-j-5": {},
+  "s2021-j-6": {},
+  "s2021-j-7": {},
+  "s2021-j-8": {},
+  "s2021-n1": {},
+  "s2022-j-1": {},
+  "s2022-j-2": {},
+  "s2022-j-3": {},
+  "s2023-s-1": {},
+  "s2023-s-10": {},
+  "s2023-s-11": {},
+  "s2023-s-12": {},
+  "s2023-s-13": {},
+  "s2023-s-14": {},
+  "s2023-s-15": {},
+  "s2023-s-16": {},
+  "s2023-s-17": {},
+  "s2023-s-18": {},
+  "s2023-s-19": {},
+  "s2023-s-2": {},
+  "s2023-s-20": {},
+  "s2023-s-21": {},
+  "s2023-s-22": {},
+  "s2023-s-23": {},
+  "s2023-s-24": {},
+  "s2023-s-25": {},
+  "s2023-s-26": {},
+  "s2023-s-27": {},
+  "s2023-s-28": {},
+  "s2023-s-29": {},
+  "s2023-s-3": {},
+  "s2023-s-30": {},
+  "s2023-s-31": {},
+  "s2023-s-32": {},
+  "s2023-s-33": {},
+  "s2023-s-34": {},
+  "s2023-s-35": {},
+  "s2023-s-36": {},
+  "s2023-s-37": {},
+  "s2023-s-38": {},
+  "s2023-s-39": {},
+  "s2023-s-4": {},
+  "s2023-s-40": {},
+  "s2023-s-41": {},
+  "s2023-s-42": {},
+  "s2023-s-43": {},
+  "s2023-s-44": {},
+  "s2023-s-45": {},
+  "s2023-s-46": {},
+  "s2023-s-47": {},
+  "s2023-s-48": {},
+  "s2023-s-49": {},
+  "s2023-s-5": {},
+  "s2023-s-50": {},
+  "s2023-s-51": {},
+  "s2023-s-52": {},
+  "s2023-s-53": {},
+  "s2023-s-54": {},
+  "s2023-s-55": {},
+  "s2023-s-56": {},
+  "s2023-s-57": {},
+  "s2023-s-58": {},
+  "s2023-s-59": {},
+  "s2023-s-6": {},
+  "s2023-s-60": {},
+  "s2023-s-61": {},
+  "s2023-s-62": {},
+  "s2023-s-63": {},
+  "s2023-s-7": {},
+  "s2023-s-8": {},
+  "s2023-s-9": {},
+  "s2023-u1": {},
+  "s2024-j-1": {},
+  "sao": {},
+  "sedna": {
+   "bv": 1.111,
+   "vr": 0.66,
+   "colorSource": "Hainaut et al. 2012, A&A 546:A115 (MBOSS-2)",
+   "albedo": 0.32,
+   "albedoSource": "Pal et al. 2012, A&A 541:L6"
+  },
+  "setebos": {
+   "bv": 0.78,
+   "vr": 0.49,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "siarnaq": {},
+  "sinope": {
+   "bv": 0.77,
+   "vr": 0.48,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "skathi": {},
+  "skoll": {},
+  "skrymir": {},
+  "sponde": {},
+  "steins": {
+   "albedo": 0.3,
+   "albedoSource": "JPL Small-Body Database"
+  },
+  "stephano": {
+   "bv": 0.97,
+   "vr": 0.66,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "styx": {},
+  "surtur": {},
+  "suttungr": {},
+  "sycorax": {
+   "bv": 0.807,
+   "vr": 0.537,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "tarqeq": {},
+  "tarvos": {
+   "bv": 0.71,
+   "vr": 0.42,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "taygete": {
+   "bv": 0.77,
+   "vr": 0.48,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "telesto": {
+   "axes": [
+    16.3,
+    11.8,
+    9.8
+   ],
+   "axesSource": "JPL Horizons satellite physical data",
+   "albedo": 1.0,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "tempel-1": {
+   "albedo": 0.05,
+   "albedoSource": "JPL Small-Body Database"
+  },
+  "tethys": {
+   "albedo": 0.8,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "thalassa": {
+   "albedo": 0.06,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "thebe": {
+   "albedo": 0.047,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "thelxinoe": {},
+  "themisto": {
+   "bv": 0.79,
+   "vr": 0.52,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "thiazzi": {},
+  "thrymr": {},
+  "thyone": {
+   "bv": 0.71,
+   "vr": 0.46,
+   "colorSource": "Graykowski & Jewitt 2018, AJ 155:184"
+  },
+  "titan": {
+   "albedo": 0.2,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "titania": {
+   "albedo": 0.27,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "toutatis": {
+   "albedo": 0.405,
+   "albedoSource": "JPL Small-Body Database",
+   "axes": [
+    4.26,
+    2.03,
+    1.7
+   ],
+   "axesSource": "JPL Small-Body Database (extent)",
+   "taxonomy": "Sk",
+   "taxonomySource": "JPL SBDB SMASSII (spec_B)"
+  },
+  "trinculo": {},
+  "triton": {
+   "albedo": 0.7,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "umbriel": {
+   "albedo": 0.18,
+   "albedoSource": "JPL Horizons satellite physical data"
+  },
+  "valetudo": {},
+  "vesta": {
+   "albedo": 0.4228,
+   "albedoSource": "JPL Small-Body Database",
+   "axes": [
+    569.24,
+    554.48,
+    452.66
+   ],
+   "axesSource": "JPL Small-Body Database (extent)",
+   "taxonomy": "V",
+   "taxonomySource": "JPL SBDB SMASSII (spec_B)",
+   "bv": 0.782,
+   "colorSource": "JPL Small-Body Database (B-V)"
+  },
+  "wild-2": {},
+  "ymir": {}
+ }
+}

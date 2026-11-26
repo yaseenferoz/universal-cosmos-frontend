@@ -6,15 +6,16 @@ import {
   type TextureLease,
 } from "../loaders/ScientificTextureLoader";
 import { CelestialBody } from "./CelestialBody";
-import { loadDeimosModel } from "./DeimosModel";
+import { loadShapeModel } from "./ShapeModel";
+import { shapeModelFor } from "../../data/shapeModels";
 import { earthOrientationAt } from "../coordinates/EarthOrientation";
 import { advanceSimulationDays, daysSinceModelEpoch, REAL_TIME_DAYS_PER_SECOND, simulationUtcMs } from "../../utils/simulationTime";
 
-vi.mock("./DeimosModel", () => ({ loadDeimosModel: vi.fn() }));
+vi.mock("./ShapeModel", () => ({ loadShapeModel: vi.fn() }));
 
 afterEach(() => {
   vi.restoreAllMocks();
-  vi.mocked(loadDeimosModel).mockReset();
+  vi.mocked(loadShapeModel).mockReset();
 });
 
 describe("body scale and asynchronous resource lifecycle", () => {
@@ -84,32 +85,38 @@ describe("body scale and asynchronous resource lifecycle", () => {
     earth.dispose();
   });
 
-  it("uses the irregular Deimos mesh at every LOD and clears its GPU resources", async () => {
-    const geometry = new BoxGeometry(0.15, 0.12, 0.105);
+  it("uses the published Deimos model at every LOD and clears its GPU resources", async () => {
+    const geometry = new BoxGeometry(2.5, 1.8, 1.5);
     const material = new MeshStandardMaterial();
     const dispose = vi.fn();
-    vi.mocked(loadDeimosModel).mockResolvedValue({ geometry, material, dispose });
+    vi.mocked(loadShapeModel).mockResolvedValue({ geometry, material, dispose });
     const deimos = new CelestialBody(objectById.deimos);
-    expect(deimos.outerRenderRadius).toBeCloseTo(deimos.renderRadius * 1.3);
+    const asset = shapeModelFor("deimos")!;
+    // Framed for the measured model extent before it loads.
+    expect(deimos.outerRenderRadius).toBeCloseTo(deimos.renderRadius * asset.extent);
+    expect(deimos.hasIrregularShape).toBe(true);
     await deimos.ensureTexture(512);
-    expect(loadDeimosModel).toHaveBeenCalledWith(0.07, 6.2);
+    expect(loadShapeModel).toHaveBeenCalledWith(asset);
     expect(deimos.surface.levels).toHaveLength(3);
     deimos.surface.levels.forEach(({ object }) => {
       expect(object).toBeInstanceOf(Mesh);
       expect((object as Mesh).geometry).toBe(geometry);
       expect((object as Mesh).material).toBe(material);
+      // Unit-radius model geometry is scaled to the display radius.
+      expect((object as Mesh).scale.x).toBeCloseTo(objectById.deimos.display.radius);
     });
+    expect(deimos.textureStatus.messages.join(" ")).toContain("NASA/JPL-Caltech");
     deimos.dispose();
     expect(dispose).toHaveBeenCalledTimes(1);
   });
 
-  it("disposes a Deimos model that finishes loading after the body is gone", async () => {
+  it("disposes a shape model that finishes loading after the body is gone", async () => {
     let finish!: (model: {
       geometry: BoxGeometry;
       material: MeshStandardMaterial;
       dispose: () => void;
     }) => void;
-    vi.mocked(loadDeimosModel).mockImplementation(
+    vi.mocked(loadShapeModel).mockImplementation(
       () => new Promise((resolve) => { finish = resolve; }),
     );
     const deimos = new CelestialBody(objectById.deimos);
@@ -119,5 +126,38 @@ describe("body scale and asynchronous resource lifecycle", () => {
     finish({ geometry: new BoxGeometry(), material: new MeshStandardMaterial(), dispose });
     await request;
     expect(dispose).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("published rotation models", () => {
+  it("points Saturn's pole and ring plane along the IAU pole", () => {
+    const saturn = new CelestialBody(objectById.saturn);
+    saturn.rotate(330);
+    const pole = new Vector3(0, 1, 0).applyQuaternion(saturn.tilted.quaternion);
+    // IAU pole: RA 40.589 deg, Dec 83.537 deg (ICRF) -> J2000 ecliptic -> engine axes.
+    const ra = (40.589 - 0.036 * 0.2608) * Math.PI / 180, dec = (83.537 - 0.004 * 0.2608) * Math.PI / 180;
+    const eq = new Vector3(Math.cos(dec) * Math.cos(ra), Math.cos(dec) * Math.sin(ra), Math.sin(dec));
+    const eps = 23.4392911 * Math.PI / 180;
+    const ecl = new Vector3(eq.x, eq.y * Math.cos(eps) + eq.z * Math.sin(eps), -eq.y * Math.sin(eps) + eq.z * Math.cos(eps));
+    expect(pole.angleTo(new Vector3(ecl.x, ecl.z, -ecl.y))).toBeLessThan(1e-4);
+    saturn.dispose();
+  });
+});
+
+describe("orientation at an arbitrary time (used to find local daylight)", () => {
+  it("matches rotate() exactly for spin-only bodies and Earth, without changing the scene", () => {
+    const sun = new Vector3(0.3, 0.1, -0.95).normalize();
+    for (const id of ["moon", "mars", "earth"] as const) {
+      const body = new CelestialBody(objectById[id]);
+      body.rotate(123.4, undefined, id === "earth" ? sun : undefined);
+      const expected = body.tilted.quaternion.clone().multiply(body.surface.quaternion);
+      body.rotate(7, undefined, id === "earth" ? sun : undefined);
+      const before = body.tilted.quaternion.clone().multiply(body.surface.quaternion);
+      const computed = body.rotationAt(123.4, undefined, id === "earth" ? sun : undefined);
+      expect(computed.angleTo(expected), id).toBeLessThan(1e-6);
+      // Pure: the scene still shows day 7.
+      expect(body.tilted.quaternion.clone().multiply(body.surface.quaternion).angleTo(before), id).toBeLessThan(1e-6);
+      body.dispose();
+    }
   });
 });

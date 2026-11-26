@@ -1,6 +1,8 @@
 import type { CelestialObject, ObjectId } from "../../types/celestial";
 import { Vector3 } from "three";
 import { earthOrientationAt } from "./EarthOrientation";
+import { analyticParentOf, analyticRelativePositionKm } from "../ephemeris/analyticEphemeris";
+import { compressedSolarDistance, usesTrueOverviewShape } from "../../data/generatedBodies";
 
 export interface Cartesian {
   x: number;
@@ -19,17 +21,58 @@ export const KM_PER_AU = 149_597_870.7;
 export const KM_PER_EXPLORATION_UNIT = 10_000;
 export type ViewMode = "exploration" | "overview";
 const TAU = Math.PI * 2;
+const MS_PER_DAY = 86_400_000;
+/** Matches the bundled SIMULATION_EPOCH; kept local to avoid a data-layer import. */
+const DEFAULT_EPOCH = "2026-01-01T00:00:00.000Z";
 
-/** A display-only circular orbit. Initial phase is composed for legibility, not an ephemeris. */
+/**
+ * Analytic parent-relative position (engine axes, km) when a published model covers
+ * this object AND the catalog parent matches that model's center; otherwise null.
+ */
+export function ephemerisRelativePositionKm(
+  object: CelestialObject,
+  days: number,
+  epoch = DEFAULT_EPOCH,
+): Cartesian | null {
+  if (!object.parentId || object.parentId !== analyticParentOf(object.id)) return null;
+  const utcMs = Date.parse(epoch) + days * MS_PER_DAY;
+  // Physical and Overview layouts query the same instant each frame; compute once.
+  if (utcMs !== cachedUtcMs) {
+    cachedUtcMs = utcMs;
+    ephemerisCache.clear();
+  }
+  const cached = ephemerisCache.get(object.id);
+  if (cached !== undefined) return cached;
+  const position = analyticRelativePositionKm(object.id, utcMs);
+  ephemerisCache.set(object.id, position);
+  return position;
+}
+let cachedUtcMs = Number.NaN;
+const ephemerisCache = new Map<ObjectId, Cartesian | null>();
+
+/**
+ * Overview orbit: compressed radius on the display ring. Bodies with an analytic
+ * ephemeris sit at their real parent-relative longitude; others keep a composed phase.
+ */
 export function displayOrbitAt(
   object: CelestialObject,
   days: number,
+  epoch = DEFAULT_EPOCH,
 ): Cartesian {
   if (!object.parentId || object.orbitalPeriodDays <= 0)
     return { x: 0, y: 0, z: 0 };
-  const phase =
-    object.display.initialPhase +
-    ((days % object.orbitalPeriodDays) / object.orbitalPeriodDays) * TAU;
+  const real = ephemerisRelativePositionKm(object, days, epoch);
+  if (real && usesTrueOverviewShape(object.id)) {
+    // Eccentric small bodies: real direction, log-compressed real distance.
+    const distance = Math.hypot(real.x, real.y, real.z);
+    const scale = distance > 0 ? compressedSolarDistance(distance) / distance : 0;
+    return { x: real.x * scale, y: real.y * scale, z: real.z * scale };
+  }
+  // Engine longitude is atan2(−z, x); the ring formula below uses phase = −longitude.
+  const phase = real
+    ? Math.atan2(real.z, real.x)
+    : object.display.initialPhase +
+      ((days % object.orbitalPeriodDays) / object.orbitalPeriodDays) * TAU;
   const z = Math.sin(phase) * object.display.orbitRadius;
   return {
     x: Math.cos(phase) * object.display.orbitRadius,
@@ -69,16 +112,20 @@ export function kmToAu(km: number): number {
 }
 
 /**
- * A distance-preserving MODEL, not an ephemeris: measured mean parent distance and
- * period, with the explicitly illustrative phase and plane used by this release.
- * Kilometer positions remain CPU doubles; display values never enter this radius.
+ * Parent-relative km in engine axes. Planets, the Moon, Ceres, Vesta and Bennu use
+ * the analytic ephemeris (see engine/ephemeris). Other moons and the ISS fall back to
+ * a circular MODEL: measured mean distance and period with an illustrative phase and
+ * plane. Kilometer positions remain CPU doubles; display values never enter here.
  */
 export function modeledRelativePositionKm(
   object: CelestialObject,
   days: number,
+  epoch = DEFAULT_EPOCH,
 ): Cartesian {
   if (!object.parentId || object.orbitalPeriodDays <= 0)
     return { x: 0, y: 0, z: 0 };
+  const real = ephemerisRelativePositionKm(object, days, epoch);
+  if (real) return real;
   const phase =
     object.display.initialPhase +
     ((days % object.orbitalPeriodDays) / object.orbitalPeriodDays) * TAU;
@@ -127,16 +174,16 @@ function resolveHierarchy(
 export function modeledPositionsKm(
   objects: readonly CelestialObject[],
   days: number,
-  epoch = "2026-01-01T00:00:00.000Z",
+  epoch = DEFAULT_EPOCH,
 ): Map<ObjectId, Cartesian> {
   const earth = objects.find(({ id }) => id === "earth");
   return resolveHierarchy(objects, (object) => {
-    const offset = modeledRelativePositionKm(object, days);
+    const offset = modeledRelativePositionKm(object, days, epoch);
     if (object.id !== "iss" || !earth) return offset;
     // ISS's 51.6° is equatorial, unlike the other illustrative ecliptic planes.
     // Share the rendered Earth's pole correction so the displayed orbit stays inclined
     // to that equator. Epoch matches the bundled visualization clock, not a TLE epoch.
-    const earthOffset = modeledRelativePositionKm(earth, days);
+    const earthOffset = modeledRelativePositionKm(earth, days, epoch);
     const sun = new Vector3(-earthOffset.x, -earthOffset.y, -earthOffset.z);
     const pole = earthOrientationAt(Date.parse(epoch) + days * 86400000, sun).poleRotation;
     return new Vector3(offset.x, offset.y, offset.z).applyQuaternion(pole);
@@ -146,8 +193,9 @@ export function modeledPositionsKm(
 export function overviewPositions(
   objects: readonly CelestialObject[],
   days: number,
+  epoch = DEFAULT_EPOCH,
 ): Map<ObjectId, Cartesian> {
-  return resolveHierarchy(objects, (object) => displayOrbitAt(object, days));
+  return resolveHierarchy(objects, (object) => displayOrbitAt(object, days, epoch));
 }
 
 export function renderRadiusFor(

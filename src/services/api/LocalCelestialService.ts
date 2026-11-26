@@ -9,6 +9,13 @@ import type {
 } from "../../types/celestial";
 import { assertActive, CelestialApiError, normalizeEpoch } from "./errors";
 import { searchCatalog } from "./searchCatalog";
+import {
+  analyticParentOf,
+  eclipticRelativeKm,
+  ephemerisCoverage,
+  isWithinCoverage,
+} from "../../engine/ephemeris/analyticEphemeris";
+import { utcToTdbMs } from "../../engine/ephemeris/time";
 
 /** In-memory data, with no artificial latency or fetch requests. */
 export class LocalCelestialService implements CelestialService {
@@ -55,13 +62,34 @@ export class LocalCelestialService implements CelestialService {
         "This object is not in the local catalog.",
         404,
       );
+    const epoch = normalizeEpoch(isoDate);
+    const utcMs = Date.parse(epoch);
+    const coverage = ephemerisCoverage(id);
+    const parent = analyticParentOf(id);
+    const position = coverage && parent && isWithinCoverage(id, utcMs)
+      ? eclipticRelativeKm(id, utcToTdbMs(utcMs))
+      : null;
+    if (!coverage || !parent || !position)
+      return {
+        status: "unavailable",
+        objectId: id,
+        epoch,
+        position: null,
+        reason: coverage
+          ? `${coverage.label} is only used between ${new Date(coverage.validFromMs).toISOString().slice(0, 10)} and ${new Date(coverage.validUntilMs).toISOString().slice(0, 10)}.`
+          : "No analytic ephemeris covers this object locally. Its animated circular path and chosen phase are display illustrations, not measured positions.",
+      };
     return {
-      status: "unavailable",
+      status: "available",
       objectId: id,
-      epoch: normalizeEpoch(isoDate),
-      position: null,
-      reason:
-        "The local catalog has no scientific ephemeris. Animated circular paths and chosen phases are display illustrations, not measured positions.",
+      epoch,
+      position: {
+        ...position,
+        unit: "km",
+        referenceObject: parent,
+        frame: "Geometric, mean ecliptic and equinox of J2000 (+x equinox, +z ecliptic north), TDB = UTC + 69.184 s",
+      },
+      provenance: { source: coverage.source.label, url: coverage.source.url, model: coverage.label },
     };
   }
 }

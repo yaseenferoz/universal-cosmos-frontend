@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Vector3 } from "three";
-import { objectById } from "../../data/catalog";
+import { celestialObjects, objectById } from "../../data/catalog";
 import type { ObjectId } from "../../types/celestial";
 import {
   displayOrbitAt,
@@ -8,17 +8,19 @@ import {
   kmToAu,
   resolveScientificCoordinate,
   modeledPositionsKm,
+  modeledRelativePositionKm,
   overviewPositions,
   explorationPosition,
   renderRadiusFor,
   type ScientificCoordinate,
 } from "./CoordinateSystem";
 import { FloatingOrigin } from "./FloatingOrigin";
+import { ephemerisCoverage } from "../ephemeris/analyticEphemeris";
 
 describe("display orbital model", () => {
-  it("returns each body to its initial position after its own orbital period", () => {
-    for (const object of Object.values(objectById)) {
-      if (!object.parentId) continue;
+  it("returns circular-model bodies to their initial position after one period", () => {
+    for (const object of celestialObjects) {
+      if (!object.parentId || ephemerisCoverage(object.id)) continue;
       const initial = displayOrbitAt(object, 0);
       const completed = displayOrbitAt(object, object.orbitalPeriodDays);
       expect(completed.x).toBeCloseTo(initial.x, 10);
@@ -39,6 +41,22 @@ describe("display orbital model", () => {
       );
     }
   });
+  it("places ephemeris bodies at their real longitude on the compressed overview ring", () => {
+    for (const id of ["mars", "jupiter", "moon"] as const) {
+      const object = objectById[id];
+      const ring = displayOrbitAt(object, 12);
+      const real = modeledRelativePositionKm(object, 12);
+      const longitude = (p: { x: number; z: number }) => Math.atan2(-p.z, p.x);
+      // Projecting onto a display ring tilted by i shifts longitude by at most
+      // ~(1 − cos i)/2 rad; display tilts here are ≤ 10°, so < 0.01 rad.
+      const delta = Math.atan2(
+        Math.sin(longitude(ring) - longitude(real)),
+        Math.cos(longitude(ring) - longitude(real)),
+      );
+      expect(Math.abs(delta)).toBeLessThan(0.01);
+      expect(Math.hypot(ring.x, ring.y, ring.z)).toBeCloseTo(object.display.orbitRadius, 10);
+    }
+  });
   it("places the Sun at the root and resolves Moon orbits relative to Earth", () => {
     expect(displayOrbitAt(objectById.sun, 50)).toEqual({ x: 0, y: 0, z: 0 });
     expect(objectById.moon.parentId).toBe("earth");
@@ -50,8 +68,8 @@ describe("display orbital model", () => {
 });
 
 describe("separate exploration and overview mappings", () => {
-  const bodies = Object.values(objectById);
-  it("preserves the measured Moon/Earth distance-to-radius ratio in exploration", () => {
+  const bodies = celestialObjects;
+  it("preserves the ephemeris Moon/Earth distance-to-radius ratio in exploration", () => {
     const positions = modeledPositionsKm(bodies, 5);
     const earth = positions.get("earth")!;
     const moon = positions.get("moon")!;
@@ -60,16 +78,15 @@ describe("separate exploration and overview mappings", () => {
       moon.y - earth.y,
       moon.z - earth.z,
     );
-    expect(distanceKm).toBeCloseTo(objectById.moon.semiMajorAxisKm, 5);
+    // Real separation varies between lunar perigee and apogee.
+    expect(distanceKm).toBeGreaterThan(356_000);
+    expect(distanceKm).toBeLessThan(407_000);
     const e = explorationPosition(earth),
       m = explorationPosition(moon);
     const ratio =
       Math.hypot(m.x - e.x, m.y - e.y, m.z - e.z) /
       renderRadiusFor(objectById.earth, "exploration");
-    expect(ratio).toBeCloseTo(
-      objectById.moon.semiMajorAxisKm / objectById.earth.radiusKm,
-      8,
-    );
+    expect(ratio).toBeCloseTo(distanceKm / objectById.earth.radiusKm, 8);
   });
   it("keeps compressed overview parameters out of physical model dimensions", () => {
     const physical = modeledPositionsKm(bodies, 0);

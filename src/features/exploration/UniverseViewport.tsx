@@ -83,6 +83,8 @@ export function UniverseViewport() {
               useExplorationStore.setState({ imageryStatus });
           },
         });
+        // Development-only handle for browser-driven diagnostics; stripped from production builds.
+        if (import.meta.env.DEV) Reflect.set(window, "__engine", engine);
         const initial = useExplorationStore.getState();
         engine.setPlayback(initial.playing, initial.speed);
         engine.setTime(initial.simulationDays);
@@ -118,9 +120,18 @@ export function UniverseViewport() {
             if (state.diagnosticsEnabled !== previous.diagnosticsEnabled)
               engine.setDiagnosticsEnabled(state.diagnosticsEnabled);
             if (state.lookAtSunRequest !== previous.lookAtSunRequest) {
-              const mode = useExplorationStore.getState().cameraMode;
-              useExplorationStore.getState().setCameraMode("free");
-              if (!engine.lookAtSun()) useExplorationStore.getState().setCameraMode(mode);
+              // On a surface the walking camera turns; the orbit camera mode is untouched.
+              if (engine.isOnSurface) engine.lookAtSun();
+              else {
+                const mode = useExplorationStore.getState().cameraMode;
+                useExplorationStore.getState().setCameraMode("free");
+                if (!engine.lookAtSun()) useExplorationStore.getState().setCameraMode(mode);
+              }
+            }
+            if (state.lookAtParentRequest !== previous.lookAtParentRequest) engine.lookAtParent();
+            if (state.daylightRequest !== previous.daylightRequest && engine.skipToSurfaceDaylight()) {
+              const exploration = useExplorationStore.getState();
+              if (exploration.playing) exploration.togglePlayback();
             }
             if (state.daySideRequest !== previous.daySideRequest) {
               const mode = useExplorationStore.getState().cameraMode;
@@ -186,6 +197,7 @@ export function UniverseViewport() {
       unsubscribeLunar?.();
       unsubscribeRendering?.();
       engine?.dispose();
+      if (import.meta.env.DEV) Reflect.deleteProperty(window, "__engine");
     };
   }, []);
   return (

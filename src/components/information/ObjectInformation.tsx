@@ -1,9 +1,36 @@
+import { useState } from "react";
 import { ArrowUpRight, ChevronUp, Crosshair, Info, X } from "lucide-react";
 import { useExplorationStore } from "../../stores/explorationStore";
 import { formatNumber } from "../../utils/format";
 import { ImageryCredits } from "./ImageryCredits";
 import { ViewingActions } from "../controls/ViewingActions";
 import { useRenderingStore } from "../../stores/renderingStore";
+import type { CelestialObject } from "../../types/celestial";
+import { ephemerisCoverage } from "../../engine/ephemeris/analyticEphemeris";
+
+const MOON_PREVIEW = 12;
+
+/** Largest measured moons first; unmeasured (mostly small irregulars) after, by distance. */
+function MoonList({ moons, parentName }: { moons: CelestialObject[]; parentName: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const sorted = [...moons].sort((a, b) => {
+    const am = a.unmeasured?.includes("radius") ? 1 : 0;
+    const bm = b.unmeasured?.includes("radius") ? 1 : 0;
+    return am - bm || (am ? a.semiMajorAxisKm - b.semiMajorAxisKm : b.radiusKm - a.radiusKm);
+  });
+  const shown = expanded ? sorted : sorted.slice(0, MOON_PREVIEW);
+  return <section className="related-destinations" aria-label={`Explore ${parentName}'s moons`}>
+    <span className="eyebrow">MOONS IN THIS CATALOG ({moons.length})</span>
+    <div className="destination-filters">
+      {shown.map((moon) => <button key={moon.id} onClick={() => useExplorationStore.getState().selectObject(moon.id)}>
+        {moon.name}<ArrowUpRight size={12} />
+      </button>)}
+      {sorted.length > MOON_PREVIEW && <button onClick={() => setExpanded(!expanded)} aria-expanded={expanded}>
+        {expanded ? "Show largest only" : `Show all ${sorted.length}`}
+      </button>}
+    </div>
+  </section>;
+}
 
 export function ObjectInformation() {
   const selectedId = useExplorationStore((s) => s.selectedId);
@@ -58,14 +85,7 @@ export function ObjectInformation() {
       </div>
       <p className="object-description">{object.description}</p>
       <ViewingActions inline />
-      {moons.length > 0 && <section className="related-destinations" aria-label={`Explore ${object.name}'s moons`}>
-        <span className="eyebrow">MOONS IN THIS CATALOG ({moons.length})</span>
-        <div className="destination-filters">
-          {moons.map((moon) => <button key={moon.id} onClick={() => useExplorationStore.getState().selectObject(moon.id)}>
-            {moon.name}<ArrowUpRight size={12} />
-          </button>)}
-        </div>
-      </section>}
+      {moons.length > 0 && <MoonList key={object.id} moons={moons} parentName={object.name} />}
       <div className="information-details">
         <div className="detail-divider">
           <span>
@@ -77,13 +97,18 @@ export function ObjectInformation() {
           <div>
             <dt>{object.id === "iss" ? "Reference span" : "Diameter"}</dt>
             <dd>
-              {formatNumber(object.radiusKm * 2 * (object.id === "iss" ? 1000 : 1))} <small>{object.id === "iss" ? "m" : "km"}</small>
+              {object.unmeasured?.includes("radius")
+                ? <span className="muted-value">Not measured</span>
+                : <>{formatNumber(object.radiusKm * 2 * (object.id === "iss" ? 1000 : 1))} <small>{object.id === "iss" ? "m" : "km"}</small></>}
             </dd>
           </div>
           <div>
             <dt>{object.id === "iss" ? "Crew environment" : "Surface gravity"}</dt>
             <dd>
-              {object.id === "iss" ? "Orbital free fall" : <>{formatNumber(object.gravityMs2, 2)} <small>m/s²</small></>}
+              {object.id === "iss" ? "Orbital free fall"
+                : object.unmeasured?.some((quantity) => quantity === "radius" || quantity === "mass")
+                  ? <span className="muted-value">Not measured</span>
+                  : <>{formatNumber(object.gravityMs2, 2)} <small>m/s²</small></>}
             </dd>
           </div>
           <div>
@@ -127,8 +152,9 @@ export function ObjectInformation() {
           <span className="science-dot" />
           Real object. Illustrative rendering.
           <p>
-            Exploration uses physical scale. Circular orbits are modeled, not
-            measured positions at the displayed time.
+            Exploration uses physical scale. {ephemerisCoverage(object.id)
+              ? `Position: ${ephemerisCoverage(object.id)!.label}.`
+              : "This orbit is a circular model, not a measured position at the displayed time."}
           </p>
           {object.backendId && (
             <p>

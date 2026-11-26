@@ -48,9 +48,10 @@ export interface LunarNavigationTelemetry {
 
 const UP = new Vector3(0, 1, 0);
 const ZERO = new Vector3();
-const APPROACH_SECONDS = 4;
-const DESCENT_SECONDS = 10;
-const ASCENT_SECONDS = 8;
+// Cinematic but brisk: landing is the experience, so it should not keep people waiting.
+const APPROACH_SECONDS = 2.5;
+const DESCENT_SECONDS = 5;
+const ASCENT_SECONDS = 4.5;
 const APPROACH_ALTITUDE_M = 120_000;
 const MAX_WALK_RESOLUTION_M = 5;
 const movementKeys = new Set([
@@ -238,6 +239,25 @@ export class LunarNavigationController {
     this.coverageNotice = null;
     this.currentPhase = "approach";
     this.updateCamera();
+    return true;
+  }
+
+  /**
+   * Turn the surface view toward a body-fixed direction (e.g. the Sun). When the
+   * direction is below the horizon, face its azimuth at the horizon instead.
+   */
+  lookToward(directionBodyFixed: Vector3): boolean {
+    if (this.currentPhase !== "surface" || directionBodyFixed.lengthSq() === 0) return false;
+    const coordinate = cartesianToGeodetic(this.positionM, this.options.radiusM);
+    const basis = this.tangentBasis(coordinate.latDeg, coordinate.lonDeg);
+    const up = this.positionM.clone().normalize();
+    const direction = directionBodyFixed.clone().normalize();
+    this.heading = Math.atan2(direction.dot(basis.east), direction.dot(basis.north));
+    this.pitch = MathUtils.clamp(
+      Math.max(0, Math.asin(MathUtils.clamp(direction.dot(up), -1, 1))),
+      0,
+      MathUtils.degToRad(85),
+    );
     return true;
   }
 

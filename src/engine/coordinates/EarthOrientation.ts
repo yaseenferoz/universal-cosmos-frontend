@@ -36,9 +36,9 @@ export function earthOrientationAt(utcMs: number, modelSunDirection?: Vector3) {
   if (modelSunDirection) {
     if (![modelSunDirection.x, modelSunDirection.y, modelSunDirection.z].every(Number.isFinite)
       || modelSunDirection.lengthSq() < 1e-20) throw new RangeError("Invalid modeled Sun direction.");
-    // The orbit phase is illustrative. Rotate this local reference frame to its
-    // Sun so UTC geography/seasonal daylight stay correct without calling the
-    // circular orbit an ephemeris. The background stars are not recalibrated.
+    // Align this frame to the rendered Sun. With the analytic ephemeris this is a
+    // small correction (J2000 vs of-date equinox, model differences); it keeps UTC
+    // geography and seasonal daylight consistent with the scene's lighting.
     const azimuth = Math.atan2(-modelSunDirection.z, modelSunDirection.x);
     const yaw = new Quaternion().setFromAxisAngle(NORTH, azimuth - longitude);
     const elevation = Math.atan2(modelSunDirection.y, Math.hypot(modelSunDirection.x, modelSunDirection.z));

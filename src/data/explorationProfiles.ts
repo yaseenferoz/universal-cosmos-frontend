@@ -1,6 +1,7 @@
-import type { ObjectId } from "../types/celestial";
+import type { CoreObjectId, ObjectId } from "../types/celestial";
+import { objectById } from "./catalog";
 import type { PlanetaryExplorationProfile } from "../types/planetaryExploration";
-import { planetaryEnvironments } from "./planetaryEnvironments";
+import { environmentFor } from "./planetaryEnvironments";
 import { additionalBodies } from "./additionalBodies";
 
 const nasaFacts = {
@@ -17,8 +18,8 @@ const unsupported = {
   reconstruction: "unavailable",
 } as const;
 
-type CoreObjectId = "sun" | "mercury" | "venus" | "earth" | "moon" | "mars" | "jupiter" | "saturn" | "uranus" | "neptune";
-type AdditionalObjectId = Exclude<ObjectId, CoreObjectId | "iss">;
+type PlanetId = "sun" | "mercury" | "venus" | "earth" | "moon" | "mars" | "jupiter" | "saturn" | "uranus" | "neptune";
+type AdditionalObjectId = Exclude<CoreObjectId, PlanetId | "iss">;
 const additionalProfiles = Object.fromEntries(additionalBodies.map((body) => [body.id, {
   objectId: body.id,
   classification: body.id === "titan" || body.id === "triton" ? "ATMOSPHERIC_SOLID" : body.parentId === "sun" ? "SMALL_BODY" : "AIRLESS_SOLID",
@@ -29,7 +30,7 @@ const additionalProfiles = Object.fromEntries(additionalBodies.map((body) => [bo
 } satisfies PlanetaryExplorationProfile])) as Record<AdditionalObjectId, PlanetaryExplorationProfile>;
 
 /** Current capabilities for the bundled catalog. */
-export const explorationProfiles: Record<ObjectId, PlanetaryExplorationProfile> = {
+export const explorationProfiles: Record<CoreObjectId, PlanetaryExplorationProfile> = {
   iss: {
     objectId: "iss", classification: "SPACECRAFT",
     modes: { orbital: "available", surface: "not-supported", atmospheric: "not-supported" },
@@ -116,15 +117,33 @@ export const explorationProfiles: Record<ObjectId, PlanetaryExplorationProfile> 
 
 // Generated environments expose an explicit demonstration capability. Measured
 // support is reserved for the existing lunar package; giants never gain ground.
-for (const profile of Object.values(explorationProfiles)) {
-  const environment = planetaryEnvironments[profile.objectId];
-  if (!environment) continue;
+function applyEnvironment(profile: PlanetaryExplorationProfile): PlanetaryExplorationProfile {
+  const environment = environmentFor(profile.objectId);
+  if (!environment) return profile;
   profile.modes[environment.mode === "surface" ? "surface" : "atmospheric"] = "demonstration";
   profile.notice = environment.description;
-  profile.sky = { ...profile.sky, reconstruction: "illustrative", coverage: "Analytic haze in modeled body-fixed coordinates; no measured atmosphere or star catalogue.", sourceLabel: "Universal Cosmos illustrative environment", sourceUrl: "", referenceEpoch: "Simulation epoch 2026-01-01; illustrative orientation" };
+  profile.sky = { ...profile.sky, reconstruction: "illustrative", coverage: environment.hazeHeightM > 0 ? "Analytic haze sky; Sun, planets and moons from the ephemeris and IAU rotation models where published." : "Airless sky: the Sun, planets, moons and star map from the ephemeris and IAU rotation models where published.", sourceLabel: "Universal Cosmos illustrative environment", sourceUrl: "", referenceEpoch: "Simulation clock (UTC)" };
   if (environment.mode === "surface") profile.terrain = { ...profile.terrain, reconstruction: "illustrative", coverage: "Global analytic reconstructed terrain; no measured elevation data.", sourceLabel: "Universal Cosmos procedural reconstruction", sourceUrl: "", referenceEpoch: "Static generated geometry; no measurement epoch" };
+  return profile;
 }
+for (const profile of Object.values(explorationProfiles)) applyEnvironment(profile);
 
+/** Profiles for any object; JPL-generated bodies get an orbit-only profile. */
 export function explorationProfile(id: ObjectId): PlanetaryExplorationProfile {
-  return explorationProfiles[id];
+  const known = (explorationProfiles as Partial<Record<ObjectId, PlanetaryExplorationProfile>>)[id];
+  if (known) return known;
+  const cached = generatedProfiles.get(id);
+  if (cached) return cached;
+  const object = objectById[id];
+  const profile = applyEnvironment({
+    objectId: id,
+    classification: object?.parentId === "sun" ? "SMALL_BODY" : "AIRLESS_SOLID",
+    modes: { orbital: "available", surface: "planned", atmospheric: "not-supported" },
+    terrain: { ...unsupported, coverage: "No shape model or terrain package is installed." },
+    sky: { ...unsupported, coverage: "No measured local sky package is installed." },
+    notice: `${object?.name ?? id} can be explored from orbit; surface descent is not available.`,
+  });
+  generatedProfiles.set(id, profile);
+  return profile;
 }
+const generatedProfiles = new Map<ObjectId, PlanetaryExplorationProfile>();

@@ -9,10 +9,14 @@ import {
 import type { CelestialObject, ObjectId, Quality } from "../../types/celestial";
 import type { TerrainDataProvider } from "../../types/terrain";
 import { ReconstructedTerrainProvider } from "../../services/terrain/ReconstructedTerrainProvider";
-import { planetaryEnvironments } from "../../data/planetaryEnvironments";
+import { environmentFor } from "../../data/planetaryEnvironments";
 import { cartesianToGeodetic } from "../terrain/coordinates";
 import { PlanetarySky, localStarVisibility } from "../effects/PlanetarySky";
 import { SurfaceAtmosphere } from "../effects/SurfaceAtmosphere";
+import { ScatteringSky } from "../effects/ScatteringSky";
+import { GIANT_ATMOSPHERES, GiantPlanetAtmosphere } from "../effects/GiantPlanetAtmosphere";
+import { scientificTextures, type TextureLease } from "../loaders/ScientificTextureLoader";
+import { imageryFor } from "../../data/imagery";
 import { initialLunarTelemetry, type LunarTelemetry } from "../../types/lunar";
 import { LunarTerrainProvider } from "../../services/terrain/LunarTerrainProvider";
 import {
@@ -42,7 +46,8 @@ export class PlanetaryExploration {
   readonly scene = new Scene();
   readonly navigation: LunarNavigationController;
   private readonly provider: TerrainDataProvider;
-  private readonly sky: PlanetarySky | null;
+  private readonly sky: PlanetarySky | ScatteringSky | GiantPlanetAtmosphere | null;
+  private bandLease: TextureLease | null = null;
   private readonly surfaceAtmosphere: SurfaceAtmosphere | undefined;
   private readonly skyScene = new Scene();
   private readonly ambient = new AmbientLight("#ffffff", 0.008);
@@ -70,7 +75,7 @@ export class PlanetaryExploration {
   ) {
     this.quality = options.quality;
     this.bodyId = options.body?.id ?? "moon";
-    const environment = planetaryEnvironments[this.bodyId];
+    const environment = environmentFor(this.bodyId);
     this.atmospheric = environment?.mode === "atmosphere";
     const site = cartesianToGeodetic(options.landingDirection ?? new Vector3(1, 0, 0), 1);
     this.provider = this.bodyId !== "moon" && options.body
@@ -80,7 +85,14 @@ export class PlanetaryExploration {
       maxConcurrentRequests: options.mobile ? 2 : 4,
     });
     const optics = localAtmosphereModel(this.bodyId);
-    this.sky = environment ? new PlanetarySky(environment, optics.asymmetry) : null;
+    // Earth uses physically based scattering and NASA cloud coverage; others keep the
+    // illustrative haze model until their optical properties are qualified.
+    const giant = this.atmospheric ? GIANT_ATMOSPHERES[this.bodyId] : undefined;
+    this.sky = this.bodyId === "earth"
+      ? new ScatteringSky(imageryFor("earth").clouds?.variants[options.mobile ? "low" : "medium"] ?? null, options.quality, options.mobile, this.provider.manifest.radiusM)
+      : giant ? new GiantPlanetAtmosphere(giant, this.provider.manifest.radiusM / 1000)
+      : environment ? new PlanetarySky(environment, optics.asymmetry) : null;
+    if (this.sky instanceof GiantPlanetAtmosphere) void this.loadBandMap(this.sky);
     this.surfaceAtmosphere = environment && optics.extinctionPerM > 0
       ? new SurfaceAtmosphere(environment.horizonColor, optics.extinctionPerM, environment.hazeHeightM) : undefined;
     if (this.sky) this.skyScene.add(this.sky.mesh);
@@ -155,9 +167,39 @@ export class PlanetaryExploration {
     }
   }
 
+  /** The giant's observed global map supplies zonal band colours for the cloud deck. */
+  private async loadBandMap(sky: GiantPlanetAtmosphere): Promise<void> {
+    const asset = imageryFor(this.bodyId).surface;
+    if (!asset) return;
+    try {
+      const lease = await scientificTextures.acquire(asset, "low");
+      if (this.disposed) { lease.release(); return; }
+      this.bandLease = lease;
+      sky.setBandMap(lease.texture);
+    } catch {
+      // The profile's fallback deck colour remains.
+    }
+  }
+
   get error(): string | null {
     return this.failure;
   }
+  /** Face the Sun from the surface (its azimuth when it is below the horizon). */
+  lookAtSun(): boolean {
+    // lookToward itself only acts while standing on the surface.
+    return this.entered && this.navigation.lookToward(this.sunDirection);
+  }
+
+  /** Face a body-fixed direction (e.g. the parent planet); its azimuth if below the horizon. */
+  lookToward(directionBodyFixed: Vector3): boolean {
+    return this.entered && this.navigation.lookToward(directionBodyFixed);
+  }
+
+  /** Standing on the surface (not loading, descending or ascending). */
+  get onSurface(): boolean {
+    return this.entered && this.navigation.phase === "surface";
+  }
+
   get ready(): boolean {
     return this.entered;
   }
@@ -222,7 +264,7 @@ export class PlanetaryExploration {
     const observer = this.navigation.positionM;
     const altitude = Math.max(0, this.navigation.getTelemetry().altitudeM);
     this.scatter?.update(observer, altitude);
-    const environment = planetaryEnvironments[this.bodyId];
+    const environment = environmentFor(this.bodyId);
     const irradiance = relativeSolarIrradiance(distanceAu);
     this.sky?.update(observer, sunDirection, altitude, irradiance);
     const solarCosine = observer.clone().normalize().dot(sunDirection);
@@ -284,6 +326,7 @@ export class PlanetaryExploration {
 
   setQuality(quality: Quality): void {
     this.quality = quality;
+    if (this.sky instanceof ScatteringSky) this.sky.setQuality(quality, this.options.mobile);
     this.terrain?.setQuality(quality, this.options.mobile);
     this.scatter?.setQuality(quality, this.options.mobile);
     const size = qualityConfig(quality, 1, this.options.mobile).shadowMapSize;
@@ -360,6 +403,8 @@ export class PlanetaryExploration {
     this.terrain?.dispose();
     this.scatter?.dispose();
     this.sky?.dispose();
+    this.bandLease?.release();
+    this.bandLease = null;
     this.skyScene.clear();
     this.provider.dispose();
     this.sunlight.shadow.dispose();

@@ -85,6 +85,8 @@ describe("engine mode and reset commands", () => {
       },
       setSelected: vi.fn(),
       ensureTexture: vi.fn().mockResolvedValue(undefined),
+      ensureShape: vi.fn(() => false),
+      hasIrregularShape: false,
     };
     Object.assign(engine, {
       viewMode: "exploration",
@@ -293,8 +295,14 @@ describe("guided solar navigation commands", () => {
     Object.assign(engine, { viewMode: "overview" });
     expect(engine.lookAtSun()).toBe(false);
     expect(engine.goToDaySide()).toBe(false);
-    Object.assign(engine, { viewMode: "exploration", lunar: {} });
+    // During a surface session orbital guidance is rejected; Look at Sun is
+    // delegated to the walking view (which declines until standing on the ground).
+    Object.assign(engine, { viewMode: "exploration", lunar: { lookAtSun: () => false } });
     expect(engine.lookAtSun()).toBe(false);
     expect(engine.goToDaySide()).toBe(false);
+    const surface = { lookAtSun: vi.fn(() => true) };
+    Object.assign(engine, { lunar: surface });
+    expect(engine.lookAtSun()).toBe(true);
+    expect(surface.lookAtSun).toHaveBeenCalledOnce();
   });
 });

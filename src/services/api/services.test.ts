@@ -17,16 +17,16 @@ describe("local celestial service", () => {
   const service = new LocalCelestialService();
 
   it("finds real objects with case, whitespace, and accent-insensitive search", async () => {
-    expect(
-      (await service.search("  \u00c9ARTH  ")).map((object) => object.id),
-    ).toEqual(["earth", "bennu"]);
+    const earth = (await service.search("  ÉARTH  ")).map((object) => object.id);
+    expect(earth[0]).toBe("earth");
+    expect(earth).toEqual(expect.arrayContaining(["bennu", "eros", "apophis"]));
     expect(
       (await service.search("gas giant")).map((object) => object.id),
     ).toEqual(["jupiter", "saturn"]);
     expect(await service.search("not a catalog object")).toEqual([]);
-    expect(await service.search("")).toHaveLength(33);
+    expect(await service.search("")).toHaveLength(celestialObjects.length);
     expect((await service.search("Europa")).map(({ id }) => id)).toEqual(["europa"]);
-    expect((await service.search("asteroid")).map(({ id }) => id)).toEqual(["ceres", "vesta", "bennu"]);
+    expect((await service.search("asteroid")).map(({ id }) => id)).toEqual(expect.arrayContaining(["ceres", "vesta", "bennu", "pallas", "eros"]));
   });
 
   it("does not expose mutable catalog objects to consumers", async () => {
@@ -44,30 +44,46 @@ describe("local celestial service", () => {
   });
 
   it("discovers moons by parent and accepts plural collection names", async () => {
-    expect((await service.search("asteroids")).map(({ id }) => id)).toEqual(["ceres", "vesta", "bennu"]);
-    expect(await service.search("moons")).toHaveLength(20);
+    expect((await service.search("asteroids")).map(({ id }) => id)).toEqual(expect.arrayContaining(["ceres", "vesta", "bennu", "pallas", "eros"]));
+    const satellites = celestialObjects.filter(({ category }) => category === "Natural satellite");
+    expect(await service.search("moons")).toHaveLength(satellites.length);
+    expect(satellites.length).toBeGreaterThan(450);
     const saturn = await service.search("Saturn moons");
     expect(saturn.map(({ id }) => id)).toEqual(expect.arrayContaining(["mimas", "tethys", "dione", "rhea", "iapetus", "enceladus", "titan"]));
-    expect(saturn).toHaveLength(7);
+    expect(saturn).toHaveLength(satellites.filter(({ parentId }) => parentId === "saturn").length);
     expect(saturn.every(({ parentId }) => parentId === "saturn")).toBe(true);
-    expect(await service.search("Uranus satellites")).toHaveLength(5);
+    expect(await service.search("Uranus satellites")).toHaveLength(satellites.filter(({ parentId }) => parentId === "uranus").length);
     expect(await service.search("Mercury moons")).toEqual([]);
     expect(await service.getObject("oberon")).toMatchObject({ parentId: "uranus", radiusKm: 761.4 });
   });
 
-  it("distinguishes a visualization epoch from unavailable scientific ephemerides", async () => {
-    const result = await service.getEphemeris("earth", SIMULATION_EPOCH);
-    expect(result).toMatchObject({
-      status: "unavailable",
-      position: null,
+  it("returns analytic ephemerides with provenance, and declines uncovered objects or dates", async () => {
+    const earth = await service.getEphemeris("earth", SIMULATION_EPOCH);
+    expect(earth).toMatchObject({
+      status: "available",
       epoch: SIMULATION_EPOCH,
+      position: { unit: "km", referenceObject: "sun" },
+      provenance: { url: "https://ssd.jpl.nasa.gov/planets/approx_pos.html" },
+    });
+    if (earth.status !== "available") throw new Error("expected position");
+    const au = Math.hypot(earth.position.x, earth.position.y, earth.position.z) / 149_597_870.7;
+    expect(au).toBeGreaterThan(0.983); // perihelion
+    expect(au).toBeLessThan(0.984); // Earth is near perihelion on 1 January
+    expect(await service.getEphemeris("moon", SIMULATION_EPOCH)).toMatchObject({
+      status: "available", position: { referenceObject: "earth" },
+    });
+    expect(await service.getEphemeris("iss", SIMULATION_EPOCH)).toMatchObject({
+      status: "unavailable", position: null,
+    });
+    expect(await service.getEphemeris("mars", "2300-01-01T00:00:00Z")).toMatchObject({
+      status: "unavailable", position: null,
     });
     await expect(service.getEphemeris("earth", "not a date")).rejects.toThrow(
       "valid ephemeris date",
     );
     const system = await service.getSystem("solar");
     expect(system.model).toBe("illustrative-circular");
-    expect(system.objectIds).toHaveLength(33);
+    expect(system.objectIds).toHaveLength(celestialObjects.length);
   });
 
   it("honors already aborted requests without performing work", async () => {
@@ -108,6 +124,7 @@ describe("scientific catalog integrity", () => {
     expect(objectById.venus.rotationPeriodHours).toBeLessThan(0);
     expect(objectById.moon.parentId).toBe("earth");
     expect(objectById.moon.semiMajorAxisKm).toBe(384_000);
+    expect(objectById.himalia?.unmeasured ?? []).not.toContain("mass");
     expect(objectById.europa.parentId).toBe("jupiter");
     expect(objectById.enceladus.parentId).toBe("saturn");
     expect(objectById.titania.parentId).toBe("uranus");

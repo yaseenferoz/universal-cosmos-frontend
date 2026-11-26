@@ -76,7 +76,10 @@ describe("analytic solar exposure", () => {
   it("keeps ordinary Earth viewing within1EV of its irradiance even beside a bright Sun", () => {
     const sunny = { ...earth, sunInView: true, solarDiskSolidAngle: 0.2, solarDiameterPixels: 400 };
     expect(meteredExposureEv(sunny)).toBeCloseTo(-1);
-    expect(meteredExposureEv({ ...sunny, solarTarget: true })).toBeCloseTo(-1);
+    // Targeting the Sun with its disk filling the view adapts to the disk itself, so
+    // limb darkening stays visible; a small, distant solar disk leaves exposure alone.
+    expect(meteredExposureEv({ ...sunny, solarTarget: true })).toBeLessThan(-12);
+    expect(meteredExposureEv({ ...sunny, solarTarget: true, solarDiskSolidAngle: 0.001 })).toBeCloseTo(-1);
     expect(meteredExposureEv(sunny, true)).toBeLessThan(-12);
     expect(meteredExposureEv({ ...sunny, sunInView: false }, true)).toBeCloseTo(0);
   });

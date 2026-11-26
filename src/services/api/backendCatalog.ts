@@ -84,6 +84,7 @@ function assertMatchingIdentity(
   if (!registered || registered.id !== identity.id)
     invalid("object identity mapping");
   const reference = objectById[identity.slug];
+  if (!reference) invalid("unsupported object slug");
   const expectedType =
     identity.slug === "sun"
       ? "STAR"
@@ -105,11 +106,13 @@ export function mapBackendIdentity(
   catalog: BackendCatalog,
 ): CelestialObject {
   const slug = assertMatchingIdentity(identity, catalog);
+  const reference = objectById[slug];
+  if (!reference) invalid("unsupported object slug");
   return {
-    ...structuredClone(objectById[slug]),
+    ...structuredClone(reference),
     backendId: identity.id,
     name: identity.name,
-    description: identity.description || objectById[slug].description,
+    description: identity.description || reference.description,
   };
 }
 export function parseBackendCatalog(value: unknown): BackendCatalog {

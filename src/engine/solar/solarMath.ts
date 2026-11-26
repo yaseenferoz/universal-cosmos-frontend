@@ -7,8 +7,39 @@ export const MIN_SOLAR_DISTANCE_AU =
 
 /** Renderer-relative display normalization, NOT radiance in physical units. */
 export const SOLAR_DISPLAY_RADIANCE = 16_384;
-/** Gray illustrative coefficient, not a wavelength-calibrated observation. */
+/**
+ * Gray linear coefficient used for flux bookkeeping (disk mean = 1 − u/3 = 0.8).
+ * The rendered disk uses the chromatic power law below, whose green mean matches.
+ */
 export const SOLAR_LIMB_DARKENING = 0.6;
+
+/**
+ * Chromatic limb darkening I(μ)/I(1) = μ^α with α(λ) = −0.023 + 0.292/λ[µm]
+ * (Hestroffer & Magnan 1998, A&A 333, 338), evaluated at 650, 550 and 450 nm.
+ */
+export const SOLAR_LIMB_ALPHA_RGB = [650, 550, 450].map(
+  (nm) => -0.023 + 0.292 / (nm / 1000),
+) as [number, number, number];
+
+/** Disk-mean of μ^α over the projected disk: 2 / (α + 2). */
+export function powerLawDiskMean(alpha: number): number {
+  return 2 / (alpha + 2);
+}
+
+/**
+ * Approximate linear-sRGB chromaticity of a 5772 K blackbody (the Sun's effective
+ * temperature), normalized to red = 1. Above the atmosphere the Sun is close to white.
+ */
+export const SOLAR_COLOR_LINEAR = [1, 0.93, 0.86] as const;
+
+/**
+ * Baumbach (1937) mean K+F white-light corona brightness, in units of the mean solar
+ * disk brightness, at distance r (solar radii) from disk center in the sky plane.
+ */
+export function baumbachCorona(r: number): number {
+  if (!(r >= 1)) return 0;
+  return 1e-6 * (0.0532 * r ** -2.5 + 1.425 * r ** -7 + 2.565 * r ** -17);
+}
 
 export interface Vec3Like {
   readonly x: number;
@@ -215,6 +246,32 @@ export function solarVisibility(
 }
 
 /** Time-based adaptation in EV; policy and EV limits belong to the controller. */
+
+/**
+ * Eclipse state of a receiving body: the fraction of the solar disk visible from its
+ * center, and the single occluder that alone hides the most (the shadow caster).
+ * Occluders must exclude the receiver itself.
+ */
+export function eclipseState(
+  receiverKm: Vec3Like,
+  sunCenterKm: Vec3Like,
+  occluders: readonly (SolarOccludingSphere & { readonly id: string })[],
+  sunRadiusKm = NOMINAL_SOLAR_RADIUS_KM,
+): { sunlitFraction: number; casterId: string | null } {
+  const sunlitFraction = solarVisibility(receiverKm, sunCenterKm, occluders, sunRadiusKm);
+  if (sunlitFraction >= 0.99) return { sunlitFraction, casterId: null };
+  let darkest = 1;
+  let casterId: string | null = null;
+  for (const occluder of occluders) {
+    const alone = solarVisibility(receiverKm, sunCenterKm, [occluder], sunRadiusKm);
+    if (alone < darkest) {
+      darkest = alone;
+      casterId = occluder.id;
+    }
+  }
+  return { sunlitFraction, casterId };
+}
+
 export function adaptExposureEv(
   currentEv: number,
   targetEv: number,

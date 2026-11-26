@@ -11,6 +11,10 @@ interface RenderingState {
   diagnosticsEnabled: boolean;
   diagnostics: DiagnosticTelemetry | null;
   lookAtSunRequest: number;
+  /** Incremented to face the parent planet from a moon's surface. */
+  lookAtParentRequest: number;
+  /** Incremented to skip the clock to local daylight at a surface site. */
+  daylightRequest: number;
   daySideRequest: number;
   telemetry: SolarTelemetry;
   solarDistanceRequest: number;
@@ -23,6 +27,8 @@ interface RenderingState {
   resetExposure: () => void;
   setDiagnosticsEnabled: (enabled: boolean) => void;
   lookAtSun: () => void;
+  lookAtParent: () => void;
+  skipToDaylight: () => void;
   goToDaySide: () => void;
   observeSunAt: (distanceAu: number) => void;
 }
@@ -37,6 +43,8 @@ export const useRenderingStore = create<RenderingState>((set) => ({
   diagnosticsEnabled: false,
   diagnostics: null,
   lookAtSunRequest: 0,
+  lookAtParentRequest: 0,
+  daylightRequest: 0,
   daySideRequest: 0,
   telemetry: initialSolarTelemetry,
   solarDistanceRequest: 0,
@@ -64,6 +72,8 @@ export const useRenderingStore = create<RenderingState>((set) => ({
   resetExposure: () => set({ automaticExposure: true, exposureEv: 0, solarFilter: false }),
   setDiagnosticsEnabled: (diagnosticsEnabled) => set({ diagnosticsEnabled }),
   lookAtSun: () => set((state) => ({ lookAtSunRequest: state.lookAtSunRequest + 1 })),
+  lookAtParent: () => set((state) => ({ lookAtParentRequest: state.lookAtParentRequest + 1 })),
+  skipToDaylight: () => set((state) => ({ daylightRequest: state.daylightRequest + 1 })),
   goToDaySide: () => set((state) => ({ daySideRequest: state.daySideRequest + 1 })),
   observeSunAt: (distanceAu) => {
     if (!Number.isFinite(distanceAu) || distanceAu < 0.006 || distanceAu > 50)

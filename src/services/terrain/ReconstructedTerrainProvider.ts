@@ -1,7 +1,9 @@
 import { Vector3 } from "three";
 import type { CelestialObject } from "../../types/celestial";
 import type { TerrainDataProvider, TerrainManifest, TerrainRegion, TerrainTileData, TerrainTileKey } from "../../types/terrain";
-import { planetaryEnvironments } from "../../data/planetaryEnvironments";
+import { craterDensityFor, environmentFor } from "../../data/planetaryEnvironments";
+import { crateredReliefM, type CrateredReliefParameters } from "./crateredRelief";
+import { shapeSeed } from "../../engine/objects/IrregularShape";
 import { geodeticToCartesian } from "../../engine/terrain/coordinates";
 import { martianReliefM } from "./martianRelief";
 import { terrestrialReliefM } from "./terrestrialRelief";
@@ -13,11 +15,17 @@ export class ReconstructedTerrainProvider implements TerrainDataProvider {
   private disposed = false;
   private readonly point = new Vector3();
   private readonly environment;
+  /** Seeded crater field for airless worlds without a dedicated relief model. */
+  private readonly craters: CrateredReliefParameters | null;
 
   constructor(body: CelestialObject, site: TerrainRegion) {
-    const environment = planetaryEnvironments[body.id];
+    const environment = environmentFor(body.id);
     if (!environment) throw new Error(`No reconstruction profile for ${body.name}.`);
     this.environment = environment;
+    this.craters = environment.mode === "surface" && !["mars", "earth", "venus", "mercury"].includes(body.id)
+      ? { seed: shapeSeed(body.id), reliefM: environment.reliefM, featureScaleM: environment.featureScaleM,
+          radiusM: body.radiusKm * 1000, craterDensity: craterDensityFor(body) }
+      : null;
     this.manifest = {
       id: `${body.id}-reconstruction`, version: "1", bodyId: body.id,
       radiusM: body.radiusKm * 1000, minElevationM: -environment.reliefM, maxElevationM: environment.reliefM,
@@ -44,7 +52,11 @@ export class ReconstructedTerrainProvider implements TerrainDataProvider {
     };
     const body = this.manifest.bodyId;
     if (body === "earth" || body === "venus" || body === "mercury") return {
-      heightM: terrestrialReliefM(body, p.x, p.y, p.z, this.environment.reliefM), available: true,
+      heightM: terrestrialReliefM(body as "earth" | "venus" | "mercury", p.x, p.y, p.z, this.environment.reliefM), available: true,
+      resolutionM: this.environment.featureScaleM, sourceId: this.manifest.id,
+    };
+    if (this.craters) return {
+      heightM: crateredReliefM(p.x, p.y, p.z, this.craters), available: true,
       resolutionM: this.environment.featureScaleM, sourceId: this.manifest.id,
     };
     // Atmospheric destinations have no solid terrain; the navigation datum is not a ground mesh.

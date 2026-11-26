@@ -1,0 +1,146 @@
+{
+ "eros": {
+  "title": "Eros 3D model",
+  "credit": "NASA Visualization Technology Applications and Development (VTAD)",
+  "sourceUrl": "https://science.nasa.gov/resource/eros-3d-model/",
+  "downloadUrl": "https://assets.science.nasa.gov/content/dam/science/psd/solar/2023/09/e/Eros_1_10.glb",
+  "notes": "Low-polygon NASA visualization model of NEAR Shoemaker's Eros with baked texture.",
+  "url": "/models/eros-nasa.glb",
+  "bytes": 474756,
+  "vertices": 839,
+  "triangles": 1536,
+  "semiAxes": [
+   1.949,
+   0.873,
+   0.712
+  ],
+  "extent": 2.099,
+  "colorTextureMean": 0.2809
+ },
+ "bennu": {
+  "title": "Bennu 3D model",
+  "credit": "NASA Visualization Technology Applications and Development (VTAD)",
+  "sourceUrl": "https://science.nasa.gov/resource/bennu-3d-model/",
+  "downloadUrl": "https://assets.science.nasa.gov/content/dam/science/psd/solar/2023/09/b/Bennu_1_1.glb",
+  "notes": "NASA visualization model of OSIRIS-REx's Bennu with baked texture.",
+  "url": "/models/bennu-nasa.glb",
+  "bytes": 272856,
+  "vertices": 1419,
+  "triangles": 2692,
+  "semiAxes": [
+   1.121,
+   1.103,
+   1.027
+  ],
+  "extent": 1.174,
+  "colorTextureMean": 0.2025
+ },
+ "itokawa": {
+  "title": "Itokawa 3D model",
+  "credit": "NASA Visualization Technology Applications and Development (VTAD)",
+  "sourceUrl": "https://science.nasa.gov/resource/asteroid-itokawa-3d-model/",
+  "downloadUrl": "https://assets.science.nasa.gov/content/dam/science/psd/solar/2023/09/i/Itokawa_1_1.glb",
+  "notes": "NASA visualization model of Hayabusa's Itokawa with baked texture.",
+  "url": "/models/itokawa-nasa.glb",
+  "bytes": 390404,
+  "vertices": 1404,
+  "triangles": 2646,
+  "semiAxes": [
+   1.745,
+   0.906,
+   0.751
+  ],
+  "extent": 1.927,
+  "colorTextureMean": 0.1041
+ },
+ "vesta": {
+  "title": "Vesta 3D model",
+  "credit": "NASA Visualization Technology Applications and Development (VTAD)",
+  "sourceUrl": "https://science.nasa.gov/resource/vesta-3d-model/",
+  "downloadUrl": "https://assets.science.nasa.gov/content/dam/science/psd/solar/2023/09/v/Vesta_1_100.glb",
+  "notes": "NASA visualization model of Dawn's Vesta, including the Rheasilvia basin.",
+  "url": "/models/vesta-nasa.glb",
+  "bytes": 1882208,
+  "vertices": 17558,
+  "triangles": 34560,
+  "semiAxes": [
+   1.097,
+   1.062,
+   0.885
+  ],
+  "extent": 1.113,
+  "colorTextureMean": 0.1461
+ },
+ "hyperion": {
+  "title": "Hyperion 3D model",
+  "credit": "NASA Visualization Technology Applications and Development (VTAD)",
+  "sourceUrl": "https://science.nasa.gov/resource/hyperion-3d-model/",
+  "downloadUrl": "https://assets.science.nasa.gov/content/dam/science/psd/solar/2023/09/h/Hyperion_1_1000.glb",
+  "notes": "NASA visualization model of Cassini's Hyperion. Hyperion tumbles chaotically; the rendered spin is illustrative.",
+  "url": "/models/hyperion-nasa.glb",
+  "bytes": 501020,
+  "vertices": 8239,
+  "triangles": 15872,
+  "semiAxes": [
+   1.293,
+   0.923,
+   0.901
+  ],
+  "extent": 1.333,
+  "colorTextureMean": 0.6252
+ },
+ "arrokoth": {
+  "title": "Arrokoth 3D model",
+  "credit": "NASA Visualization Technology Applications and Development (VTAD)",
+  "sourceUrl": "https://science.nasa.gov/resource/arrokoth-3d-model/",
+  "downloadUrl": "https://assets.science.nasa.gov/content/dam/science/psd/solar/2023/09/a/Arrokoth.glb",
+  "notes": "NASA visualization model of New Horizons' Arrokoth contact binary.",
+  "url": "/models/arrokoth-nasa.glb",
+  "bytes": 167520,
+  "vertices": 2908,
+  "triangles": 5576,
+  "semiAxes": [
+   1.863,
+   1.205,
+   0.581
+  ],
+  "extent": 2.159,
+  "colorTextureMean": 0.1633
+ },
+ "phobos": {
+  "title": "Phobos 3D model",
+  "credit": "NASA/JPL-Caltech",
+  "sourceUrl": "https://science.nasa.gov/resource/phobos-mars-moon-3d-model/",
+  "downloadUrl": "https://assets.science.nasa.gov/content/dam/science/psd/mars/resources/gltf_files/24878_Phobos_1_1000.glb",
+  "notes": "NASA/JPL visualization model of Phobos with baked texture.",
+  "url": "/models/phobos-nasa.glb",
+  "bytes": 1108296,
+  "vertices": 16449,
+  "triangles": 32040,
+  "semiAxes": [
+   1.159,
+   1.043,
+   0.881
+  ],
+  "extent": 1.219,
+  "colorTextureMean": 0.1784
+ },
+ "deimos": {
+  "title": "Deimos 3D model",
+  "credit": "NASA/JPL-Caltech",
+  "sourceUrl": "https://science.nasa.gov/resource/deimos-mars-moon-3d-model/",
+  "downloadUrl": "https://assets.science.nasa.gov/content/dam/science/psd/mars/resources/gltf_files/24879_Deimos_1_1000.glb",
+  "notes": "NASA/JPL visualization model of Deimos with baked texture.",
+  "url": "/models/deimos-nasa.glb",
+  "bytes": 823656,
+  "vertices": 16649,
+  "triangles": 32512,
+  "semiAxes": [
+   1.258,
+   1.009,
+   0.884
+  ],
+  "extent": 1.359,
+  "colorTextureMean": 0.1124
+ }
+}

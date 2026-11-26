@@ -229,7 +229,13 @@ describe("lunar descent and surface navigation", () => {
     controller.returnToOrbit();
     const before = controller.positionM.clone();
     controller.update(0.1);
-    expect(controller.positionM.distanceTo(before)).toBeLessThan(5);
+    const first = controller.positionM.distanceTo(before);
+    const mid = controller.positionM.clone();
+    controller.update(0.1);
+    const second = controller.positionM.distanceTo(mid);
+    // Eased from rest: a gentle first step that then accelerates (no initial jump).
+    expect(first).toBeLessThan(10);
+    expect(second).toBeGreaterThan(first);
     advance(controller, 8.1);
     expect(controller.phase).toBe("inactive");
     expect(controller.positionM).toEqual(pose.positionM);

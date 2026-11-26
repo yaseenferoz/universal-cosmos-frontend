@@ -18,6 +18,8 @@ const models: Partial<Record<ObjectId, LocalAtmosphereModel>> = {
   saturn: { directOpticalDepth: 8, diffuseStrength: 0.8, extinctionPerM: 0, asymmetry: 0.6 },
   uranus: { directOpticalDepth: 8, diffuseStrength: 0.8, extinctionPerM: 0, asymmetry: 0.5 },
   neptune: { directOpticalDepth: 8, diffuseStrength: 0.8, extinctionPerM: 0, asymmetry: 0.55 },
+  // Titan: diffuse orange light, no direct solar disk at the surface (Huygens DISR).
+  titan: { directOpticalDepth: 6, diffuseStrength: 0.9, extinctionPerM: 0.00003, asymmetry: 0.6 },
 };
 export function localAtmosphereModel(bodyId: ObjectId): LocalAtmosphereModel {
   return models[bodyId] ?? airless;

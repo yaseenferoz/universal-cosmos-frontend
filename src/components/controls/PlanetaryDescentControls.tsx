@@ -1,6 +1,6 @@
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
 import { useState } from "react";
-import { planetaryEnvironments } from "../../data/planetaryEnvironments";
+import { environmentFor } from "../../data/planetaryEnvironments";
 import { useExplorationStore } from "../../stores/explorationStore";
 import { useLunarStore } from "../../stores/lunarStore";
 import { MovementButton } from "./LunarSurfaceControls";
@@ -15,7 +15,7 @@ export function PlanetaryDescentControls() {
   const telemetry = useLunarStore(s => s.telemetry);
   const t = telemetry.bodyId === selected ? telemetry : initialLunarTelemetry;
   const body = objects.find(o => o.id === selected);
-  const environment = selected ? planetaryEnvironments[selected] : undefined;
+  const environment = selected ? environmentFor(selected) : undefined;
   if (!body || !environment || mode !== "exploration" || !ready) return null;
   const atmospheric = environment.mode === "atmosphere";
   const active = !["orbit", "error"].includes(t.phase);
@@ -39,7 +39,7 @@ export function PlanetaryDescentControls() {
           <div><dt>{atmospheric ? "Above reference radius" : "Height above terrain"}</dt><dd>{t.altitudeM >= 1000 ? `${(t.altitudeM / 1000).toFixed(1)} km` : `${t.altitudeM.toFixed(1)} m`}</dd></div>
           <div><dt>Modeled Sun altitude</dt><dd>{t.solarAltitudeDeg.toFixed(1)}°</dd></div>
         </dl>}
-        <details className="lunar-source-details"><summary>Environment & limits</summary><p>Generated terrain/haze are illustrative. Positions, lighting and rotation follow the current circular-orbit model. This is not a measured landing site, weather simulation or ephemeris. Use Go to Day Side before entry for a daylight view.</p><p>The night background uses a <a href="https://svs.gsfc.nasa.gov/4851/" target="_blank" rel="noreferrer">NASA SVS Milky Way map</a>, source-derived stars, and enhanced <a href="https://lambda.gsfc.nasa.gov/product/foreground/fg_halpha_info.html" target="_blank" rel="noreferrer">H-alpha gas emission</a>. Local sky alignment and atmospheric extinction are approximate. Dense Venus and giant-planet haze obscures it.</p></details>
+        <details className="lunar-source-details"><summary>Environment & limits</summary><p>Generated terrain/haze are illustrative. Planet positions and sunlight direction follow JPL-based ephemerides. This is not a measured landing site or weather simulation. Use Go to Day Side before entry for a daylight view.</p><p>The night background uses a <a href="https://svs.gsfc.nasa.gov/4851/" target="_blank" rel="noreferrer">NASA SVS Milky Way map</a>, source-derived stars, and enhanced <a href="https://lambda.gsfc.nasa.gov/product/foreground/fg_halpha_info.html" target="_blank" rel="noreferrer">H-alpha gas emission</a>. Local sky alignment and atmospheric extinction are approximate. Dense Venus and giant-planet haze obscures it.</p></details>
       </div>
     </section>
     {exploring && <div className="surface-movement" role="group" aria-label={atmospheric ? "Atmospheric movement" : "Surface movement"}>

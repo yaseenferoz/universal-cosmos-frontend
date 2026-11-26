@@ -33,7 +33,7 @@ export function RenderingDiagnostics() {
           <div><dt>Viewing phase angle</dt><dd>{diagnostic.selectedPhaseAngleDeg === null ? "Not applicable" : `${diagnostic.selectedPhaseAngleDeg.toFixed(2)}° · ${(50 * (1 + Math.cos(diagnostic.selectedPhaseAngleDeg * Math.PI / 180))).toFixed(1)}% lit disk`}</dd></div>
           <div><dt>Exposure</dt><dd>{diagnostic.effectiveExposureEv.toFixed(2)} EV · {diagnostic.automaticExposure ? filter ? "Solar filter" : "Automatic scene" : "Manual"}</dd></div>
         </dl>
-        <p>Positions and directions use the heliocentric model axes (+Y up). They follow illustrative orbits, not an ephemeris. Camera values in Overview describe display geometry only. Samples update every 400 ms.</p>
+        <p>Positions and directions use the heliocentric model axes (+Y up). Planets, moons and small bodies follow JPL-based ephemerides; the ISS follows an illustrative circular orbit. Camera values in Overview describe display geometry only. Samples update every 400 ms.</p>
         <button className="solar-filter-button" onClick={useRenderingStore.getState().resetExposure}>Reset scene exposure</button>
       </>}
     </aside>

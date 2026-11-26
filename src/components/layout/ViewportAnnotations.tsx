@@ -1,5 +1,7 @@
-import { Info, MousePointer2 } from "lucide-react";
+import { ephemerisCoverage } from "../../engine/ephemeris/analyticEphemeris";
+import { Info, MoonStar, MousePointer2 } from "lucide-react";
 import { useExplorationStore } from "../../stores/explorationStore";
+import { useRenderingStore } from "../../stores/renderingStore";
 
 export function ViewportAnnotations() {
   const selectedId = useExplorationStore((s) => s.selectedId);
@@ -7,6 +9,11 @@ export function ViewportAnnotations() {
   const mode = useExplorationStore((s) => s.viewMode);
   const imagery = useExplorationStore((s) => s.imageryStatus);
   const object = objects.find((item) => item.id === selectedId);
+  const sunlit = useRenderingStore((s) => s.telemetry.targetSunlitFraction);
+  const casterId = useRenderingStore((s) => s.telemetry.targetShadowCasterId);
+  const caster = casterId ? objects.find((item) => item.id === casterId) : undefined;
+  // Explain a dark body: it is inside another body's shadow, not unlit by mistake.
+  const eclipsed = mode === "exploration" && object && caster && sunlit < 0.9;
   const assetIssue =
     imagery?.objectId === selectedId &&
     (imagery.state === "partial" || imagery.state === "missing");
@@ -24,8 +31,20 @@ export function ViewportAnnotations() {
         <p>
           {mode === "overview"
             ? "Sizes exaggerated · Distances compressed"
-            : "Physical scale · Modeled circular orbits"}
+            : object && !object.parentId
+              ? "Physical scale · Solar System reference body"
+              : object && ephemerisCoverage(object.id)
+                ? "Physical scale · JPL-based positions"
+                : "Physical scale · Modeled circular orbit"}
         </p>
+        {eclipsed && (
+          <p className="eclipse-notice" role="status">
+            <MoonStar size={12} aria-hidden="true" />
+            {sunlit < 0.01
+              ? `In ${caster.name}'s shadow · total eclipse`
+              : `Partly in ${caster.name}'s shadow · ${Math.round(sunlit * 100)}% of the Sun visible`}
+          </p>
+        )}
         {assetIssue && (
           <button
             className="asset-notice"
@@ -55,7 +74,7 @@ export function ViewportAnnotations() {
         </span>
       </div>
       <div className="model-context">
-        ILLUSTRATIVE ORBITS<span>·</span>NOT AN EPHEMERIS
+        JPL-BASED POSITIONS<span>·</span>NOT FOR NAVIGATION
       </div>
     </>
   );

@@ -59,7 +59,7 @@ describe("backend catalog mapping", () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(reply(system));
     const service = new HttpCelestialService("https://example.test", fetcher);
     const objects = await service.getObjects();
-    expect(objects).toHaveLength(33);
+    expect(objects).toHaveLength(celestialObjects.length);
     expect(objects.find((object) => object.id === "earth")).toMatchObject({
       backendId: ids.get("earth"),
       radiusKm: objectById.earth.radiusKm,
@@ -88,7 +88,7 @@ describe("backend catalog mapping", () => {
     expect(
       parseBackendCatalog({ ...system, objects: [...identities, extra] })
         .objects,
-    ).toHaveLength(33);
+    ).toHaveLength(celestialObjects.length);
     expect(() =>
       parseBackendCatalog({ ...system, objects: identities.slice(1) }),
     ).toThrow("incomplete");
@@ -131,8 +131,8 @@ describe("connected search and detail", () => {
     const service = new HttpCelestialService("https://example.test", fetcher);
     const loaded = await service.getObjects();
     expect((await service.getSystem("solar")).objectIds).toEqual(loaded.map(({ id }) => id));
-    expect((await service.search("asteroids")).map(({ id }) => id)).toEqual(["ceres", "vesta", "bennu"]);
-    expect(await service.search("Saturn moons")).toHaveLength(7);
+    expect((await service.search("asteroids")).map(({ id }) => id)).toEqual(expect.arrayContaining(["ceres", "vesta", "bennu", "pallas", "eros"]));
+    expect(await service.search("Saturn moons")).toHaveLength(celestialObjects.filter(({ parentId, category }) => parentId === "saturn" && category === "Natural satellite").length);
     for (const id of ["bennu", "europa", "mimas", "oberon"]) {
       const object = await service.getObject(id);
       expect(object?.id).toBe(id);
@@ -147,10 +147,8 @@ describe("connected search and detail", () => {
   it("handles initial and one-character searches from the loaded backend catalog", async () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(reply(system));
     const service = new HttpCelestialService("https://example.test", fetcher);
-    expect(await service.search("")).toHaveLength(33);
-    expect((await service.search("j")).map((object) => object.id)).toEqual([
-      "jupiter",
-    ]);
+    expect(await service.search("")).toHaveLength(celestialObjects.length);
+    expect((await service.search("j")).map((object) => object.id)[0]).toBe("jupiter");
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
@@ -256,7 +254,7 @@ describe("backend failures and cancellation", () => {
     const service = new HttpCelestialService("https://example.test", fetcher);
     await expect(service.getObjects()).rejects.toMatchObject({ status: 503 });
     await expect(service.getObjects()).rejects.toThrow("unreadable JSON");
-    expect(await service.getObjects()).toHaveLength(33);
+    expect(await service.getObjects()).toHaveLength(celestialObjects.length);
     expect(fetcher).toHaveBeenCalledTimes(3);
   });
 
@@ -273,7 +271,7 @@ describe("backend failures and cancellation", () => {
     await expect(
       service.getObjects({ signal: controller.signal }),
     ).rejects.toMatchObject({ name: "AbortError" });
-    expect(await service.getObjects()).toHaveLength(33);
+    expect(await service.getObjects()).toHaveLength(celestialObjects.length);
     await expect(
       service.getObjects({ signal: controller.signal }),
     ).rejects.toMatchObject({ name: "AbortError" });

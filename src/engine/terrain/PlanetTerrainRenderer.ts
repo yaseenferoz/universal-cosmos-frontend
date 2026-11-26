@@ -2,8 +2,8 @@ import {
   Frustum, Group, Matrix4, Mesh, MeshStandardMaterial,
   PerspectiveCamera, Ray, Vector3,
 } from "three";
-import { imageryById } from "../../data/imagery";
-import { planetaryEnvironments } from "../../data/planetaryEnvironments";
+import { imageryFor } from "../../data/imagery";
+import { environmentFor } from "../../data/planetaryEnvironments";
 import type { Quality } from "../../types/celestial";
 import type { TerrainDataProvider } from "../../types/terrain";
 import { scientificTextures, type TextureLease } from "../loaders/ScientificTextureLoader";
@@ -37,6 +37,9 @@ export interface TerrainRenderStatus {
 }
 
 /** A bounded meter-space terrain pass. The host owns lights, camera, clock and provider. */
+/** Main-thread milliseconds per frame spent building terrain tiles. */
+const TILE_BUILD_BUDGET_MS = 3;
+
 export class PlanetTerrainRenderer {
   readonly group = new Group();
   private readonly material = new MeshStandardMaterial({ color: "#b5b3af", roughness: 1, metalness: 0 });
@@ -72,7 +75,7 @@ export class PlanetTerrainRenderer {
     this.budget = terrainBudget(quality, mobile);
     this.group.name = "Body cube-sphere terrain (camera-relative meters)";
     if (provider.manifest.reconstruction)
-      this.material.color.set(planetaryEnvironments[provider.manifest.bodyId]?.groundColor ?? "#999999");
+      this.material.color.set(environmentFor(provider.manifest.bodyId)?.groundColor ?? "#999999");
     this.imageryLayers.configure(this.material);
     this.imageryLayers.setAnisotropy(quality === "low" || mobile ? 2 : 4);
     configureSurfaceDetail(this.material, this.detailMaps, this.materialOriginM,
@@ -95,7 +98,7 @@ export class PlanetTerrainRenderer {
   private async loadBaseImagery(): Promise<void> {
     // Orbital clouds/geography must not be painted as invented surface measurements.
     if (this.provider.manifest.reconstruction) return;
-    const asset = imageryById[this.provider.manifest.bodyId].surface;
+    const asset = imageryFor(this.provider.manifest.bodyId).surface;
     if (!asset) return;
     const generation = this.generation;
     const tier = this.quality === "high" ? "high" : this.quality === "low" || this.mobile || this.autoReduced ? "low" : "medium";
@@ -156,7 +159,16 @@ export class PlanetTerrainRenderer {
       const tile = this.tiles.get(tileId(key));
       return !tile || tile.revision !== this.provider.revision;
     }).sort((a, b) => a.level - b.level);
-    for (const key of queue.slice(0, this.budget.buildsPerFrame)) this.build(key);
+    // Time-sliced: keep building while under the frame budget (at least one tile),
+    // capped so a burst of cheap tiles cannot monopolise a frame either.
+    const started = performance.now();
+    let built = 0;
+    for (const key of queue) {
+      if (built >= this.budget.buildsPerFrame * 3) break;
+      if (built > 0 && performance.now() - started > TILE_BUILD_BUDGET_MS) break;
+      this.build(key);
+      built++;
+    }
     for (const tile of this.tiles.values()) tile.mesh.visible = false;
     CUBE_ROOTS.forEach((key) => this.showBranch(key));
     for (const tile of this.tiles.values()) {

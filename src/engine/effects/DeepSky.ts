@@ -16,6 +16,11 @@ const SKY_TEXTURES = {
   desktop: "/textures/deep-sky-4096.webp?v=2020ha2",
 } as const;
 
+/** Mip level whose texel spans ~0.35 deg (1024 texels around the sky). */
+export function glowLevelFor(width: number): number {
+  return Math.max(0, Math.log2(Math.max(1, width) / 1024));
+}
+
 /** NASA SVS J2000 Milky Way and enhanced measured H-alpha; body axes remain illustrative. */
 export class DeepSky {
   readonly mesh: Mesh<SphereGeometry, ShaderMaterial>;
@@ -28,6 +33,7 @@ export class DeepSky {
     const material = new ShaderMaterial({
       uniforms: {
         skyMap: { value: null as Texture | null },
+        glowLod: { value: 2 },
         visibility: { value: 0 },
         exposureCompensation: { value: 1 },
       },
@@ -38,12 +44,22 @@ export class DeepSky {
           gl_Position = projected.xyww;
         }`,
       fragmentShader: `uniform sampler2D skyMap;
+        uniform float glowLod;
         uniform float visibility;
         uniform float exposureCompensation;
         varying vec2 skyUv;
         void main() {
-          // Diffuse Milky Way and dust lanes; bright stars use a separate point layer.
-          vec3 diffuse = texture2D(skyMap, skyUv).rgb;
+          // Diffuse Milky Way and dust lanes only. The survey image also contains
+          // unresolved faint stars; magnified, they read as grain and soft blobs.
+          // Sampling a fixed coarse mip (~0.35 deg per texel, see glowLod) turns them
+          // into smooth integrated starlight while keeping degree-scale dust lanes.
+          // Stars are drawn as crisp points by the Starfield layer instead.
+          // An explicit LOD also removes the mip seam at the u = 0/1 wrap.
+          vec3 coarse = textureLod(skyMap, skyUv, glowLod).rgb;
+          // One level finer, keep only what is darker than the coarse glow (dust-lane
+          // edges); brighter excursions there are mostly faint-star grain.
+          vec3 fine = textureLod(skyMap, skyUv, max(glowLod - 1.0, 0.0)).rgb;
+          vec3 diffuse = mix(coarse, min(fine, coarse), 0.7);
           // Keep the large-scale cloud structure below the crisp point stars.
           diffuse = diffuse / (vec3(1.0) + diffuse * 2.0);
           gl_FragColor = vec4(diffuse * visibility * exposureCompensation * 0.85, 1.0);
@@ -80,6 +96,8 @@ export class DeepSky {
       this.texture?.dispose();
       this.texture = texture;
       this.mesh.material.uniforms.skyMap.value = texture;
+      const image = texture.image as { width?: number } | undefined;
+      this.mesh.material.uniforms.glowLod.value = glowLevelFor(image?.width ?? 4096);
     }).catch(() => {
       // Keep the fallback star points without retrying the same URL every frame.
     });

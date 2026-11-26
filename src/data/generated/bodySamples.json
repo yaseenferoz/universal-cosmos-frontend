@@ -1,0 +1,1981 @@
+{
+ "generated": "2026-11-25",
+ "startTdb": "2024-01-01T00:00:00Z",
+ "stopTdb": "2030-01-01T00:00:00Z",
+ "format": "little-endian float32 x,y,z km per sample; ecliptic J2000; parent body center (no companion offset)",
+ "asset": "/ephemeris/body-samples.bin",
+ "bytes": 1199988,
+ "source": "https://ssd.jpl.nasa.gov/api/horizons.api",
+ "bodies": {
+  "himalia": {
+   "offset": 0,
+   "count": 439,
+   "stepDays": 5
+  },
+  "elara": {
+   "offset": 1317,
+   "count": 439,
+   "stepDays": 5
+  },
+  "pasiphae": {
+   "offset": 2634,
+   "count": 220,
+   "stepDays": 10
+  },
+  "sinope": {
+   "offset": 3294,
+   "count": 220,
+   "stepDays": 10
+  },
+  "lysithea": {
+   "offset": 3954,
+   "count": 439,
+   "stepDays": 5
+  },
+  "carme": {
+   "offset": 5271,
+   "count": 220,
+   "stepDays": 10
+  },
+  "ananke": {
+   "offset": 5931,
+   "count": 220,
+   "stepDays": 10
+  },
+  "leda": {
+   "offset": 6591,
+   "count": 439,
+   "stepDays": 5
+  },
+  "callirrhoe": {
+   "offset": 7908,
+   "count": 220,
+   "stepDays": 10
+  },
+  "themisto": {
+   "offset": 8568,
+   "count": 731,
+   "stepDays": 3
+  },
+  "magaclite": {
+   "offset": 10761,
+   "count": 220,
+   "stepDays": 10
+  },
+  "taygete": {
+   "offset": 11421,
+   "count": 220,
+   "stepDays": 10
+  },
+  "chaldene": {
+   "offset": 12081,
+   "count": 220,
+   "stepDays": 10
+  },
+  "harpalyke": {
+   "offset": 12741,
+   "count": 220,
+   "stepDays": 10
+  },
+  "kalyke": {
+   "offset": 13401,
+   "count": 220,
+   "stepDays": 10
+  },
+  "iocaste": {
+   "offset": 14061,
+   "count": 220,
+   "stepDays": 10
+  },
+  "erinome": {
+   "offset": 14721,
+   "count": 220,
+   "stepDays": 10
+  },
+  "isonoe": {
+   "offset": 15381,
+   "count": 220,
+   "stepDays": 10
+  },
+  "praxidike": {
+   "offset": 16041,
+   "count": 220,
+   "stepDays": 10
+  },
+  "autonoe": {
+   "offset": 16701,
+   "count": 220,
+   "stepDays": 10
+  },
+  "thyone": {
+   "offset": 17361,
+   "count": 220,
+   "stepDays": 10
+  },
+  "hermippe": {
+   "offset": 18021,
+   "count": 220,
+   "stepDays": 10
+  },
+  "aitne": {
+   "offset": 18681,
+   "count": 220,
+   "stepDays": 10
+  },
+  "eurydome": {
+   "offset": 19341,
+   "count": 220,
+   "stepDays": 10
+  },
+  "euanthe": {
+   "offset": 20001,
+   "count": 220,
+   "stepDays": 10
+  },
+  "euporie": {
+   "offset": 20661,
+   "count": 220,
+   "stepDays": 10
+  },
+  "orthosie": {
+   "offset": 21321,
+   "count": 220,
+   "stepDays": 10
+  },
+  "sponde": {
+   "offset": 21981,
+   "count": 220,
+   "stepDays": 10
+  },
+  "kale": {
+   "offset": 22641,
+   "count": 220,
+   "stepDays": 10
+  },
+  "pasithee": {
+   "offset": 23301,
+   "count": 220,
+   "stepDays": 10
+  },
+  "hegemone": {
+   "offset": 23961,
+   "count": 220,
+   "stepDays": 10
+  },
+  "mneme": {
+   "offset": 24621,
+   "count": 220,
+   "stepDays": 10
+  },
+  "aoede": {
+   "offset": 25281,
+   "count": 220,
+   "stepDays": 10
+  },
+  "thelxinoe": {
+   "offset": 25941,
+   "count": 220,
+   "stepDays": 10
+  },
+  "arche": {
+   "offset": 26601,
+   "count": 220,
+   "stepDays": 10
+  },
+  "kallichore": {
+   "offset": 27261,
+   "count": 220,
+   "stepDays": 10
+  },
+  "helike": {
+   "offset": 27921,
+   "count": 220,
+   "stepDays": 10
+  },
+  "carpo": {
+   "offset": 28581,
+   "count": 244,
+   "stepDays": 9
+  },
+  "eukelade": {
+   "offset": 29313,
+   "count": 220,
+   "stepDays": 10
+  },
+  "cyllene": {
+   "offset": 29973,
+   "count": 220,
+   "stepDays": 10
+  },
+  "kore": {
+   "offset": 30633,
+   "count": 220,
+   "stepDays": 10
+  },
+  "herse": {
+   "offset": 31293,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2010-j-1": {
+   "offset": 31953,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2010-j-2": {
+   "offset": 32613,
+   "count": 220,
+   "stepDays": 10
+  },
+  "dia": {
+   "offset": 33273,
+   "count": 366,
+   "stepDays": 6
+  },
+  "s2016-j-1": {
+   "offset": 34371,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2003-j-18": {
+   "offset": 35031,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2011-j-2": {
+   "offset": 35691,
+   "count": 220,
+   "stepDays": 10
+  },
+  "eirene": {
+   "offset": 36351,
+   "count": 220,
+   "stepDays": 10
+  },
+  "philophrosyn": {
+   "offset": 37011,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2017-j-1": {
+   "offset": 37671,
+   "count": 220,
+   "stepDays": 10
+  },
+  "eupheme": {
+   "offset": 38331,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2003-j-19": {
+   "offset": 38991,
+   "count": 220,
+   "stepDays": 10
+  },
+  "valetudo": {
+   "offset": 39651,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2017-j-2": {
+   "offset": 40311,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2017-j-3": {
+   "offset": 40971,
+   "count": 220,
+   "stepDays": 10
+  },
+  "pandia": {
+   "offset": 41631,
+   "count": 439,
+   "stepDays": 5
+  },
+  "s2017-j-5": {
+   "offset": 42948,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2017-j-6": {
+   "offset": 43608,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2017-j-7": {
+   "offset": 44268,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2017-j-8": {
+   "offset": 44928,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2017-j-9": {
+   "offset": 45588,
+   "count": 220,
+   "stepDays": 10
+  },
+  "ersa": {
+   "offset": 46248,
+   "count": 439,
+   "stepDays": 5
+  },
+  "s2011-j-1": {
+   "offset": 47565,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2003-j-2": {
+   "offset": 48225,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2003-j-4": {
+   "offset": 48885,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2003-j-9": {
+   "offset": 49545,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2003-j-10": {
+   "offset": 50205,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2003-j-12": {
+   "offset": 50865,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2003-j-16": {
+   "offset": 51525,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2003-j-23": {
+   "offset": 52185,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2003-j-24": {
+   "offset": 52845,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2011-j-3": {
+   "offset": 53505,
+   "count": 439,
+   "stepDays": 5
+  },
+  "s2018-j-2": {
+   "offset": 54822,
+   "count": 439,
+   "stepDays": 5
+  },
+  "s2018-j-3": {
+   "offset": 56139,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2021-j-1": {
+   "offset": 56799,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2021-j-2": {
+   "offset": 57459,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2021-j-3": {
+   "offset": 58119,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2021-j-4": {
+   "offset": 58779,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2021-j-5": {
+   "offset": 59439,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2021-j-6": {
+   "offset": 60099,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2016-j-3": {
+   "offset": 60759,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2016-j-4": {
+   "offset": 61419,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2018-j-4": {
+   "offset": 62079,
+   "count": 244,
+   "stepDays": 9
+  },
+  "s2022-j-1": {
+   "offset": 62811,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2022-j-2": {
+   "offset": 63471,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2022-j-3": {
+   "offset": 64131,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2017-j-10": {
+   "offset": 64791,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2017-j-11": {
+   "offset": 65451,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2011-j-4": {
+   "offset": 66111,
+   "count": 439,
+   "stepDays": 5
+  },
+  "s2018-j-5": {
+   "offset": 67428,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2024-j-1": {
+   "offset": 68088,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2011-j-5": {
+   "offset": 68748,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2010-j-3": {
+   "offset": 69408,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2010-j-4": {
+   "offset": 70068,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2010-j-5": {
+   "offset": 70728,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2010-j-6": {
+   "offset": 71388,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2011-j-6": {
+   "offset": 72048,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2017-j-12": {
+   "offset": 72708,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2017-j-13": {
+   "offset": 73368,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2017-j-14": {
+   "offset": 74028,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2017-j-15": {
+   "offset": 74688,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2017-j-16": {
+   "offset": 75348,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2017-j-17": {
+   "offset": 76008,
+   "count": 439,
+   "stepDays": 5
+  },
+  "s2017-j-18": {
+   "offset": 77325,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2021-j-7": {
+   "offset": 77985,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2021-j-8": {
+   "offset": 78645,
+   "count": 220,
+   "stepDays": 10
+  },
+  "hyperion": {
+   "offset": 79305,
+   "count": 2193,
+   "stepDays": 1
+  },
+  "phoebe": {
+   "offset": 85884,
+   "count": 220,
+   "stepDays": 10
+  },
+  "ymir": {
+   "offset": 86544,
+   "count": 220,
+   "stepDays": 10
+  },
+  "paaliaq": {
+   "offset": 87204,
+   "count": 220,
+   "stepDays": 10
+  },
+  "tarvos": {
+   "offset": 87864,
+   "count": 220,
+   "stepDays": 10
+  },
+  "ijiraq": {
+   "offset": 88524,
+   "count": 244,
+   "stepDays": 9
+  },
+  "suttungr": {
+   "offset": 89256,
+   "count": 220,
+   "stepDays": 10
+  },
+  "kiviuq": {
+   "offset": 89916,
+   "count": 244,
+   "stepDays": 9
+  },
+  "mundilfari": {
+   "offset": 90648,
+   "count": 220,
+   "stepDays": 10
+  },
+  "albiorix": {
+   "offset": 91308,
+   "count": 220,
+   "stepDays": 10
+  },
+  "skathi": {
+   "offset": 91968,
+   "count": 220,
+   "stepDays": 10
+  },
+  "erriapus": {
+   "offset": 92628,
+   "count": 220,
+   "stepDays": 10
+  },
+  "siarnaq": {
+   "offset": 93288,
+   "count": 220,
+   "stepDays": 10
+  },
+  "thrymr": {
+   "offset": 93948,
+   "count": 220,
+   "stepDays": 10
+  },
+  "narvi": {
+   "offset": 94608,
+   "count": 220,
+   "stepDays": 10
+  },
+  "aegir": {
+   "offset": 95268,
+   "count": 220,
+   "stepDays": 10
+  },
+  "bebhionn": {
+   "offset": 95928,
+   "count": 220,
+   "stepDays": 10
+  },
+  "bergelmir": {
+   "offset": 96588,
+   "count": 220,
+   "stepDays": 10
+  },
+  "bestla": {
+   "offset": 97248,
+   "count": 220,
+   "stepDays": 10
+  },
+  "farbauti": {
+   "offset": 97908,
+   "count": 220,
+   "stepDays": 10
+  },
+  "fenrir": {
+   "offset": 98568,
+   "count": 220,
+   "stepDays": 10
+  },
+  "fornjot": {
+   "offset": 99228,
+   "count": 220,
+   "stepDays": 10
+  },
+  "hati": {
+   "offset": 99888,
+   "count": 220,
+   "stepDays": 10
+  },
+  "hyrrokkin": {
+   "offset": 100548,
+   "count": 220,
+   "stepDays": 10
+  },
+  "kari": {
+   "offset": 101208,
+   "count": 220,
+   "stepDays": 10
+  },
+  "loge": {
+   "offset": 101868,
+   "count": 220,
+   "stepDays": 10
+  },
+  "skoll": {
+   "offset": 102528,
+   "count": 220,
+   "stepDays": 10
+  },
+  "surtur": {
+   "offset": 103188,
+   "count": 220,
+   "stepDays": 10
+  },
+  "jarnsaxa": {
+   "offset": 103848,
+   "count": 220,
+   "stepDays": 10
+  },
+  "greip": {
+   "offset": 104508,
+   "count": 220,
+   "stepDays": 10
+  },
+  "tarqeq": {
+   "offset": 105168,
+   "count": 220,
+   "stepDays": 10
+  },
+  "gridr": {
+   "offset": 105828,
+   "count": 220,
+   "stepDays": 10
+  },
+  "angrboda": {
+   "offset": 106488,
+   "count": 220,
+   "stepDays": 10
+  },
+  "skrymir": {
+   "offset": 107148,
+   "count": 220,
+   "stepDays": 10
+  },
+  "gerd": {
+   "offset": 107808,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-26": {
+   "offset": 108468,
+   "count": 220,
+   "stepDays": 10
+  },
+  "eggther": {
+   "offset": 109128,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-29": {
+   "offset": 109788,
+   "count": 220,
+   "stepDays": 10
+  },
+  "beli": {
+   "offset": 110448,
+   "count": 220,
+   "stepDays": 10
+  },
+  "gunnlod": {
+   "offset": 111108,
+   "count": 220,
+   "stepDays": 10
+  },
+  "thiazzi": {
+   "offset": 111768,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-34": {
+   "offset": 112428,
+   "count": 220,
+   "stepDays": 10
+  },
+  "alvaldi": {
+   "offset": 113088,
+   "count": 220,
+   "stepDays": 10
+  },
+  "geirrod": {
+   "offset": 113748,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-31": {
+   "offset": 114408,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-24": {
+   "offset": 115068,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-28": {
+   "offset": 115728,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-21": {
+   "offset": 116388,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-36": {
+   "offset": 117048,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-37": {
+   "offset": 117708,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-39": {
+   "offset": 118368,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-7": {
+   "offset": 119028,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-12": {
+   "offset": 119688,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-13": {
+   "offset": 120348,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-17": {
+   "offset": 121008,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2006-s-1": {
+   "offset": 121668,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2006-s-3": {
+   "offset": 122328,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2007-s-2": {
+   "offset": 122988,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2007-s-3": {
+   "offset": 123648,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-1": {
+   "offset": 124308,
+   "count": 244,
+   "stepDays": 9
+  },
+  "s2019-s-2": {
+   "offset": 125040,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-3": {
+   "offset": 125700,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-1": {
+   "offset": 126360,
+   "count": 244,
+   "stepDays": 9
+  },
+  "s2020-s-2": {
+   "offset": 127092,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-40": {
+   "offset": 127752,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2006-s-9": {
+   "offset": 128412,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2007-s-5": {
+   "offset": 129072,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-3": {
+   "offset": 129732,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-4": {
+   "offset": 130392,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-41": {
+   "offset": 131052,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-4": {
+   "offset": 131712,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-5": {
+   "offset": 132372,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2007-s-6": {
+   "offset": 133032,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-42": {
+   "offset": 133692,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2006-s-10": {
+   "offset": 134352,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-5": {
+   "offset": 135012,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-43": {
+   "offset": 135672,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-44": {
+   "offset": 136332,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-45": {
+   "offset": 136992,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2006-s-11": {
+   "offset": 137652,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2006-s-12": {
+   "offset": 138312,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-6": {
+   "offset": 138972,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2006-s-13": {
+   "offset": 139632,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-7": {
+   "offset": 140292,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-8": {
+   "offset": 140952,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-9": {
+   "offset": 141612,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-46": {
+   "offset": 142272,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-10": {
+   "offset": 142932,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-47": {
+   "offset": 143592,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-11": {
+   "offset": 144252,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2006-s-14": {
+   "offset": 144912,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-12": {
+   "offset": 145572,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-6": {
+   "offset": 146232,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-13": {
+   "offset": 146892,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2005-s-4": {
+   "offset": 147552,
+   "count": 244,
+   "stepDays": 9
+  },
+  "s2007-s-7": {
+   "offset": 148284,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2007-s-8": {
+   "offset": 148944,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-7": {
+   "offset": 149604,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-14": {
+   "offset": 150264,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-15": {
+   "offset": 150924,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2005-s-5": {
+   "offset": 151584,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2006-s-15": {
+   "offset": 152244,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2006-s-16": {
+   "offset": 152904,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2006-s-17": {
+   "offset": 153564,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-48": {
+   "offset": 154224,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-8": {
+   "offset": 154884,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-49": {
+   "offset": 155544,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-50": {
+   "offset": 156204,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2006-s-18": {
+   "offset": 156864,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-16": {
+   "offset": 157524,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-17": {
+   "offset": 158184,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-18": {
+   "offset": 158844,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-19": {
+   "offset": 159504,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-20": {
+   "offset": 160164,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2006-s-19": {
+   "offset": 160824,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-51": {
+   "offset": 161484,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-9": {
+   "offset": 162144,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-52": {
+   "offset": 162804,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2007-s-9": {
+   "offset": 163464,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-53": {
+   "offset": 164124,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-10": {
+   "offset": 164784,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-21": {
+   "offset": 165444,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2006-s-20": {
+   "offset": 166104,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-54": {
+   "offset": 166764,
+   "count": 244,
+   "stepDays": 9
+  },
+  "s2004-s-55": {
+   "offset": 167496,
+   "count": 244,
+   "stepDays": 9
+  },
+  "s2004-s-56": {
+   "offset": 168228,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-57": {
+   "offset": 168888,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-58": {
+   "offset": 169548,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-59": {
+   "offset": 170208,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-60": {
+   "offset": 170868,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2004-s-61": {
+   "offset": 171528,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2005-s-6": {
+   "offset": 172188,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2005-s-7": {
+   "offset": 172848,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2006-s-21": {
+   "offset": 173508,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2006-s-22": {
+   "offset": 174168,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2006-s-23": {
+   "offset": 174828,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2006-s-24": {
+   "offset": 175488,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2006-s-25": {
+   "offset": 176148,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2006-s-26": {
+   "offset": 176808,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2006-s-27": {
+   "offset": 177468,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2006-s-28": {
+   "offset": 178128,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2006-s-29": {
+   "offset": 178788,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2007-s-10": {
+   "offset": 179448,
+   "count": 244,
+   "stepDays": 9
+  },
+  "s2007-s-11": {
+   "offset": 180180,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-22": {
+   "offset": 180840,
+   "count": 244,
+   "stepDays": 9
+  },
+  "s2019-s-23": {
+   "offset": 181572,
+   "count": 244,
+   "stepDays": 9
+  },
+  "s2019-s-24": {
+   "offset": 182304,
+   "count": 244,
+   "stepDays": 9
+  },
+  "s2019-s-25": {
+   "offset": 183036,
+   "count": 244,
+   "stepDays": 9
+  },
+  "s2019-s-26": {
+   "offset": 183768,
+   "count": 244,
+   "stepDays": 9
+  },
+  "s2019-s-27": {
+   "offset": 184500,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-28": {
+   "offset": 185160,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-29": {
+   "offset": 185820,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-30": {
+   "offset": 186480,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-31": {
+   "offset": 187140,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-32": {
+   "offset": 187800,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-33": {
+   "offset": 188460,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-34": {
+   "offset": 189120,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-35": {
+   "offset": 189780,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-36": {
+   "offset": 190440,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-37": {
+   "offset": 191100,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-38": {
+   "offset": 191760,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-39": {
+   "offset": 192420,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-40": {
+   "offset": 193080,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-41": {
+   "offset": 193740,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-42": {
+   "offset": 194400,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-43": {
+   "offset": 195060,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2019-s-44": {
+   "offset": 195720,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-11": {
+   "offset": 196380,
+   "count": 244,
+   "stepDays": 9
+  },
+  "s2020-s-12": {
+   "offset": 197112,
+   "count": 244,
+   "stepDays": 9
+  },
+  "s2020-s-13": {
+   "offset": 197844,
+   "count": 244,
+   "stepDays": 9
+  },
+  "s2020-s-14": {
+   "offset": 198576,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-15": {
+   "offset": 199236,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-16": {
+   "offset": 199896,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-17": {
+   "offset": 200556,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-18": {
+   "offset": 201216,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-19": {
+   "offset": 201876,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-20": {
+   "offset": 202536,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-21": {
+   "offset": 203196,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-22": {
+   "offset": 203856,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-23": {
+   "offset": 204516,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-24": {
+   "offset": 205176,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-25": {
+   "offset": 205836,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-26": {
+   "offset": 206496,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-27": {
+   "offset": 207156,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-28": {
+   "offset": 207816,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-29": {
+   "offset": 208476,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-30": {
+   "offset": 209136,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-31": {
+   "offset": 209796,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-32": {
+   "offset": 210456,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-33": {
+   "offset": 211116,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-34": {
+   "offset": 211776,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-35": {
+   "offset": 212436,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-36": {
+   "offset": 213096,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-37": {
+   "offset": 213756,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-38": {
+   "offset": 214416,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-39": {
+   "offset": 215076,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-40": {
+   "offset": 215736,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-41": {
+   "offset": 216396,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-42": {
+   "offset": 217056,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-43": {
+   "offset": 217716,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-44": {
+   "offset": 218376,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-1": {
+   "offset": 219036,
+   "count": 244,
+   "stepDays": 9
+  },
+  "s2023-s-2": {
+   "offset": 219768,
+   "count": 244,
+   "stepDays": 9
+  },
+  "s2023-s-3": {
+   "offset": 220500,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-4": {
+   "offset": 221160,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-5": {
+   "offset": 221820,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-6": {
+   "offset": 222480,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-7": {
+   "offset": 223140,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-8": {
+   "offset": 223800,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-9": {
+   "offset": 224460,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-10": {
+   "offset": 225120,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-11": {
+   "offset": 225780,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-12": {
+   "offset": 226440,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-13": {
+   "offset": 227100,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-14": {
+   "offset": 227760,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-15": {
+   "offset": 228420,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-16": {
+   "offset": 229080,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-17": {
+   "offset": 229740,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-18": {
+   "offset": 230400,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-19": {
+   "offset": 231060,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-20": {
+   "offset": 231720,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-21": {
+   "offset": 232380,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-22": {
+   "offset": 233040,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-23": {
+   "offset": 233700,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-24": {
+   "offset": 234360,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-25": {
+   "offset": 235020,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-26": {
+   "offset": 235680,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-27": {
+   "offset": 236340,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-28": {
+   "offset": 237000,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-29": {
+   "offset": 237660,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-30": {
+   "offset": 238320,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-31": {
+   "offset": 238980,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-32": {
+   "offset": 239640,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-33": {
+   "offset": 240300,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-34": {
+   "offset": 240960,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-35": {
+   "offset": 241620,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-36": {
+   "offset": 242280,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-37": {
+   "offset": 242940,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-38": {
+   "offset": 243600,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-39": {
+   "offset": 244260,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-40": {
+   "offset": 244920,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-41": {
+   "offset": 245580,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-42": {
+   "offset": 246240,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-43": {
+   "offset": 246900,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-44": {
+   "offset": 247560,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-45": {
+   "offset": 248220,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-46": {
+   "offset": 248880,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-47": {
+   "offset": 249540,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-48": {
+   "offset": 250200,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-49": {
+   "offset": 250860,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-50": {
+   "offset": 251520,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-45": {
+   "offset": 252180,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-46": {
+   "offset": 252840,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-47": {
+   "offset": 253500,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-48": {
+   "offset": 254160,
+   "count": 244,
+   "stepDays": 9
+  },
+  "s2023-s-51": {
+   "offset": 254892,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-52": {
+   "offset": 255552,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-53": {
+   "offset": 256212,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-54": {
+   "offset": 256872,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-55": {
+   "offset": 257532,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-56": {
+   "offset": 258192,
+   "count": 244,
+   "stepDays": 9
+  },
+  "s2023-s-57": {
+   "offset": 258924,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2020-s-49": {
+   "offset": 259584,
+   "count": 244,
+   "stepDays": 9
+  },
+  "s2023-s-58": {
+   "offset": 260316,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-59": {
+   "offset": 260976,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-60": {
+   "offset": 261636,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-61": {
+   "offset": 262296,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-62": {
+   "offset": 262956,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2023-s-63": {
+   "offset": 263616,
+   "count": 220,
+   "stepDays": 10
+  },
+  "sycorax": {
+   "offset": 264276,
+   "count": 220,
+   "stepDays": 10
+  },
+  "prospero": {
+   "offset": 264936,
+   "count": 220,
+   "stepDays": 10
+  },
+  "stephano": {
+   "offset": 265596,
+   "count": 220,
+   "stepDays": 10
+  },
+  "margaret": {
+   "offset": 266256,
+   "count": 220,
+   "stepDays": 10
+  },
+  "ferdinand": {
+   "offset": 266916,
+   "count": 220,
+   "stepDays": 10
+  },
+  "nereid": {
+   "offset": 267576,
+   "count": 275,
+   "stepDays": 8
+  },
+  "psamathe": {
+   "offset": 268401,
+   "count": 220,
+   "stepDays": 10
+  },
+  "sao": {
+   "offset": 269061,
+   "count": 220,
+   "stepDays": 10
+  },
+  "laomedeia": {
+   "offset": 269721,
+   "count": 220,
+   "stepDays": 10
+  },
+  "neso": {
+   "offset": 270381,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2002-n5": {
+   "offset": 271041,
+   "count": 220,
+   "stepDays": 10
+  },
+  "s2021-n1": {
+   "offset": 271701,
+   "count": 220,
+   "stepDays": 10
+  },
+  "styx": {
+   "offset": 272361,
+   "count": 2193,
+   "stepDays": 1
+  },
+  "nix": {
+   "offset": 278940,
+   "count": 2193,
+   "stepDays": 1
+  },
+  "kerberos": {
+   "offset": 285519,
+   "count": 2193,
+   "stepDays": 1
+  },
+  "hydra": {
+   "offset": 292098,
+   "count": 2193,
+   "stepDays": 1
+  },
+  "sedna": {
+   "offset": 298677,
+   "count": 220,
+   "stepDays": 10
+  },
+  "tempel-1": {
+   "offset": 299337,
+   "count": 220,
+   "stepDays": 10
+  }
+ }
+}

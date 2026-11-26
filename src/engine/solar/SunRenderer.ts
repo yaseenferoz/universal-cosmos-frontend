@@ -1,12 +1,14 @@
 import {
   AdditiveBlending, BackSide, BufferGeometry, Float32BufferAttribute, Group, LOD,
-  Mesh, PerspectiveCamera, Points, ShaderMaterial, SphereGeometry, Vector3,
+  Mesh, PerspectiveCamera, Points, ShaderMaterial, SphereGeometry, Vector3, Vector4,
 } from "three";
 import type { Quality } from "../../types/celestial";
 import { createGranulationTexture, GRANULE_SCALE_KM, GRANULE_TILE_CELLS } from "./GranulationTexture";
-import { NOMINAL_SOLAR_RADIUS_KM, SOLAR_DISPLAY_RADIANCE, SOLAR_LIMB_DARKENING } from "./solarMath";
 import {
-  CORONA_OUTER_RADII, CORONA_RELATIVE_RADIANCE, SOLAR_OCCLUDER_LIMIT,
+  NOMINAL_SOLAR_RADIUS_KM, SOLAR_COLOR_LINEAR, SOLAR_DISPLAY_RADIANCE, SOLAR_LIMB_ALPHA_RGB, SOLAR_LIMB_DARKENING,
+} from "./solarMath";
+import {
+  CORONA_DISPLAY_LEVEL, CORONA_OUTER_RADII, SOLAR_OCCLUDER_LIMIT, SOLAR_SPOT_LIMIT,
   coronaFragmentShader, photosphereFragmentShader, solarVertexShader,
   unresolvedFragmentShader, unresolvedVertexShader,
 } from "./SolarShaders";
@@ -56,16 +58,51 @@ export function unresolvedSolarWeight(diameterPixels: number): number {
   return 1 - t * t * (3 - 2 * t);
 }
 
+/**
+ * Deterministic, illustrative sunspot groups in the solar body frame (+Y = rotation
+ * pole): leader/follower pairs in the ±8–30° activity belts, umbrae 2,500–9,000 km.
+ * Positions are not observations. xyz = direction, w = umbra angular radius (rad).
+ */
+export function illustrativeSunspots(seed = 25): Vector4[] {
+  let state = seed;
+  const random = () => {
+    state = (state * 1664525 + 1013904223) % 4294967296;
+    return state / 4294967296;
+  };
+  const spots: Vector4[] = [];
+  const groups = 7;
+  for (let group = 0; group < groups && spots.length < SOLAR_SPOT_LIMIT - 3; group++) {
+    const latitude = (8 + random() * 22) * (random() < 0.5 ? -1 : 1) * (Math.PI / 180);
+    const longitude = random() * Math.PI * 2;
+    const members = 1 + Math.floor(random() * 3);
+    for (let member = 0; member < members; member++) {
+      // Followers trail the leader in longitude and sit slightly poleward (Joy's law).
+      const lon = longitude - member * (2.5 + random() * 4) * (Math.PI / 180);
+      const lat = latitude + Math.sign(latitude) * member * 0.6 * (Math.PI / 180);
+      const umbraKm = (member === 0 ? 5000 : 2500) + random() * 4000;
+      spots.push(new Vector4(
+        Math.cos(lat) * Math.cos(lon), Math.sin(lat), -Math.cos(lat) * Math.sin(lon),
+        umbraKm / NOMINAL_SOLAR_RADIUS_KM,
+      ));
+    }
+  }
+  return spots;
+}
+
 /** All units here are renderer-relative. Parent tilt/scale and physical catalog radius stay authoritative. */
 export class SunRenderer {
   readonly surface = new LOD();
   readonly pickables: Mesh<SphereGeometry, ShaderMaterial>[] = [];
   /** Coronal shell + unresolved optical sampling point, both excluded from picking. */
   readonly corona = new Group();
-  readonly notice = "Modeled white-light photosphere; approximate limb darkening, procedural granulation and radial corona. Optical glare is a bounded camera effect, not solar plasma. No observed solar activity or prominences. Subpixel optical sampling preserves disk area.";
+  readonly notice = `Modeled white-light photosphere with chromatic power-law limb darkening (Hestroffer & Magnan 1998) and procedural granulation. Sunspot groups are illustrative, placed in the active-latitude belts; they are not today's observed spots. Corona follows the Baumbach (1937) radial profile with illustrative streamers, radially compressed and shown at a fixed visibility like processed eclipse photographs (the real corona is ~10⁻⁶ of the disk). Glare is a smooth camera point-spread effect, not solar plasma.`;
   private readonly uniforms = {
     solarRadiance: { value: SOLAR_DISPLAY_RADIANCE },
-    solarLimbCoefficient: { value: SOLAR_LIMB_DARKENING },
+    solarLimbAlpha: { value: new Vector3(...SOLAR_LIMB_ALPHA_RGB) },
+    solarColor: { value: new Vector3(...SOLAR_COLOR_LINEAR) },
+    solarSpotCount: { value: 0 },
+    solarSpots: { value: Array.from({ length: SOLAR_SPOT_LIMIT }, () => new Vector4()) },
+    solarPole: { value: new Vector3(0, 1, 0) },
     solarGranulation: { value: createGranulationTexture(128) },
     solarGranuleScale: { value: NOMINAL_SOLAR_RADIUS_KM / (GRANULE_SCALE_KM * GRANULE_TILE_CELLS) },
     solarGranulationStrength: { value: 0.18 },
@@ -129,6 +166,9 @@ export class SunRenderer {
     this.point.name = "Flux-weighted unresolved Sun optical sample";
     this.point.visible = false;
     this.corona.add(this.coronaMesh, this.point, this.glare.mesh, this.glare.ghosts.points);
+    const spots = illustrativeSunspots();
+    spots.forEach((spot, index) => this.uniforms.solarSpots.value[index].copy(spot));
+    this.uniforms.solarSpotCount.value = spots.length;
     this.replaceGranulation(this.budget.granulationTextureSize);
     this.setRenderRadius(baseRadius);
   }
@@ -190,7 +230,13 @@ export class SunRenderer {
     const diskArea = Math.PI * (pixels / 2) ** 2;
     this.pointUniforms.solarPointRadiance.value = SOLAR_DISPLAY_RADIANCE * (1 - SOLAR_LIMB_DARKENING / 3) * diskArea * weight * fraction / this.pointUniforms.solarPointSize.value ** 2;
     this.point.visible = pixels > 0 && weight > 0 && fraction > 0;
-    this.coronaMesh.visible = this.coronaEnabled && this.budget.coronaEnabled && frame.exposure * SOLAR_DISPLAY_RADIANCE * CORONA_RELATIVE_RADIANCE > 1e-5;
+    this.coronaMesh.visible = this.coronaEnabled && this.budget.coronaEnabled && frame.exposure > 0;
+    // Fixed display level at the limb, independent of exposure (see CORONA_DISPLAY_LEVEL).
+    this.uniforms.solarCoronaGain.value = frame.exposure > 0
+      ? CORONA_DISPLAY_LEVEL / (frame.exposure * SOLAR_DISPLAY_RADIANCE)
+      : 0;
+    // Rotation axis in world space orients the coronal streamer belt.
+    this.uniforms.solarPole.value.set(0, 1, 0).transformDirection(this.surface.matrixWorld);
     let count = 0;
     for (const occluder of frame.occluders ?? []) {
       if (count >= SOLAR_OCCLUDER_LIMIT) break;

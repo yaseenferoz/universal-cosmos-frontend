@@ -1,5 +1,5 @@
-/** IDs in the initial real-object catalog. Synthetic background stars have no IDs. */
-export type ObjectId =
+/** Hand-curated catalog IDs with bundled imagery and exploration profiles. */
+export type CoreObjectId =
   | "sun"
   | "mercury"
   | "venus"
@@ -34,6 +34,13 @@ export type ObjectId =
   | "vesta"
   | "bennu";
 
+/**
+ * Any catalog object. Generated bodies (JPL satellites, dwarf planets, asteroids and
+ * comets) use slug IDs; code that needs per-object assets must handle a missing entry.
+ * Synthetic background stars have no IDs.
+ */
+export type ObjectId = CoreObjectId | (string & {});
+
 export type Quality = "auto" | "low" | "medium" | "high";
 
 export interface CelestialObject {
@@ -66,6 +73,8 @@ export interface CelestialObject {
     inclination: number;
   };
   facts: { label: string; value: string }[];
+  /** Quantities with no published measurement; their numeric fields are display placeholders. */
+  unmeasured?: ("radius" | "mass" | "rotation")[];
 }
 
 export interface SolarSystem {

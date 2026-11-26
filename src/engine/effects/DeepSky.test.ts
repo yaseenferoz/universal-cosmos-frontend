@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { Texture, TextureLoader, Vector3 } from "three";
-import { DeepSky } from "./DeepSky";
+import { DeepSky, glowLevelFor } from "./DeepSky";
 
 describe("local deep sky", () => {
   it("loads one bounded texture per tier and releases it on teardown", async () => {
@@ -42,5 +42,14 @@ describe("local deep sky", () => {
     } finally {
       load.mockRestore();
     }
+  });
+
+  it("samples the glow at the same angular scale for both map tiers", () => {
+    // ~0.35 deg per texel: 4096 and 2048 maps both resolve 1024 texels around the sky.
+    expect(glowLevelFor(4096)).toBe(2);
+    expect(glowLevelFor(2048)).toBe(1);
+    expect(glowLevelFor(1024)).toBe(0);
+    expect(glowLevelFor(512)).toBe(0);
+    expect(glowLevelFor(0)).toBe(0);
   });
 });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   adaptExposureEv,
+  eclipseState,
   angularDiameterRad,
   ASTRONOMICAL_UNIT_KM,
   MIN_SOLAR_DISTANCE_AU,
@@ -214,3 +215,26 @@ describe("time-based exposure adaptation", () => {
     expect(Number.isFinite(adaptExposureEv(Number.MAX_VALUE, -Number.MAX_VALUE, 1))).toBe(true);
   });
 });
+
+describe("eclipse state of an inspected body", () => {
+  // Saturn at 9.5 AU on +X; Mimas 185,539 km beyond it (anti-sunward) or beside it.
+  const sun = { x: 0, y: 0, z: 0 };
+  const saturn = { id: "saturn", positionKm: { x: 1_421_000_000, y: 0, z: 0 }, radiusKm: 58_232 };
+  it("reports a total eclipse and names the shadow caster", () => {
+    const mimas = { x: 1_421_000_000 + 185_539, y: 0, z: 0 };
+    expect(eclipseState(mimas, sun, [saturn])).toEqual({ sunlitFraction: 0, casterId: "saturn" });
+  });
+  it("reports full sunlight and no caster outside the shadow", () => {
+    const mimas = { x: 1_421_000_000, y: 185_539, z: 0 };
+    expect(eclipseState(mimas, sun, [saturn])).toEqual({ sunlitFraction: 1, casterId: null });
+  });
+  it("reports a partial eclipse in the penumbra", () => {
+    // Just inside the shadow edge: the Sun's 0.028 deg radius straddles Saturn's limb.
+    const mimas = { x: 1_421_000_000 + 185_539, y: 58_232 * (1 + 185_539 / 1_421_000_000) - 50, z: 0 };
+    const { sunlitFraction, casterId } = eclipseState(mimas, sun, [saturn]);
+    expect(sunlitFraction).toBeGreaterThan(0.05);
+    expect(sunlitFraction).toBeLessThan(0.95);
+    expect(casterId).toBe("saturn");
+  });
+});
+

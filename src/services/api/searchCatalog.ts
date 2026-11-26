@@ -14,5 +14,14 @@ export function searchCatalog(objects: readonly CelestialObject[], query: string
     const parent = tokens.length > 1 ? objects.find(({ id }) => id === object.parentId)?.name ?? "" : "";
     const searchable = normalize(`${object.name} ${object.category} ${parent}`);
     return tokens.every((token) => searchable.includes(token));
-  }).sort((a, b) => Number(normalize(b.name) === term) - Number(normalize(a.name) === term));
+  }).sort((a, b) => rank(a, term) - rank(b, term));
+}
+
+/** Exact name, then name prefix, then name substring, then category/parent matches. */
+function rank(object: CelestialObject, term: string): number {
+  const name = normalize(object.name);
+  if (name === term) return 0;
+  if (name.startsWith(term)) return 1;
+  if (name.includes(term)) return 2;
+  return 3;
 }

@@ -1,9 +1,11 @@
 import type {
   CelestialObject,
+  CoreObjectId,
   ObjectId,
   SolarSystem,
 } from "../types/celestial";
 import { additionalBodies } from "./additionalBodies";
+import { generatedCelestialObjects } from "./generatedBodies";
 import { iss } from "./spacecraft";
 
 /** Chosen visualization origin. Initial phases are NOT observed positions on this date. */
@@ -22,7 +24,7 @@ const planetarySource = {
  * The nested display values are hand-selected visual composition parameters.
  * Distances and radii use DIFFERENT nonlinear scales, not a common km conversion.
  */
-export const celestialObjects: CelestialObject[] = [
+const handCuratedObjects: CelestialObject[] = [
   {
     id: "sun",
     name: "Sun",
@@ -295,9 +297,18 @@ export const celestialObjects: CelestialObject[] = [
   iss,
 ];
 
+/** Hand-curated objects first, then every JPL-generated moon, dwarf planet, asteroid and comet. */
+export const celestialObjects: CelestialObject[] = [
+  ...handCuratedObjects,
+  ...generatedCelestialObjects(
+    new Set(handCuratedObjects.map(({ id }) => id)),
+    new Map(handCuratedObjects.map((object) => [object.id, object])),
+  ),
+];
+
 export const objectById = Object.fromEntries(
   celestialObjects.map((object) => [object.id, object]),
-) as Record<ObjectId, CelestialObject>;
+) as Record<CoreObjectId, CelestialObject> & Partial<Record<ObjectId, CelestialObject>>;
 
 export const solarSystem: SolarSystem = {
   id: "solar",
@@ -307,5 +318,5 @@ export const solarSystem: SolarSystem = {
   visualizationEpoch: SIMULATION_EPOCH,
   model: "illustrative-circular",
   notice:
-    "The UTC clock can show the current time, but circular orbits and chosen phases do not represent observed celestial positions. Overview compresses distances and exaggerates radii. Background stars and reconstructed surfaces are illustrative.",
+    "Planets and the Moon follow analytic ephemerides (JPL mean elements, truncated ELP lunar theory). 458 natural satellites, dwarf planets, asteroids and comets use JPL orbits fitted to Horizons or sampled Horizons positions (2024–2030); each object lists its validated error. The ISS uses a circular model orbit. Overview compresses distances and exaggerates radii. Background stars and reconstructed surfaces are illustrative.",
 };

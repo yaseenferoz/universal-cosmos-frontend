@@ -5,14 +5,15 @@ import {
   WebGLRenderer,
 } from "three";
 import type { Quality } from "../../types/celestial";
-import { qualityConfig } from "./quality";
+import { initialAdaptiveResolution, nextAdaptiveResolution, qualityConfig } from "./quality";
 import { boundedRenderPixelRatio, HDRPipeline } from "./HDRPipeline";
 
 export class RendererManager {
   readonly renderer: WebGLRenderer;
   private quality: Quality = "auto";
   private pixelRatio = 1;
-  private adaptiveLimit = Infinity;
+  private adaptive = initialAdaptiveResolution();
+  private qualitySetAt = performance.now();
   private width = 1;
   private height = 1;
   private readonly pipeline: HDRPipeline;
@@ -21,7 +22,9 @@ export class RendererManager {
     this.renderer = new WebGLRenderer({
       antialias: true,
       alpha: false,
-      powerPreference: "default",
+      // Prefer the discrete GPU on dual-GPU laptops (honoured by Chrome on macOS; on
+      // Windows the browser-wide graphics setting decides).
+      powerPreference: "high-performance",
     });
     this.renderer.setClearColor(0x000000);
     this.renderer.outputColorSpace = SRGBColorSpace;
@@ -41,16 +44,28 @@ export class RendererManager {
   }
   setQuality(quality: Quality): void {
     this.quality = quality;
-    this.adaptiveLimit = Infinity;
+    this.adaptive = initialAdaptiveResolution();
+    this.qualitySetAt = performance.now();
     this.pipeline.setQuality(quality, this.mobile);
     const config = qualityConfig(quality, window.devicePixelRatio, this.mobile);
     this.applyPixelRatio();
     this.renderer.shadowMap.enabled = config.shadowMapSize > 0;
   }
-  adapt(fps: number): void {
-    if (this.quality !== "auto" || fps >= 28 || this.pixelRatio <= 0.5) return;
-    this.adaptiveLimit = Math.max(0.5, this.pixelRatio - 0.15);
-    this.applyPixelRatio();
+  /**
+   * Restart the start-up grace (texture uploads, terrain builds) without resetting
+   * the current limit — used around descents and returns to orbit.
+   */
+  restartAdaptiveGrace(now = performance.now()): void {
+    this.qualitySetAt = now;
+  }
+
+  adapt(fps: number, now = performance.now()): void {
+    if (this.quality !== "auto") return;
+    const preset = qualityConfig(this.quality, window.devicePixelRatio, this.mobile).pixelRatio;
+    const next = nextAdaptiveResolution(this.adaptive, fps, this.pixelRatio, preset, now, this.qualitySetAt);
+    const changed = next.limit !== this.adaptive.limit;
+    this.adaptive = next;
+    if (changed) this.applyPixelRatio();
   }
   get qualityLabel(): string {
     return `${this.quality} · ${this.pixelRatio.toFixed(2)}× · ${this.pipeline.enabled ? "HDR" : "direct"}`;
@@ -62,7 +77,7 @@ export class RendererManager {
   private applyPixelRatio(): void {
     this.pixelRatio = boundedRenderPixelRatio(
       this.quality, window.devicePixelRatio, this.mobile, this.width, this.height,
-      this.adaptiveLimit, this.renderer.capabilities.maxTextureSize,
+      this.adaptive.limit, this.renderer.capabilities.maxTextureSize,
     );
     this.renderer.setPixelRatio(this.pixelRatio);
     this.pipeline.resize();
