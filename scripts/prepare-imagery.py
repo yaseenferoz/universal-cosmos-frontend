@@ -26,7 +26,7 @@ ASSETS = [
          assetUrl='https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57730/land_ocean_ice_8192.png',
          sourceUrl='https://science.nasa.gov/earth/earth-observatory/the-blue-marble-true-color-global-imagery-at-1km-resolution/',
          attribution='NASA Goddard Space Flight Center / Reto Stockli / Robert Simmon / MODIS teams',
-         notes='Satellite-derived 2002 Blue Marble composite, not a single exposure or current weather. Ocean color is enhanced in the published source. Resampled without added features.',
+         notes='Satellite-derived 2002 Blue Marble composite, not a single exposure or current weather. Ocean color is enhanced in the published source. Resampled without added features. The globe uses a smooth surface and uniform roughness for lighting.',
          kind='observational', colorSpace='srgb', maximum=4096),
     dict(body='earth', slot='clouds', id='earth-clouds', filename='earth-clouds.jpg',
          title='Blue Marble cloud composite',
@@ -201,7 +201,6 @@ catalog['iss'] = {'missing': ['Lightweight station marker in the Solar System; V
 
 catalog['sun']['missing'] = ['The white-light photosphere, granulation and corona are modeled approximations, not an observed solar activity map. No prominence dataset is installed.']
 catalog['venus']['missing'] = ['Cream-colored, low-contrast visible-light clouds are a procedural reconstruction. No verified global visible-light Venus cloud mosaic is installed; Magellan radar is not a visible-light cloud map.']
-catalog['earth']['missing'] = ['No measured normal or surface-roughness map is installed; surface roughness is a constant approximation.']
 catalog['moon']['missing'] = ['No measured roughness map is installed. The normal map resolves only LOLA elevation at 1440 x 720.']
 catalog['mercury']['missing'] = ['Natural-color, normal and measured roughness maps are not installed; the observed monochrome preview is limited to 1024 x 512.']
 catalog['mars']['missing'] = ['No normal or measured roughness maps are installed; Viking surface imagery is limited to 1440 x 720.']

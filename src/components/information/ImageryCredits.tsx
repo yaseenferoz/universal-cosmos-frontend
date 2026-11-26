@@ -68,7 +68,7 @@ export function ImageryCredits({ id }: { id: ObjectId }) {
       ))}
       {imagery.missing.length > 0 && (
         <div className="imagery-missing">
-          <strong>Unavailable imagery</strong>
+          <strong>Imagery limitations</strong>
           {imagery.missing.map((message) => (
             <p key={message}>{message}</p>
           ))}

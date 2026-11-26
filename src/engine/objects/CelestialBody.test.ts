@@ -72,6 +72,17 @@ describe("body scale and asynchronous resource lifecycle", () => {
     releases.forEach((release) => expect(release).toHaveBeenCalledTimes(1));
   });
 
+  it("marks Earth imagery ready when its installed layers load", async () => {
+    vi.spyOn(scientificTextures, "acquire").mockImplementation(async () => ({
+      texture: new Texture(),
+      release: () => {},
+    }));
+    const earth = new CelestialBody(objectById.earth);
+    await earth.ensureTexture(512);
+    expect(earth.textureStatus).toEqual({ state: "ready", messages: [] });
+    earth.dispose();
+  });
+
   it("reports a failed source and retains a usable renderer", async () => {
     vi.spyOn(scientificTextures, "acquire").mockRejectedValue(new Error("404"));
     const earth = new CelestialBody(objectById.earth);

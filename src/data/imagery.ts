@@ -92,16 +92,14 @@ export const imageryById: Record<CoreObjectId, ObjectImagery> = {
     ]
   },
   "earth": {
-    "missing": [
-      "No measured normal or surface-roughness map is installed; surface roughness is a constant approximation."
-    ],
+    "missing": [],
     "surface": {
       "id": "earth-day",
       "title": "Blue Marble land, ocean and sea ice",
       "assetUrl": "https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57730/land_ocean_ice_8192.png",
       "sourceUrl": "https://science.nasa.gov/earth/earth-observatory/the-blue-marble-true-color-global-imagery-at-1km-resolution/",
       "attribution": "NASA Goddard Space Flight Center / Reto Stockli / Robert Simmon / MODIS teams",
-      "notes": "Satellite-derived 2002 Blue Marble composite, not a single exposure or current weather. Ocean color is enhanced in the published source. Resampled without added features.",
+      "notes": "Satellite-derived 2002 Blue Marble composite, not a single exposure or current weather. Ocean color is enhanced in the published source. Resampled without added features. The globe uses a smooth surface and uniform roughness for lighting.",
       "kind": "observational",
       "colorSpace": "srgb",
       "license": "NASA media usage guidelines: educational/informational use with attribution; no endorsement.",
