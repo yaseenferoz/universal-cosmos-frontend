@@ -1,7 +1,13 @@
 import { basename } from "node:path";
 import type { HtmlTagDescriptor, Plugin } from "vite";
 
-export const sitePages = ["index.html", "solar-system.html", "moon-landing.html", "iss.html"] as const;
+export const sitePages = ["index.html", "solar-system.html", "moon-landing.html", "iss.html", "about.html"] as const;
+
+const creator = {
+  "@type": "Person",
+  name: "Yaseen Feroz",
+  url: "https://yaseenferoz.github.io/yaseen-feroz/",
+};
 
 function siteOrigin(value: string | undefined): string | undefined {
   if (!value?.trim()) return;
@@ -31,9 +37,10 @@ export function siteSeo(siteUrl: string | undefined, verification: string | unde
       if (!title || !description) throw new Error(`Missing title or description in ${file}.`);
 
       const isHome = file === "index.html";
+      const isAbout = file === "about.html";
       const url = origin && `${origin}${pagePath(file)}`;
       const tags: HtmlTagDescriptor[] = [
-        { tag: "meta", attrs: { property: "og:type", content: isHome ? "website" : "article" } },
+        { tag: "meta", attrs: { property: "og:type", content: isHome || isAbout ? "website" : "article" } },
         { tag: "meta", attrs: { property: "og:site_name", content: "Universal Cosmos" } },
         { tag: "meta", attrs: { property: "og:title", content: title } },
         { tag: "meta", attrs: { property: "og:description", content: description } },
@@ -41,21 +48,22 @@ export function siteSeo(siteUrl: string | undefined, verification: string | unde
           { tag: "link", attrs: { rel: "canonical", href: url } },
           { tag: "meta", attrs: { property: "og:url", content: url } },
         ] : []),
-        ...(isHome && url ? [{
-          tag: "script",
-          attrs: { type: "application/ld+json" },
-          children: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "WebSite",
-            name: "Universal Cosmos",
-            url,
-          }).replaceAll("<", "\\u003c"),
-        }] : []),
         ...(isHome && verificationCode ? [{
           tag: "meta",
           attrs: { name: "google-site-verification", content: verificationCode },
         }] : []),
       ];
+      if (origin && url && (isHome || isAbout)) {
+        const website = { "@type": "WebSite", name: "Universal Cosmos", url: `${origin}/`, creator };
+        tags.push({
+          tag: "script",
+          attrs: { type: "application/ld+json" },
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            ...(isHome ? website : { "@type": "AboutPage", name: "About Universal Cosmos", url, mainEntity: website }),
+          }).replaceAll("<", "\\u003c"),
+        });
+      }
       return tags.map((tag) => ({ ...tag, injectTo: "head" }));
     },
     generateBundle() {

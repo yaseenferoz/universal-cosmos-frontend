@@ -1,4 +1,5 @@
 import {
+  ArrowRight,
   ArrowUpRight,
   BookOpen,
   CircleDot,
@@ -73,13 +74,11 @@ export function ExplorationRail() {
       </button>
       <a
         className="developer-credit"
-        href="https://yaseenferoz.github.io/yaseen-feroz/"
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Developed by Yaseen Feroz — portfolio (opens in a new tab)"
+        href="/about.html"
+        aria-label="About Universal Cosmos, developed by Yaseen Feroz"
       >
-        <span>Developed by <strong>Yaseen Feroz</strong></span>
-        <ArrowUpRight size={14} aria-hidden="true" />
+        <span>About Universal Cosmos<br />Developed by <strong>Yaseen Feroz</strong></span>
+        <ArrowRight size={14} aria-hidden="true" />
       </a>
     </aside>
   );

@@ -38,7 +38,7 @@ No backend, API key, paid service, or external texture download is required in l
 
 ## Google Search setup
 
-The production build includes the homepage and three linked HTML guides at `/solar-system.html`, `/moon-landing.html`, and `/iss.html`. Each guide is readable without JavaScript or WebGL. The existing S3 deployment publishes these files from `dist/`.
+The production build includes the homepage, an About page at `/about.html`, and three linked HTML guides at `/solar-system.html`, `/moon-landing.html`, and `/iss.html`. The About page credits Yaseen Feroz as the creator, developer, and owner. The About page and guides work without JavaScript or WebGL. The existing S3 deployment publishes these files from `dist/`.
 
 1. In the frontend GitHub repository, open **Settings → Secrets and variables → Actions → Variables → New repository variable**. Set `SITE_URL` to the exact public HTTPS origin visitors use, such as `https://cosmos.example.com`. If you build outside GitHub Actions, set it in the build environment or `.env.production.local`. The build uses it for the canonical links, homepage site-name data, and `dist/sitemap.xml`. It advertises the sitemap in `dist/robots.txt`.
 2. Add the live site to [Google Search Console](https://search.google.com/search-console). For a custom domain you control, choose **Domain** and add Google’s TXT record to the domain’s DNS settings. For an address such as a CloudFront hostname, choose **URL prefix** and use **HTML tag** verification. Put only the tag’s `content` value in the GitHub Actions variable `GOOGLE_SITE_VERIFICATION`, or in the build environment when deploying outside Actions. The build adds the tag to the homepage.

@@ -42,6 +42,14 @@
   background: #142338;
   font-weight: 600;
 }
+.cosmos-guide .guide-creator {
+  margin: 2rem 0;
+  padding: clamp(1rem, 4vw, 1.75rem);
+  border: 1px solid #29384c;
+  border-radius: 0.75rem;
+  background: #0d1420;
+}
+.cosmos-guide .guide-creator h2 { margin-top: 0; font-size: 1.6rem; }
 .cosmos-guide .guide-links {
   list-style: none;
   margin: 2rem 0 0;

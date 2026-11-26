@@ -12,11 +12,13 @@
       content="Explore the Solar System in 3D. Fly around planets and moons, land at Apollo 17’s Taurus–Littrow site, and watch Earth from the ISS Cupola."
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="stylesheet" href="/guide.css" />
+    <style>html { background: #05070b; }</style>
+    <noscript><link rel="stylesheet" href="/guide.css" /></noscript>
     <title>Universal Cosmos | 3D Solar System Explorer</title>
   </head>
   <body>
-    <div id="root">
+    <div id="root"></div>
+    <noscript>
       <main class="cosmos-guide">
         <p class="guide-brand">Universal Cosmos</p>
         <h1>Explore the Solar System in 3D</h1>
@@ -26,11 +28,12 @@
             <li><a href="/solar-system.html">Explore the planets and moons</a></li>
             <li><a href="/moon-landing.html">Land near Apollo 17</a></li>
             <li><a href="/iss.html">Visit the International Space Station</a></li>
+            <li><a href="/about.html">About Universal Cosmos and Yaseen Feroz</a></li>
           </ul>
         </nav>
-        <noscript><p>Enable JavaScript and use a browser with WebGL 2 to open the 3D explorer. The guides work without JavaScript.</p></noscript>
+        <p>Enable JavaScript and use a browser with WebGL 2 to open the 3D explorer. The guides work without JavaScript.</p>
       </main>
-    </div>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
