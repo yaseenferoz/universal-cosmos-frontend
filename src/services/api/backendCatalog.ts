@@ -146,3 +146,65 @@ export function parseBackendCatalog(value: unknown): BackendCatalog {
   });
   return catalog;
 }
+
+/** Measurements the explorer uses, read from a backend object detail (units checked). */
+export interface BackendMeasurements {
+  radiusKm?: number;
+  massKg?: number;
+  gravityMs2?: number;
+  rotationPeriodHours?: number;
+  axialTiltDeg?: number;
+  semiMajorAxisKm?: number;
+  orbitalPeriodDays?: number;
+  source?: string;
+}
+
+function measured(value: unknown, unit: string): number | undefined {
+  if (typeof value !== "object" || value === null) return undefined;
+  const entry = value as { value?: unknown; unit?: unknown };
+  return entry.unit === unit && typeof entry.value === "number" && Number.isFinite(entry.value) ? entry.value : undefined;
+}
+
+/**
+ * Pick the explorer's measurements out of an object detail. Anything missing, non-finite or
+ * in an unexpected unit is ignored (the bundled reference value stays), never coerced.
+ */
+export function parseBackendMeasurements(value: unknown): BackendMeasurements {
+  const data = record(value, "object detail");
+  if (typeof data.measurements === "object" && data.measurements !== null) {
+    const m = record(data.measurements);
+    const positive = (n: number | undefined) => (n !== undefined && n > 0 ? n : undefined);
+    return {
+      radiusKm: positive(measured(m.radius, "km")), massKg: positive(measured(m.mass, "kg")),
+      gravityMs2: positive(measured(m.surfaceGravity, "m/s2")), rotationPeriodHours: measured(m.siderealRotationPeriod, "h"),
+      axialTiltDeg: measured(m.axialTilt, "deg"), semiMajorAxisKm: positive(measured(m.semiMajorAxis, "km")),
+      orbitalPeriodDays: positive(measured(m.orbitalPeriod, "day")),
+      source: typeof m.source === "string" ? m.source.slice(0, 300) : undefined,
+    };
+  }
+  const physical = typeof data.physicalProperties === "object" && data.physicalProperties !== null ? record(data.physicalProperties) : null;
+  const extra = physical && typeof physical.additionalProperties === "object" && physical.additionalProperties !== null
+    ? record(physical.additionalProperties) : null;
+  const orbit = Array.isArray(data.orbitalElements) && typeof data.orbitalElements[0] === "object" && data.orbitalElements[0] !== null
+    ? record(data.orbitalElements[0]) : null;
+  const positive = (n: number | undefined) => (n !== undefined && n > 0 ? n : undefined);
+  return {
+    radiusKm: positive(measured(physical?.radius, "km")),
+    massKg: positive(measured(physical?.mass, "kg")),
+    gravityMs2: positive(measured(extra?.surfaceGravity, "m/s2")),
+    rotationPeriodHours: measured(extra?.siderealRotationPeriod, "h"),
+    axialTiltDeg: measured(extra?.axialTilt, "deg"),
+    semiMajorAxisKm: positive(measured(orbit?.semiMajorAxis, "km")),
+    orbitalPeriodDays: positive(measured(orbit?.period, "day")),
+    source: typeof physical?.source === "string" ? physical.source.slice(0, 300) : undefined,
+  };
+}
+
+/** The object with the backend's measurements in place of the bundled references. */
+export function applyBackendMeasurements(object: CelestialObject, m: BackendMeasurements): CelestialObject {
+  const fields = ["radiusKm", "massKg", "gravityMs2", "rotationPeriodHours", "axialTiltDeg", "semiMajorAxisKm", "orbitalPeriodDays"] as const;
+  if (!fields.some((field) => m[field] !== undefined)) return object;
+  const next = { ...object, measurementSource: m.source ?? "connected backend" };
+  for (const field of fields) if (m[field] !== undefined) next[field] = m[field]!;
+  return next;
+}

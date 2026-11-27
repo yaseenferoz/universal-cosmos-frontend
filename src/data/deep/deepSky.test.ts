@@ -2,13 +2,21 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { createDeepSkyCatalog, deepDisplayName, MILKY_WAY_REF, searchDeepSky } from "./deepSky";
 import { GALAXY_FLAGS, GALAXY_RECORD_BYTES, galaxyDistancePc, galaxyMorphology, morphologyLabel, parseGalaxyFile } from "./galaxies";
+import { ageText, parseClusterFile } from "./clusters";
 import { parseNebulaFile } from "./nebulae";
 
 const bin = readFileSync(new URL("../../../public/deep/galaxies.bin", import.meta.url));
 const meta: unknown = JSON.parse(readFileSync(new URL("../../../public/deep/galaxies.json", import.meta.url), "utf8"));
 const nebulaFile: unknown = JSON.parse(readFileSync(new URL("../../../public/deep/nebulae.json", import.meta.url), "utf8"));
+const clusterFile: unknown = JSON.parse(readFileSync(new URL("../../../public/deep/clusters.json", import.meta.url), "utf8"));
 const galaxies = parseGalaxyFile(bin.buffer.slice(bin.byteOffset, bin.byteOffset + bin.byteLength), meta);
-const catalog = createDeepSkyCatalog(galaxies, parseNebulaFile(nebulaFile));
+const catalog = createDeepSkyCatalog(galaxies, parseNebulaFile(nebulaFile), parseClusterFile(clusterFile));
+
+function cluster(query: string) {
+  const ref = searchDeepSky(catalog, query, 1)[0];
+  if (ref?.kind !== "cluster") throw new Error(`${query} is not a catalogued cluster`);
+  return catalog.clusters.clusters[ref.index];
+}
 
 function galaxy(query: string): number {
   const ref = searchDeepSky(catalog, query, 1)[0];
@@ -96,6 +104,33 @@ describe("installed nebula catalogue", () => {
     const parsed = parseNebulaFile({ meta: {}, nebulae: [{ names: ["x"], kind: "emission", p: [1, 2], r: 1, d: 10, axis: [1, 0, 0] }, { names: [], kind: "emission" }, null] });
     expect(parsed.nebulae).toHaveLength(0);
     expect(() => parseNebulaFile({})).toThrow();
+  });
+});
+
+describe("installed star clusters (Hunt & Reffert 2023, Harris, Vasiliev & Baumgardt 2021)", () => {
+  it("covers thousands of open clusters and the globular clusters", () => {
+    const open = catalog.clusters.clusters.filter((c) => c.kind === "open").length;
+    expect(open).toBeGreaterThan(3500);
+    expect(catalog.clusters.clusters.length - open).toBeGreaterThan(130);
+  });
+
+  it("uses the Gaia distances and ages of famous clusters", () => {
+    const pleiades = cluster("Pleiades");
+    expect(pleiades.names).toContain("M 45");
+    expect(pleiades.distancePc).toBeCloseTo(134.8, 0);
+    expect(ageText(pleiades.logAge)).toBe("122 million years");
+    expect(cluster("Hyades").distancePc).toBeCloseTo(47.2, 0);
+    const omega = cluster("Omega Centauri");
+    expect(omega.kind).toBe("globular");
+    expect(omega.method).toMatch(/Gaia EDR3/);
+    expect(omega.distancePc / 1000).toBeCloseTo(5.2, 1);
+    expect(omega.absMagV).toBeLessThan(-10);
+    expect(cluster("M 13").kind).toBe("globular");
+  });
+
+  it("skips entries without the measurements the model needs", () => {
+    const parsed = parseClusterFile({ meta: {}, clusters: [{ names: ["x"], kind: "open", p: [1, 2, 3], d: 10, r50: 1, age: 8 }] });
+    expect(parsed.clusters).toHaveLength(0);
   });
 });
 

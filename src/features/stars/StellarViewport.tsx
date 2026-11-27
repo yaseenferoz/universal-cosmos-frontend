@@ -19,8 +19,8 @@ export function StellarViewport() {
     let cancelled = false;
     useStellarStore.setState({ status: "loading", error: null, telemetry: null, deepStatus: "loading" });
     // Galaxies and nebulae load alongside; the star map does not wait for them.
-    const deepSky = loadDeepSky(import.meta.env.BASE_URL ?? "/");
-    Promise.all([import("../../engine/stars/StellarEngine"), loadStarCatalog(import.meta.env.BASE_URL ?? "/")])
+    const deepSky = loadDeepSky();
+    Promise.all([import("../../engine/stars/StellarEngine"), loadStarCatalog()])
       .then(([module, catalog]) => {
         if (cancelled) return;
         engine = new module.StellarEngine(element, {

@@ -254,3 +254,18 @@ Every planet with a known orbit can be visited. The descent reuses the Solar Sys
   - Nebulae use procedural interiors in approximate emission-line colours: Hα + [N II] red, [O III] teal, scattered blue.
 - **Brightness:** galaxies and nebulae are drawn 5 magnitudes brighter than the eye sees them, like a long exposure. Far from every large galaxy, an automatic exposure brightens the view by up to 9 more magnitudes (shown in the caption). Surface brightness does not change with distance.
 - **Not exact:** nebula brightness is illustrative; the catalogues give no uniform integrated photometry.
+
+### Star clusters (27 November 2026)
+
+`scripts/deep_sky_clusters.py` (run by `prepare-deep-sky.py`) writes `public/deep/clusters.json`: 4,004 open and 139 globular clusters, about 300 kB gzipped.
+- **Open clusters:** Hunt & Reffert 2023 (VizieR J/A+A/673/A114), the Gaia DR3 all-sky catalogue. Only open clusters that pass the authors' quality cuts are kept: astrometric significance at least 5 and median CMD class at least 0.5; moving groups are left out. Distances are the maximum-likelihood values from members' parallaxes (16th–84th percentile). Ages, extinctions, radii and member counts come from the same catalogue.
+- **Globular clusters:** the Harris catalogue (VizieR VII/202) supplies integrated magnitude, colour, metallicity, core and half-light radii and concentration. Distances are Gaia EDR3 parallaxes (Vasiliev & Baumgardt 2021, VizieR J/MNRAS/505/5978) where better than 5%, otherwise Harris's distance. The age is a typical 12.6 Gyr, assumed.
+- **Names:** OpenNGC names (Messier numbers, common names) go to the nearest cluster centre within its half-member radius, one cluster per object. A short list adds popular names such as Pleiades, Hyades and Omega Centauri.
+
+**Stars drawn for a cluster are a statistical sample, not the real members** (`src/engine/deep/clusterPopulation.ts`).
+- **How many:** open clusters are scaled from their Gaia member count, taken as the stars brighter than V ≈ 18 at their distance and extinction. Globulars are scaled from their integrated magnitude. Both use the Kroupa (2001) initial mass function from 0.1 M☉.
+- **Brightness and colour:** main-sequence stars follow textbook mass–luminosity and mass–radius relations, converted to V with the Torres (2010) bolometric correction.
+- **Turnoff and giants:** the main-sequence lifetime is 10 Gyr × M^−2.5, which sets the turnoff mass. Stars up to 4% heavier are giants: a giant branch with dN/dL ∝ L^−1.6, the red clump, a blue horizontal branch for metal-poor globulars, or supergiants in young clusters. Heavier stars are remnants and are not drawn.
+- **Positions:** Plummer profiles with the catalogued radii (globulars add a core component), truncated at the tidal radius.
+- **Avoiding duplicates:** stars brighter than V = 7.5 from Earth are left out, because HYG already has them as the real stars (e.g. the Pleiades' bright members).
+- **What is drawn:** each cluster's brightest sampled stars are always drawn; clusters seen up close get a deeper sample of up to 3,000 (open) or 20,000 (globular) stars. The unresolved rest of the light is a glow with the cluster's profile, on the stars' brightness scale (no long-exposure gain).

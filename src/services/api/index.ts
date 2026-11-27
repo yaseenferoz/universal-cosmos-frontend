@@ -44,4 +44,12 @@ export const celestialService: CelestialService = {
   async getEphemeris(id, isoDate, options) {
     return getService().getEphemeris(id, isoDate, options);
   },
+  async getCatalogueFile(path, options) {
+    return getService().getCatalogueFile(path, options);
+  },
 };
+
+/** "local" (bundled files) or "http" (backend API), for provenance notes in the interface. */
+export function catalogueSourceMode(): "local" | "http" {
+  return (import.meta.env.VITE_DATA_SOURCE || "local") === "http" ? "http" : "local";
+}

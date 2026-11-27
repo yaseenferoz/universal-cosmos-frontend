@@ -302,3 +302,47 @@ describe("backend failures and cancellation", () => {
     }
   });
 });
+
+describe("catalogue files over HTTP", () => {
+  it("downloads catalogues rebuilt by the backend from its database", async () => {
+    const bytes = new Uint8Array([85, 67, 83, 84]);
+    const fetcher = vi.fn(async () => new Response(bytes, { status: 200 }));
+    const service = new HttpCelestialService("http://localhost:4000/", fetcher);
+    const buffer = await service.getCatalogueFile("stars/hyg-v41.bin");
+    expect(new Uint8Array(buffer)).toEqual(bytes);
+    expect(fetcher).toHaveBeenCalledWith("http://localhost:4000/api/v1/datasets/files/stars/hyg-v41.bin", expect.objectContaining({ method: "GET" }));
+  });
+
+  it("explains a catalogue that was never imported and refuses unknown paths", async () => {
+    const fetcher = vi.fn(async () => new Response("{}", { status: 404 }));
+    const service = new HttpCelestialService("/", fetcher);
+    await expect(service.getCatalogueFile("deep/nebulae.json")).rejects.toThrow(/not been imported/);
+    // @ts-expect-error: only the published catalogue files can be requested.
+    await expect(service.getCatalogueFile("../.env")).rejects.toThrow(/Unknown catalogue file/);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("Solar System measurements over HTTP", () => {
+  it("uses the backend's measurements (with units checked) and keeps bundled values otherwise", async () => {
+    const withMeasurements = {
+      ...system,
+      objects: identities.map((item) => item.slug === "mars"
+        ? { ...item, measurements: {
+          radius: { value: 3389.5, unit: "km", uncertainty: null }, mass: { value: 6.4171e23, unit: "kg", uncertainty: null },
+          surfaceGravity: { value: 3.71, unit: "m/s2", uncertainty: null }, siderealRotationPeriod: { value: 24.6229, unit: "h", uncertainty: null },
+          axialTilt: { value: 25.19, unit: "deg", uncertainty: null }, semiMajorAxis: { value: 1.524, unit: "au", uncertainty: null },
+          orbitalPeriod: { value: 686.98, unit: "day", uncertainty: null }, source: "Fixture fact sheet",
+        } }
+        : item),
+    };
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(reply(withMeasurements));
+    const objects = await new HttpCelestialService("https://example.test", fetcher).getObjects();
+    const mars = objects.find((object) => object.id === "mars")!;
+    expect(mars).toMatchObject({ radiusKm: 3389.5, massKg: 6.4171e23, gravityMs2: 3.71, rotationPeriodHours: 24.6229, axialTiltDeg: 25.19, orbitalPeriodDays: 686.98, measurementSource: "Fixture fact sheet" });
+    // An unexpected unit (au where km is required) is ignored, not converted silently.
+    expect(mars.semiMajorAxisKm).toBe(objectById.mars.semiMajorAxisKm);
+    expect(objects.find((object) => object.id === "venus")!.measurementSource).toBeUndefined();
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+});

@@ -5,6 +5,7 @@ import {
   formatSimulationDate,
 } from "../../utils/format";
 import { REAL_TIME_DAYS_PER_SECOND } from "../../utils/simulationTime";
+import { withinPlanetaryEphemeris } from "../../engine/ephemeris/positionModel";
 
 export function TopBar() {
   const days = useExplorationStore((s) => s.simulationDays);
@@ -64,7 +65,12 @@ export function TopBar() {
       </div>
       <div className="top-actions">
         <div className="simulation-date">
-          <span>{playing && speed === REAL_TIME_DAYS_PER_SECOND ? "CURRENT UTC · JPL-BASED POSITIONS" : "SIMULATED UTC · JPL-BASED POSITIONS"}</span>
+          {/* Positions come from several models (JPL elements, lunar theory, circular models); the
+              caption under the object name says which one applies. Here: only whether they are in range. */}
+          <span>
+            {playing && speed === REAL_TIME_DAYS_PER_SECOND ? "CURRENT UTC" : "SIMULATED UTC"}
+            {withinPlanetaryEphemeris(Date.parse(epoch) + days * 86_400_000) ? " · MODEL POSITIONS" : " · POSITIONS EXTRAPOLATED"}
+          </span>
           <time>
             {formatSimulationDate(days, epoch)}
             <span className="clock-time">

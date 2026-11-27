@@ -280,6 +280,19 @@ export class DeepVolumes {
       .forEach((entry, rank) => { entry.mesh.renderOrder = -900 + rank; });
   }
 
+  /** Distance from the eye to the far side of the farthest visible volume (for the far clipping plane). */
+  reach(eye: Vector3): number {
+    const center = new Vector3(), scale = new Vector3();
+    let far = 0;
+    for (const mesh of [...this.galaxies, ...this.nebulae]) {
+      if (!mesh.visible) continue;
+      center.setFromMatrixPosition(mesh.matrix);
+      scale.setFromMatrixScale(mesh.matrix);
+      far = Math.max(far, center.distanceTo(eye) + scale.length());
+    }
+    return far;
+  }
+
   get activeGalaxies(): readonly number[] {
     return this.galaxyKeys;
   }

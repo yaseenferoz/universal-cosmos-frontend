@@ -16,6 +16,64 @@ export function starVisibility(apparentMag: number, magnitudeLimit: number): num
 }
 
 /**
+ * The stars' point material: attributes `absMag`, `starColor` (linear RGB) and `radiusPc`;
+ * brightness and glare follow the true distance to each star. Shared with cluster stars.
+ */
+export function createStarMaterial(): ShaderMaterial {
+return new ShaderMaterial({
+    uniforms: {
+      magnitudeLimit: { value: 6.5 },
+      /** Daylight/atmosphere dimming from a planet's surface (1 = space). */
+      skyVisibility: { value: 1 },
+      pixelRatio: { value: 1 },
+      focalPx: { value: 1000 },
+    },
+    vertexShader: `
+      attribute float absMag;
+      attribute vec3 starColor;
+      attribute float radiusPc;
+      uniform float magnitudeLimit, skyVisibility, pixelRatio, focalPx;
+      varying vec3 vColor;
+      varying float vSize, vGlow, vCore;
+      void main() {
+        vec4 view = modelViewMatrix * vec4(position, 1.0);
+        float d = max(length(view.xyz), 1e-12);
+        float m = absMag + 5.0 * log2(d) * 0.30103 - 5.0;
+        float v = exp2(1.3287712 * (magnitudeLimit - m)) * 0.05 * skyVisibility;
+        // Skip stars too faint to show at this limit: most of the catalogue at any moment.
+        if (v < 0.02 || view.z > 0.0) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); gl_PointSize = 0.0; return; }
+        // A resolved stellar disk is drawn by the star-body mesh; the point keeps only glare.
+        float diskPx = radiusPc / d * focalPx;
+        vCore = 1.0 - smoothstep(0.8, 2.5, diskPx);
+        vGlow = clamp(log(max(v, 1.0)) * 0.25, 0.0, 1.5);
+        vSize = min(64.0, 3.0 + 26.0 * vGlow) * pixelRatio;
+        vColor = starColor * min(v, 3.0);
+        gl_PointSize = vSize;
+        gl_Position = projectionMatrix * view;
+      }`,
+    fragmentShader: `
+      varying vec3 vColor;
+      varying float vSize, vGlow, vCore;
+      void main() {
+        float rPx = length(gl_PointCoord - 0.5) * vSize;
+        // Crisp ~1.5 px core plus an eye/camera glare halo for bright stars.
+        float core = exp(-rPx * rPx / 1.1) * vCore;
+        // The halo fades to zero before the sprite's edge, so very bright stars show no square.
+        float halo = vGlow * 0.35 * exp(-rPx / max(1.0, vSize * 0.16)) * (1.0 - smoothstep(0.6, 1.0, rPx / (0.5 * vSize)));
+        float a = core + halo;
+        if (a < 0.002) discard;
+        gl_FragColor = vec4(vColor * a, 1.0);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }`,
+    blending: AdditiveBlending,
+    transparent: true,
+    depthTest: false,
+    depthWrite: false,
+  });
+}
+
+/**
  * Every catalogued star as one draw call. Brightness, glare size and colour follow each
  * star's absolute magnitude and the camera's true distance to it, so moving through space
  * changes the sky. Positions are re-expressed relative to a floating origin (parsecs) so
@@ -57,57 +115,7 @@ export class StarCloud {
     geometry.setAttribute("starColor", new BufferAttribute(colors, 3));
     geometry.setAttribute("radiusPc", new BufferAttribute(this.radiusPc, 1));
     this.rebase(new Vector3());
-    const material = new ShaderMaterial({
-      uniforms: {
-        magnitudeLimit: { value: 6.5 },
-        /** Daylight/atmosphere dimming from a planet's surface (1 = space). */
-        skyVisibility: { value: 1 },
-        pixelRatio: { value: 1 },
-        focalPx: { value: 1000 },
-      },
-      vertexShader: `
-        attribute float absMag;
-        attribute vec3 starColor;
-        attribute float radiusPc;
-        uniform float magnitudeLimit, skyVisibility, pixelRatio, focalPx;
-        varying vec3 vColor;
-        varying float vSize, vGlow, vCore;
-        void main() {
-          vec4 view = modelViewMatrix * vec4(position, 1.0);
-          float d = max(length(view.xyz), 1e-12);
-          float m = absMag + 5.0 * log2(d) * 0.30103 - 5.0;
-          float v = exp2(1.3287712 * (magnitudeLimit - m)) * 0.05 * skyVisibility;
-          // Skip stars too faint to show at this limit: most of the catalogue at any moment.
-          if (v < 0.02 || view.z > 0.0) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); gl_PointSize = 0.0; return; }
-          // A resolved stellar disk is drawn by the star-body mesh; the point keeps only glare.
-          float diskPx = radiusPc / d * focalPx;
-          vCore = 1.0 - smoothstep(0.8, 2.5, diskPx);
-          vGlow = clamp(log(max(v, 1.0)) * 0.25, 0.0, 1.5);
-          vSize = min(64.0, 3.0 + 26.0 * vGlow) * pixelRatio;
-          vColor = starColor * min(v, 3.0);
-          gl_PointSize = vSize;
-          gl_Position = projectionMatrix * view;
-        }`,
-      fragmentShader: `
-        varying vec3 vColor;
-        varying float vSize, vGlow, vCore;
-        void main() {
-          float rPx = length(gl_PointCoord - 0.5) * vSize;
-          // Crisp ~1.5 px core plus an eye/camera glare halo for bright stars.
-          float core = exp(-rPx * rPx / 1.1) * vCore;
-          // The halo fades to zero before the sprite's edge, so very bright stars show no square.
-          float halo = vGlow * 0.35 * exp(-rPx / max(1.0, vSize * 0.16)) * (1.0 - smoothstep(0.6, 1.0, rPx / (0.5 * vSize)));
-          float a = core + halo;
-          if (a < 0.002) discard;
-          gl_FragColor = vec4(vColor * a, 1.0);
-          #include <tonemapping_fragment>
-          #include <colorspace_fragment>
-        }`,
-      blending: AdditiveBlending,
-      transparent: true,
-      depthTest: false,
-      depthWrite: false,
-    });
+    const material = createStarMaterial();
     this.points = new Points(geometry, material);
     this.points.frustumCulled = false;
     this.points.renderOrder = -1000;

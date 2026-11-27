@@ -5,6 +5,7 @@ import type { Quality } from "../../types/celestial";
 import { LabelPool } from "../stars/LabelPool";
 import { DeepVolumes, type GalaxyVolumeSpec, type NebulaVolumeSpec } from "./DeepVolumes";
 import { displayLuminosity, NEBULA_SURFACE_BRIGHTNESS, REFERENCE_PIXEL_SR } from "./deepPhotometry";
+import { ClusterField } from "./ClusterField";
 import { GalaxyField, galaxyShapes, MAX_DETAILED } from "./GalaxyField";
 import { ARCHETYPE, GalaxyMaps } from "./galaxyMaps";
 import { bulgeScaledIntegral, bulgeShape, diskHeights, milkyWayHeights } from "./galaxyModel";
@@ -14,6 +15,12 @@ import { createNoiseVolume } from "./noiseVolume";
 
 const GALAXY_LABELS = 14;
 const NEBULA_LABELS = 10;
+const CLUSTER_LABELS = 10;
+/** Clusters this large on screen get a deeper sample of faint members, per quality. */
+const CLUSTER_DETAIL_PX = 25;
+const CLUSTER_DETAIL_COUNT: Record<Quality, number> = { low: 1, medium: 2, high: 4, auto: 2 };
+/** Survey designations (no popular or historical name) are labelled only when large. */
+const SURVEY_NAME = /^(PN|WISE|G\d|RCW|LBN|Sh2|SNR|RX|MSH|PKS|UBC|UPK|Theia|CWNU|HSC|OCSN|CWWDL|FSR|LP|Gulliver|COIN|LISC|Kronberger|Teutsch|Juchert|OC\s|UFMG|Loden|Alessi|DBSB|BH\s|ESO)/;
 /** Apparent radius (CSS px) at which a sprite starts handing over to a volume, and is fully replaced. */
 const VOLUME_FROM_PX = 36;
 const VOLUME_FULL_PX = 80;
@@ -48,6 +55,11 @@ export class DeepSkyLayer {
   private readonly volumes: DeepVolumes;
   private galaxies: GalaxyField;
   private nebulae: NebulaField | null = null;
+  private clusters: ClusterField | null = null;
+  private readonly clusterLabels: LabelPool;
+  private clusterLabelKeys: number[] = [];
+  private chosenClusters: number[] = [];
+  private quality: Quality;
   private catalog: DeepSkyCatalog | null = null;
   private readonly origin = new Vector3();
   private readonly frame = milkyWayFrame();
@@ -85,6 +97,11 @@ export class DeepSkyLayer {
       select: (key) => options.onSelect({ kind: "nebula", index: key }),
       open: (key) => options.onOpen({ kind: "nebula", index: key }),
     });
+    this.clusterLabels = new LabelPool(options.labelRoot, CLUSTER_LABELS, "celestial-label star-label deep-label cluster-label", options.signal, {
+      select: (key) => options.onSelect({ kind: "cluster", index: key }),
+      open: (key) => options.onOpen({ kind: "cluster", index: key }),
+    });
+    this.quality = options.quality;
   }
 
   get ready(): boolean {
@@ -114,6 +131,10 @@ export class DeepSkyLayer {
     this.galaxies = new GalaxyField(catalog.galaxies, galaxyShapes(catalog.galaxies), this.maps.atlas, this.maps.milkyWay, this.mapTexels);
     this.nebulae = new NebulaField(catalog.nebulae, this.noise);
     this.group.add(this.galaxies.points, this.nebulae.points);
+    if (catalog.clusters.clusters.length > 0) {
+      this.clusters = new ClusterField(catalog.clusters);
+      this.group.add(this.clusters.group);
+    }
     this.rebase(this.origin);
     this.select(this.selected);
     this.setSkyVisibility(this.skyVisibility);
@@ -121,6 +142,7 @@ export class DeepSkyLayer {
   }
 
   setQuality(quality: Quality): void {
+    this.quality = quality;
     this.volumes.setQuality(quality);
     this.lastChoice = -Infinity;
   }
@@ -140,12 +162,14 @@ export class DeepSkyLayer {
     this.origin.copy(origin);
     this.galaxies.rebase(origin);
     this.nebulae?.rebase(origin);
+    this.clusters?.rebase(origin);
   }
 
   select(ref: DeepRef | null): void {
     this.selected = ref;
     this.galaxies.setHighlight(ref ? this.galaxyIndex(ref) : null);
     this.nebulae?.setHighlight(ref?.kind === "nebula" ? ref.index : null);
+    this.clusters?.setHighlight(ref?.kind === "cluster" ? ref.index : null);
   }
 
   setFocus(ref: DeepRef | null): void {
@@ -156,6 +180,10 @@ export class DeepSkyLayer {
   heliocentric(ref: DeepRef, target = new Vector3()): Vector3 | null {
     const galaxy = this.galaxyIndex(ref);
     if (galaxy !== null) return this.galaxies.heliocentric(galaxy, target);
+    if (ref.kind === "cluster") {
+      const cluster = this.catalog?.clusters.clusters[ref.index];
+      return cluster ? target.set(...cluster.position) : null;
+    }
     const nebula = ref.kind === "nebula" ? this.catalog?.nebulae.nebulae[ref.index] : undefined;
     return nebula ? target.set(...nebula.position) : null;
   }
@@ -167,6 +195,8 @@ export class DeepSkyLayer {
   radiusPc(ref: DeepRef): number {
     if (ref.kind === "milky-way") return MILKY_WAY.displayRadiusPc;
     if (ref.kind === "galaxy") return this.catalog?.galaxies.radiusPc[ref.index] ?? 1;
+    // Clusters: three half-member radii frame the cluster with its outskirts.
+    if (ref.kind === "cluster") return (this.catalog?.clusters.clusters[ref.index]?.halfRadiusPc ?? 1) * 3;
     return this.catalog?.nebulae.nebulae[ref.index]?.radiusPc ?? 1;
   }
 
@@ -190,6 +220,11 @@ export class DeepSkyLayer {
     const maxSize = Math.min(512, maxPointSize / Math.max(1, pixelRatio));
     this.galaxies.setView(this.magnitudeLimit, this.exposure, focalPx, pixelRatio, maxSize);
     this.nebulae?.setView(focalPx, pixelRatio, maxSize);
+    if (this.clusters) {
+      this.clusters.buildStep();
+      this.clusters.setView(this.magnitudeLimit, this.skyVisibility, focalPx, pixelRatio, maxSize);
+      this.clusters.setDetailed(this.chosenClusters, now);
+    }
     const galaxySpecs = this.chosenGalaxies.map((index) => this.galaxySpec(index, eye, focalPx)).filter((s) => s !== null);
     const nebulaSpecs = this.chosenNebulae.map((index) => this.nebulaSpec(index, eye, focalPx)).filter((s) => s !== null);
     this.volumes.setGalaxies(galaxySpecs, camera, focalPx);
@@ -203,6 +238,11 @@ export class DeepSkyLayer {
       ...(galaxySpecs.some((spec) => spec.key === milkyWay) ? [] : [{ index: milkyWay, fade: 1 - this.milkyWayFade }]),
     ].slice(0, MAX_DETAILED));
     this.nebulae?.setDetailed(nebulaSpecs.map((s) => ({ index: s.key, fade: s.fade })));
+  }
+
+  /** Far plane needed so no volume is clipped (0 when none is shown). */
+  volumeReach(eye: Vector3): number {
+    return this.volumes.reach(eye);
   }
 
   private apparentRadius(center: Vector3, radius: number, eye: Vector3, focalPx: number): number {
@@ -242,6 +282,8 @@ export class DeepSkyLayer {
     });
     nebulaCandidates.sort((a, b) => b.rho - a.rho);
     this.chosenNebulae = nebulaCandidates.slice(0, this.volumes.nebulaCapacity).map((c) => c.index);
+    this.chosenClusters = this.clusters?.ready
+      ? this.clusters.largest(eye, focalPx, CLUSTER_DETAIL_PX).slice(0, CLUSTER_DETAIL_COUNT[this.quality]).map((c) => c.index) : [];
   }
 
   private galaxySpec(index: number, eye: Vector3, focalPx: number): (GalaxyVolumeSpec & { fade: number }) | null {
@@ -361,6 +403,9 @@ export class DeepSkyLayer {
       const rho = (nebula.radiusPc / Math.max(local.distanceTo(eye), 1e-9)) * focalPx;
       if (rho * rho * NEBULA_SURFACE_BRIGHTNESS[nebula.kind] > 1) consider({ kind: "nebula", index: i }, local, rho);
     });
+    if (this.clusters?.ready)
+      for (const { index, rho } of this.clusters.largest(eye, focalPx, 3))
+        if (Number.isFinite(rho)) consider({ kind: "cluster", index }, this.clusters.localPosition(index), rho);
     return best;
   }
 
@@ -397,7 +442,7 @@ export class DeepSkyLayer {
       const rho = (nebula.radiusPc / Math.max(local.distanceTo(eye), 1e-9)) * focalPx;
       if (rho < 8 || !this.screen(local, camera, width, height)) return;
       // Named objects (common names, Messier, NGC) first; survey designations need to be large.
-      const named = /Nebula|Loop|^M \d|^NGC|^IC/.test(nebula.names[0]) ? 3 : /^(PN|WISE|G\d|RCW|LBN|Sh2|SNR|RX|MSH|PKS)/.test(nebula.names[0]) ? 0.5 : 1;
+      const named = /Nebula|Loop|^M \d|^NGC|^IC/.test(nebula.names[0]) ? 3 : SURVEY_NAME.test(nebula.names[0]) ? 0.5 : 1;
       if (named < 1 && rho < 25) return;
       nebulae.push({ key: i, rank: -rho * named });
     });
@@ -405,6 +450,20 @@ export class DeepSkyLayer {
     const nebulaKeys = new Set(nebulae.slice(0, NEBULA_LABELS - 2).map((n) => n.key));
     for (const ref of [this.selected, this.focused]) if (ref?.kind === "nebula") nebulaKeys.add(ref.index);
     this.nebulaLabelKeys = [...nebulaKeys];
+    const clusterKeys = new Set<number>();
+    if (this.clusters?.ready) {
+      const ranked = this.clusters.largest(eye, focalPx, 6)
+        .filter(({ index, rho }) => Number.isFinite(rho) && this.screen(this.clusters!.localPosition(index), camera, width, height))
+        .map(({ index, rho }) => ({ index, rank: -rho * (SURVEY_NAME.test(this.catalog!.clusters.clusters[index].names[0]) ? 0.25 : 3) }))
+        .filter(({ rank }) => rank < -6)
+        .sort((a, b) => a.rank - b.rank);
+      for (const { index } of ranked.slice(0, CLUSTER_LABELS - 2)) clusterKeys.add(index);
+    }
+    for (const ref of [this.selected, this.focused]) if (ref?.kind === "cluster") clusterKeys.add(ref.index);
+    this.clusterLabelKeys = [...clusterKeys];
+    this.clusterLabels.assign(this.clusterLabelKeys.map((key) => ({
+      key, text: this.catalog?.clusters.clusters[key]?.names[0] ?? "Star cluster", selected: sameDeep(this.selected, { kind: "cluster", index: key }),
+    })));
     this.nebulaLabels.assign(this.nebulaLabelKeys.map((key) => ({
       key, text: this.catalog?.nebulae.nebulae[key]?.names[0] ?? "Nebula", selected: sameDeep(this.selected, { kind: "nebula", index: key }),
     })));
@@ -420,16 +479,19 @@ export class DeepSkyLayer {
       const nebula = this.catalog?.nebulae.nebulae[key];
       return nebula ? this.screen(local.set(...nebula.position).sub(this.origin), camera, width, height) : null;
     });
+    this.clusterLabels.place((key) => (this.clusters ? this.screen(this.clusters.localPosition(key, local), camera, width, height) : null));
   }
 
   hideLabels(): void {
     this.galaxyLabels.assign([]);
     this.nebulaLabels.assign([]);
+    this.clusterLabels.assign([]);
   }
 
   dispose(): void {
     this.galaxies.dispose();
     this.nebulae?.dispose();
+    this.clusters?.dispose();
     this.volumes.dispose();
     this.maps.dispose();
     this.noise.dispose();

@@ -579,6 +579,12 @@ export class StellarEngine {
     this.deepSky.update(this.camera.position, skyVisibility * photographicSkyWeight(this.camera.position.distanceTo(sun)), 1, skyAdaptation);
     this.deep.setSkyVisibility(skyVisibility * skyAdaptation);
     this.deep.update(this.camera, focalPx, pixelRatio, this.maxPointSize, sun, now, delta);
+    // Volumes (e.g. the Milky Way seen from inside it) can reach beyond the zoom-based far plane.
+    const reach = this.deep.volumeReach(this.camera.position) * 1.05;
+    if (reach > this.camera.far) {
+      this.camera.far = reach;
+      this.camera.updateProjectionMatrix();
+    }
     this.cloud.setView(pixelRatio, focalPx);
     if (!descent) {
       if (now - this.lastLabels > 200) {

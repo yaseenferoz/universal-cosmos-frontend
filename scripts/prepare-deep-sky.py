@@ -10,6 +10,7 @@ Galaxies (public/deep/galaxies.bin + galaxies.json):
     Cosmicflows-4 (Tully et al. 2023; group average when the group has several measured
     members) where the galaxy is in it, otherwise from the Hubble law in the CMB frame.
   * Shapes: OpenNGC (optical size, axis ratio, position angle), else 2MASS XSC.
+Star clusters (public/deep/clusters.json): see scripts/deep_sky_clusters.py.
 Nebulae (public/deep/nebulae.json):
   * Planetary nebulae: Chornay & Walton 2021 Gaia EDR3 central-star distances.
   * HII regions: Anderson et al. 2014 WISE catalog (parallax and kinematic distances).
@@ -769,11 +770,14 @@ def main() -> None:
     ngc = openngc_entries(sources.openngc_rows(refresh))
     blob, galaxy_meta = build_galaxies(refresh, ngc)
     nebulae = build_nebulae(refresh, ngc)
+    import deep_sky_clusters
+    clusters = deep_sky_clusters.build(refresh, ngc, sys.modules[__name__])
     OUT.mkdir(parents=True, exist_ok=True)
+    (OUT / "clusters.json").write_text(json.dumps(clusters, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     (OUT / "galaxies.bin").write_bytes(blob)
     (OUT / "galaxies.json").write_text(json.dumps(galaxy_meta, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     (OUT / "nebulae.json").write_text(json.dumps(nebulae, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    for name in ("galaxies.bin", "galaxies.json", "nebulae.json"):
+    for name in ("galaxies.bin", "galaxies.json", "nebulae.json", "clusters.json"):
         print(f"  {name}: {(OUT / name).stat().st_size / 1e6:.2f} MB")
 
 

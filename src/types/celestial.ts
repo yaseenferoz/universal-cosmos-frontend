@@ -45,8 +45,10 @@ export type Quality = "auto" | "low" | "medium" | "high";
 
 export interface CelestialObject {
   id: ObjectId;
-  /** Connected identity UUID; physical/display values remain bundled references. */
+  /** Connected identity UUID; display values remain bundled. */
   backendId?: string;
+  /** Set when physical/orbital measurements came from the connected backend (its source text). */
+  measurementSource?: string;
   name: string;
   category: string;
   description: string;
@@ -181,6 +183,17 @@ export interface RequestOptions {
   signal?: AbortSignal;
 }
 
+/**
+ * Prepared scientific catalogues in their compact formats (paths as published under
+ * public/): stars, exoplanet systems, galaxies, nebulae and star clusters. Local mode reads
+ * the bundled files; HTTP mode reads the backend's versions, rebuilt from its database.
+ */
+export const CATALOGUE_FILES = [
+  "stars/hyg-v41.bin", "stars/hyg-v41-names.json", "stars/hyg-v41-spect.txt", "stars/exoplanets.json",
+  "deep/galaxies.bin", "deep/galaxies.json", "deep/nebulae.json", "deep/clusters.json",
+] as const;
+export type CatalogueFile = (typeof CATALOGUE_FILES)[number];
+
 export interface CelestialService {
   getObjects(options?: RequestOptions): Promise<CelestialObject[]>;
   getObject(
@@ -194,4 +207,6 @@ export interface CelestialService {
     isoDate: string,
     options?: RequestOptions,
   ): Promise<EphemerisResult>;
+  /** Raw bytes of a prepared catalogue file (parsed and validated by the data layer). */
+  getCatalogueFile(path: CatalogueFile, options?: RequestOptions): Promise<ArrayBuffer>;
 }

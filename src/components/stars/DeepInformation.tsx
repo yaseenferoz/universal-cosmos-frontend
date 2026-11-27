@@ -1,5 +1,6 @@
 import { ArrowLeft, ExternalLink, Navigation, Orbit, X } from "lucide-react";
 import type { ReactNode } from "react";
+import { ageText } from "../../data/deep/clusters";
 import { MILKY_WAY_REF, type DeepRef, type DeepSkyCatalog } from "../../data/deep/deepSky";
 import { GALAXY_FLAGS, galaxyDistancePc, morphologyLabel } from "../../data/deep/galaxies";
 import { MILKY_WAY, milkyWayFrame, SPIRAL_ARMS } from "../../data/deep/milkyWay";
@@ -44,6 +45,12 @@ function Panel({ eyebrow, title, subtitle, children, label }: { eyebrow: string;
     </section>
   );
 }
+
+/** A distance range with enough digits that its ends differ (e.g. 134.4–135.3 pc). */
+const rangeText = ([lo, hi]: [number, number]) => {
+  const digits = hi - lo < 2 ? 1 : 0;
+  return `${formatNumber(lo, digits)}–${formatNumber(hi, digits)}`;
+};
 
 const luminosityText = (absMag: number) => `${formatNumber(10 ** (-0.4 * (absMag - 4.83)), 2)} × Sun (visual, estimated)`;
 
@@ -130,7 +137,7 @@ function NebulaInformation({ catalog, index }: { catalog: DeepSkyCatalog; index:
   const fromCentre = Math.hypot(nebula.position[0] - sx, nebula.position[1] - sy, nebula.position[2] - sz);
   const facts: Fact[] = [
     { label: "Type", value: NEBULA_KIND_LABEL[nebula.kind] },
-    { label: "Distance from the Sun", value: `${distanceText(nebula.distancePc)}${nebula.distanceRange ? ` (${formatNumber(nebula.distanceRange[0], 0)}–${formatNumber(nebula.distanceRange[1], 0)} pc)` : ""}` },
+    { label: "Distance from the Sun", value: `${distanceText(nebula.distancePc)}${nebula.distanceRange ? ` (${rangeText(nebula.distanceRange)} pc)` : ""}` },
     { label: "Distance from", value: nebula.method },
     { label: "Diameter", value: `${sizeText(nebula.radiusPc * 2)} (${formatNumber(nebula.angularSizeArcmin, nebula.angularSizeArcmin < 1 ? 2 : 1)}′ across)` },
     { label: "From the Galactic centre", value: distanceText(fromCentre) },
@@ -156,10 +163,51 @@ function NebulaInformation({ catalog, index }: { catalog: DeepSkyCatalog; index:
   );
 }
 
-/** Facts and provenance for the selected galaxy, nebula or the Milky Way. */
+function ClusterInformation({ catalog, index }: { catalog: DeepSkyCatalog; index: number }) {
+  const cluster = catalog.clusters.clusters[index];
+  if (!cluster) return null;
+  const open = cluster.kind === "open";
+  const facts: Fact[] = [
+    { label: "Type", value: open ? "Open star cluster" : "Globular star cluster" },
+    { label: "Distance from the Sun", value: `${distanceText(cluster.distancePc)}${cluster.distanceRange ? ` (${rangeText(cluster.distanceRange)} pc)` : ""}` },
+    { label: "Distance from", value: cluster.method },
+    { label: open ? "Half the members within" : "Half the light within", value: sizeText(cluster.halfRadiusPc) },
+    open
+      ? { label: "Age", value: ageText(cluster.logAge) }
+      : { label: "Brightness", value: `absolute magnitude ${cluster.absMagV?.toFixed(2)} (${formatNumber(10 ** (-0.4 * ((cluster.absMagV ?? 0) - 4.83)), 2)} × Sun)` },
+    open
+      ? { label: "Gaia members", value: (cluster.members ?? 0).toLocaleString("en-US") }
+      : { label: "Metallicity", value: cluster.metallicity !== undefined ? `[Fe/H] = ${cluster.metallicity.toFixed(2)} (${formatNumber(10 ** cluster.metallicity * 100, 1)}% of the Sun's)` : "Not catalogued" },
+    { label: "Brightness from Earth", value: open ? `extinction A_V = ${cluster.extinctionV.toFixed(2)} mag` : `magnitude ${apparentMagnitude(cluster.absMagV ?? 0, cluster.distancePc).toFixed(1)} (before extinction)` },
+  ];
+  return (
+    <Panel eyebrow={open ? "OPEN CLUSTER" : "GLOBULAR CLUSTER"} title={cluster.names[0]} subtitle={cluster.names.slice(1, 4).join(" · ") || "Star cluster"} label={cluster.names[0]}>
+      <Facts facts={facts} />
+      <div className="star-actions">
+        <button className="lunar-primary" onClick={() => useStellarStore.getState().flyToDeep({ kind: "cluster", index })}>
+          <Navigation size={14} /> Fly to {cluster.names[0]}
+        </button>
+        <button className="lunar-primary" onClick={() => useStellarStore.getState().flyTo(0)}>
+          <ArrowLeft size={14} /> Sun
+        </button>
+      </div>
+      <p className="star-provenance">
+        Distance: <Reference bibcode={cluster.reference} />.{" "}
+        {open
+          ? "Position, distance, age, extinction, radii and member count: Hunt & Reffert 2023 (Gaia DR3)."
+          : "Integrated magnitude, metallicity and radii: Harris catalogue; the age is a typical 12.6 billion years (assumed)."}{" "}
+        The stars drawn are a statistical sample matching the measured population (initial mass function, age, size), not the real
+        members; members bright enough for the star catalogue are its real stars, and the unresolved rest is a glow.
+      </p>
+    </Panel>
+  );
+}
+
+/** Facts and provenance for the selected galaxy, nebula, star cluster or the Milky Way. */
 export function DeepInformation({ selection }: { selection: DeepRef }) {
   const catalog = useDeepSkyCatalog();
   if (selection.kind === "milky-way") return <MilkyWayInformation />;
   if (!catalog) return null;
+  if (selection.kind === "cluster") return <ClusterInformation catalog={catalog} index={selection.index} />;
   return selection.kind === "galaxy" ? <GalaxyInformation catalog={catalog} index={selection.index} /> : <NebulaInformation catalog={catalog} index={selection.index} />;
 }

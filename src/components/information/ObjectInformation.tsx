@@ -6,7 +6,7 @@ import { ImageryCredits } from "./ImageryCredits";
 import { ViewingActions } from "../controls/ViewingActions";
 import { useRenderingStore } from "../../stores/renderingStore";
 import type { CelestialObject } from "../../types/celestial";
-import { ephemerisCoverage } from "../../engine/ephemeris/analyticEphemeris";
+import { positionModelAt } from "../../engine/ephemeris/positionModel";
 
 const MOON_PREVIEW = 12;
 
@@ -36,6 +36,8 @@ export function ObjectInformation() {
   const selectedId = useExplorationStore((s) => s.selectedId);
   const objects = useExplorationStore((s) => s.objects);
   const open = useExplorationStore((s) => s.informationOpen);
+  const days = useExplorationStore((s) => s.simulationDays);
+  const epoch = useExplorationStore((s) => s.simulationEpoch);
   const object = objects.find((item) => item.id === selectedId);
   if (!object) return null;
   if (!open)
@@ -57,6 +59,7 @@ export function ObjectInformation() {
       </button>
     );
   const parent = objects.find((item) => item.id === object.parentId);
+  const positionStatus = positionModelAt(object, Date.parse(epoch) + days * 86_400_000);
   const moons = objects.filter((item) => item.parentId === object.id && item.category === "Natural satellite");
   return (
     <aside
@@ -152,14 +155,13 @@ export function ObjectInformation() {
           <span className="science-dot" />
           Real object. Illustrative rendering.
           <p>
-            Exploration uses physical scale. {ephemerisCoverage(object.id)
-              ? `Position: ${ephemerisCoverage(object.id)!.label}.`
-              : "This orbit is a circular model, not a measured position at the displayed time."}
+            Exploration uses physical scale. Position at the displayed time: {positionStatus.caption}. {positionStatus.detail}
           </p>
           {object.backendId && (
             <p>
-              Object identity is supplied by the connected backend. Physical
-              values are from the bundled NASA reference catalog.
+              {object.measurementSource
+                ? `Identity and measurements (radius, mass, gravity, rotation, tilt, orbit size and period) come from the connected backend: ${object.measurementSource}.`
+                : "Object identity is supplied by the connected backend. Physical values are from the bundled NASA reference catalog."}
             </p>
           )}
           {object.id === "earth" && (

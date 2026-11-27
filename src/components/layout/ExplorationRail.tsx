@@ -2,6 +2,7 @@ import {
   ArrowRight,
   BookOpen,
   Cloud,
+  Sparkle,
   CircleDot,
   Compass,
   Galaxy,
@@ -19,6 +20,7 @@ const COSMIC_WEB_DISTANCE_PC = 7e8;
 const collections = [
   { name: "Galaxies", label: "Galaxies", icon: Galaxy },
   { name: "Nebulae", label: "Nebulae", icon: Cloud },
+  { name: "Star clusters", label: "Star clusters", icon: Sparkle },
 ];
 
 export function ExplorationRail() {

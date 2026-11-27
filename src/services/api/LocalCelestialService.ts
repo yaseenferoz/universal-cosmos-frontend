@@ -1,11 +1,13 @@
 import { celestialObjects, solarSystem } from "../../data/catalog";
-import type {
-  CelestialObject,
-  CelestialService,
-  EphemerisResult,
-  ObjectId,
-  RequestOptions,
-  SolarSystem,
+import {
+  CATALOGUE_FILES,
+  type CatalogueFile,
+  type CelestialObject,
+  type CelestialService,
+  type EphemerisResult,
+  type ObjectId,
+  type RequestOptions,
+  type SolarSystem,
 } from "../../types/celestial";
 import { assertActive, CelestialApiError, normalizeEpoch } from "./errors";
 import { searchCatalog } from "./searchCatalog";
@@ -17,8 +19,22 @@ import {
 } from "../../engine/ephemeris/analyticEphemeris";
 import { utcToTdbMs } from "../../engine/ephemeris/time";
 
-/** In-memory data, with no artificial latency or fetch requests. */
+/**
+ * Bundled data: the Solar System in memory, and the prepared catalogue files fetched from
+ * this site's own public directory (no backend, no artificial latency).
+ */
 export class LocalCelestialService implements CelestialService {
+  constructor(private readonly baseUrl: string = import.meta.env?.BASE_URL ?? "/") {}
+
+  async getCatalogueFile(path: CatalogueFile, options?: RequestOptions): Promise<ArrayBuffer> {
+    assertActive(options?.signal);
+    if (!CATALOGUE_FILES.includes(path)) throw new CelestialApiError("Unknown catalogue file.", 404);
+    const base = this.baseUrl.endsWith("/") ? this.baseUrl : `${this.baseUrl}/`;
+    const response = await fetch(`${base}${path}`, { signal: options?.signal });
+    if (!response.ok) throw new CelestialApiError(`The bundled catalogue ${path} is unavailable (HTTP ${response.status}).`, response.status);
+    return response.arrayBuffer();
+  }
+
   async getObjects(options?: RequestOptions): Promise<CelestialObject[]> {
     assertActive(options?.signal);
     return structuredClone(celestialObjects);

@@ -36,6 +36,12 @@ VIZIER_TABLES = {
     "hii": ("J/ApJS/212/1/wisecat", "WISE,Cl,GLON,GLAT,Rad,HIIName,Dist,e_Dist,Meth", {"-out.add": "_RAJ,_DEJ"}),
     # Green 2025, catalogue of Galactic supernova remnants.
     "snr": ("VII/297/snrs", "SNR,RAJ2000,DEJ2000,MajDiam,MinDiam,type,Names", {}),
+    # Hunt & Reffert 2023, Gaia DR3 star cluster catalogue.
+    "hr23": ("J/A+A/673/A114/clusters", "Name,AllNames,Type,CST,N,RA_ICRS,DE_ICRS,r50pc,rcpc,rtpc,dist16,dist50,dist84,logAge50,AV50,CMDCl50", {}),
+    # Harris globular cluster catalogue (VizieR edition).
+    "harris": ("VII/202/catalog", "ID,Name,RAJ2000,DEJ2000,Rsun,MVt,(B-V)t,[Fe/H],c,Rc,Rh", {}),
+    # Vasiliev & Baumgardt 2021, Gaia EDR3 globular cluster parallaxes.
+    "gcplx": ("J/MNRAS/505/5978/tablea1", "Name,OName,RAJ2000,DEJ2000,plx,e_plx,Nstar", {}),
 }
 
 

@@ -25,7 +25,7 @@ export function StellarHud() {
     ? system.planets[telemetry.focusedPlanet]?.name : undefined;
   const focusName = focusedDeep ? deepDisplayName(deep, focusedDeep) : planetName ?? starName;
   const eyebrow = focusedDeep?.kind === "milky-way" ? "OUR GALAXY" : focusedDeep?.kind === "galaxy" ? "GALAXY"
-    : focusedDeep?.kind === "nebula" ? "NEBULA" : system ? "PLANETARY SYSTEM"
+    : focusedDeep?.kind === "nebula" ? "NEBULA" : focusedDeep?.kind === "cluster" ? "STAR CLUSTER" : system ? "PLANETARY SYSTEM"
       : (telemetry?.fromSunPc ?? 0) > 30_000 ? "INTERGALACTIC SPACE" : "STELLAR NEIGHBOURHOOD";
   const exposure = telemetry?.exposureMag ?? 0;
   const hostCount = catalog?.systems.size ?? 0;
@@ -51,6 +51,8 @@ export function StellarHud() {
               ? "Catalogue position, distance, size and tilt · spiral pattern illustrative"
               : focusedDeep?.kind === "nebula"
                 ? "Published distance and catalogued outline · interior illustrative"
+                : focusedDeep?.kind === "cluster"
+                  ? "Measured distance and population · individual stars sampled statistically"
                 : system?.solarSystem
                   ? "Our planets, placed with JPL's approximate elements · explore them in the Solar System view"
                   : system

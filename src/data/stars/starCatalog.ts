@@ -11,6 +11,9 @@
  */
 import { parseExoplanetFile, searchPlanets, type ExoplanetData, type PlanetarySystem } from "./exoplanets";
 import { solarPlanetarySystem } from "./solarSystemPlanets";
+import { celestialService } from "../../services/api";
+
+const text = (buffer: ArrayBuffer) => new TextDecoder().decode(buffer);
 
 export const STAR_RECORD_BYTES = 20;
 const HEADER_BYTES = 16;
@@ -124,24 +127,22 @@ export function mergeExoplanets(base: StarCatalog, data: ExoplanetData): StarCat
 let pending: Promise<StarCatalog> | null = null;
 
 /** The exoplanet systems file; star mode still works (without planets) if it is unavailable. */
-function loadExoplanetFile(baseUrl: string): Promise<unknown> {
-  return fetch(`${baseUrl}stars/exoplanets.json`)
-    .then((response) => (response.ok ? response.json() as Promise<unknown> : null))
+function loadExoplanetFile(): Promise<unknown> {
+  return celestialService.getCatalogueFile("stars/exoplanets.json")
+    .then((buffer) => JSON.parse(text(buffer)) as unknown)
     .catch(() => null);
 }
 
-/** Fetch and parse the catalogue once per page; ~2.2 MB binary, names index and exoplanets. */
-export function loadStarCatalog(baseUrl = "/"): Promise<StarCatalog> {
+/**
+ * Load and parse the catalogue once per page (~2.2 MB binary, names index and exoplanets),
+ * through the CelestialService: bundled files, or the backend's database in HTTP mode.
+ */
+export function loadStarCatalog(): Promise<StarCatalog> {
   pending ??= Promise.all([
-    fetch(`${baseUrl}stars/hyg-v41.bin`).then((response) => {
-      if (!response.ok) throw new Error(`Star catalogue unavailable (${response.status}).`);
-      return response.arrayBuffer();
-    }),
-    fetch(`${baseUrl}stars/hyg-v41-names.json`).then((response) => {
-      if (!response.ok) throw new Error(`Star names unavailable (${response.status}).`);
-      return response.json() as Promise<{ names: Record<string, StarNames>; attribution: string; license: string }>;
-    }),
-    loadExoplanetFile(baseUrl),
+    celestialService.getCatalogueFile("stars/hyg-v41.bin"),
+    celestialService.getCatalogueFile("stars/hyg-v41-names.json")
+      .then((buffer) => JSON.parse(text(buffer)) as { names: Record<string, StarNames>; attribution: string; license: string }),
+    loadExoplanetFile(),
   ]).then(([buffer, meta, exoplanets]) => {
     let catalog = parseStarCatalog(buffer, meta.names, meta.attribution, meta.license);
     if (exoplanets !== null) {
@@ -164,13 +165,9 @@ export function loadStarCatalog(baseUrl = "/"): Promise<StarCatalog> {
 
 let spectra: Promise<string[]> | null = null;
 /** Spectral types (one per star), loaded on first need. */
-export function loadSpectralTypes(baseUrl = "/"): Promise<string[]> {
-  spectra ??= fetch(`${baseUrl}stars/hyg-v41-spect.txt`)
-    .then((response) => {
-      if (!response.ok) throw new Error("Spectral types unavailable.");
-      return response.text();
-    })
-    .then((text) => text.split("\n"))
+export function loadSpectralTypes(): Promise<string[]> {
+  spectra ??= celestialService.getCatalogueFile("stars/hyg-v41-spect.txt")
+    .then((buffer) => text(buffer).split(/\r?\n/))
     .catch((error: unknown) => {
       spectra = null;
       throw error;

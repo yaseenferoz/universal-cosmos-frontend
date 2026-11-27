@@ -15,10 +15,11 @@ import { useStarCatalog } from "./useStarCatalog";
 
 const STAR_SUGGESTIONS = ["Proxima Centauri", "TRAPPIST-1", "Sirius", "51 Pegasi", "Betelgeuse", "HR 8799"];
 const GALAXY_SUGGESTIONS = ["Andromeda Galaxy", "Large Magellanic Cloud", "Triangulum Galaxy", "Whirlpool Galaxy", "Sombrero Galaxy", "Centaurus A", "M 87"];
+const CLUSTER_SUGGESTIONS = ["Pleiades", "Hyades", "Beehive Cluster", "Omega Centauri", "47 Tucanae", "Hercules Cluster", "Jewel Box", "Wild Duck Cluster", "h Persei", "M 4"];
 const NEBULA_SUGGESTIONS = ["Orion Nebula", "Crab Nebula", "Ring Nebula", "Helix Nebula", "Eagle Nebula", "Lagoon Nebula", "Carina Nebula", "Cygnus Loop", "Tarantula Nebula", "Horsehead Nebula"];
 
 /** Which suggestions to offer first (the navigation rail opens the dialog on a collection). */
-export type SearchFocus = "stars" | "galaxies" | "nebulae";
+export type SearchFocus = "stars" | "galaxies" | "nebulae" | "clusters";
 
 type Result = { kind: "star"; star: number; planet: number | null } | { kind: "deep"; ref: DeepRef };
 
@@ -27,9 +28,11 @@ function suggestions(stars: StarCatalog | null, deep: DeepSkyCatalog | null, foc
   const pick = (names: string[]) => deep ? names.flatMap((name) => searchDeepSky(deep, name, 1)).map((ref): Result => ({ kind: "deep", ref })) : [];
   const galaxies: Result[] = [{ kind: "deep", ref: MILKY_WAY_REF }, ...pick(GALAXY_SUGGESTIONS)];
   const nebulae = pick(NEBULA_SUGGESTIONS);
+  const clusters = pick(CLUSTER_SUGGESTIONS);
+  if (focus === "clusters") return [...clusters, ...nebulae.slice(0, 2), ...galaxies.slice(0, 2)];
   if (focus === "galaxies") return [...galaxies, ...nebulae.slice(0, 3), ...starResults.slice(0, 2)];
   if (focus === "nebulae") return [...nebulae, ...galaxies.slice(0, 3), ...starResults.slice(0, 2)];
-  return [...starResults, ...galaxies.slice(0, 4), ...nebulae.slice(0, 4)];
+  return [...starResults, ...galaxies.slice(0, 4), ...nebulae.slice(0, 3), ...clusters.slice(0, 3)];
 }
 
 function deepDetails(catalog: DeepSkyCatalog | null, ref: DeepRef): { subtitle: string; distance: string } {
@@ -42,6 +45,10 @@ function deepDetails(catalog: DeepSkyCatalog | null, ref: DeepRef): { subtitle: 
       distance: distanceText(galaxyDistancePc(g, ref.index)),
     };
   }
+  if (ref.kind === "cluster") {
+    const cluster = catalog.clusters.clusters[ref.index];
+    return { subtitle: [cluster.kind === "open" ? "Open cluster" : "Globular cluster", ...cluster.names.slice(1, 2)].join(" · "), distance: distanceText(cluster.distancePc) };
+  }
   const nebula = catalog.nebulae.nebulae[ref.index];
   return { subtitle: [NEBULA_KIND_LABEL[nebula.kind], ...nebula.names.slice(1, 2)].join(" · "), distance: distanceText(nebula.distancePc) };
 }
@@ -50,7 +57,8 @@ export function StarSearchDialog() {
   const [query, setQuery] = useState("");
   const catalog = useStarCatalog();
   const deep = useDeepSkyCatalog();
-  const focus = useExplorationStore((s) => (s.collection === "Galaxies" || s.collection === "Deep space" ? "galaxies" : s.collection === "Nebulae" ? "nebulae" : "stars"));
+  const focus = useExplorationStore((s): SearchFocus => (s.collection === "Galaxies" ? "galaxies" : s.collection === "Nebulae" ? "nebulae"
+    : s.collection === "Star clusters" ? "clusters" : "stars"));
   const input = useRef<HTMLInputElement>(null);
   useEffect(() => input.current?.focus(), []);
   const results = useMemo<Result[]>(() => {
@@ -75,6 +83,7 @@ export function StarSearchDialog() {
     catalog && `${(catalog.exoplanets?.planetCount ?? 0).toLocaleString("en-US")} PLANETS`,
     deep && `${deep.galaxies.count.toLocaleString("en-US")} GALAXIES`,
     deep && `${deep.nebulae.nebulae.length.toLocaleString("en-US")} NEBULAE`,
+    deep && deep.clusters.clusters.length > 0 && `${deep.clusters.clusters.length.toLocaleString("en-US")} CLUSTERS`,
   ].filter(Boolean);
   return (
     <Modal title="Where to?" eyebrow={counts.length ? `SEARCH ${counts.join(" · ")}` : "SEARCH THE UNIVERSE"} className="search-dialog">
@@ -82,7 +91,7 @@ export function StarSearchDialog() {
         <label className="search-input">
           <Search size={16} aria-hidden="true" />
           <input ref={input} value={query} onChange={(event) => setQuery(event.target.value)}
-            placeholder="Sirius, TRAPPIST-1 e, Andromeda, M 42, Crab Nebula…" aria-label="Search stars, planets, galaxies and nebulae" />
+            placeholder="Sirius, TRAPPIST-1 e, Andromeda, M 42, Pleiades…" aria-label="Search stars, planets, galaxies, nebulae and clusters" />
         </label>
       </form>
       <div className="search-results" aria-label="Search results" role="listbox">

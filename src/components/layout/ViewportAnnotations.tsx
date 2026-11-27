@@ -1,4 +1,4 @@
-import { ephemerisCoverage } from "../../engine/ephemeris/analyticEphemeris";
+import { positionModelAt } from "../../engine/ephemeris/positionModel";
 import { Info, MoonStar, MousePointer2 } from "lucide-react";
 import { useExplorationStore } from "../../stores/explorationStore";
 import { useRenderingStore } from "../../stores/renderingStore";
@@ -8,6 +8,8 @@ export function ViewportAnnotations() {
   const objects = useExplorationStore((s) => s.objects);
   const mode = useExplorationStore((s) => s.viewMode);
   const imagery = useExplorationStore((s) => s.imageryStatus);
+  const days = useExplorationStore((s) => s.simulationDays);
+  const epoch = useExplorationStore((s) => s.simulationEpoch);
   const object = objects.find((item) => item.id === selectedId);
   const sunlit = useRenderingStore((s) => s.telemetry.targetSunlitFraction);
   const casterId = useRenderingStore((s) => s.telemetry.targetShadowCasterId);
@@ -31,11 +33,9 @@ export function ViewportAnnotations() {
         <p>
           {mode === "overview"
             ? "Sizes exaggerated · Distances compressed"
-            : object && !object.parentId
-              ? "Physical scale · Solar System reference body"
-              : object && ephemerisCoverage(object.id)
-                ? "Physical scale · JPL-based positions"
-                : "Physical scale · Modeled circular orbit"}
+            : object
+              ? `Physical scale · ${positionModelAt(object, Date.parse(epoch) + days * 86_400_000).caption}`
+              : "Physical scale"}
         </p>
         {eclipsed && (
           <p className="eclipse-notice" role="status">

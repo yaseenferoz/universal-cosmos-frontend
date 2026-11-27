@@ -1,15 +1,19 @@
-﻿import type {
-  CelestialObject,
-  CelestialService,
-  EphemerisResult,
-  ObjectId,
-  RequestOptions,
-  SolarSystem,
+import {
+  CATALOGUE_FILES,
+  type CatalogueFile,
+  type CelestialObject,
+  type CelestialService,
+  type EphemerisResult,
+  type ObjectId,
+  type RequestOptions,
+  type SolarSystem,
 } from "../../types/celestial";
 import { assertActive, CelestialApiError, normalizeEpoch } from "./errors";
 import {
+  applyBackendMeasurements,
   isSupportedSlug,
   mapBackendIdentity,
+  parseBackendMeasurements,
   parseBackendCatalog,
   parseBackendIdentities,
   parseBackendIdentity,
@@ -115,6 +119,27 @@ export class HttpCelestialService implements CelestialService {
     return { data: body.data, meta: record(body.meta, "response metadata") };
   }
 
+  /**
+   * A catalogue file rebuilt by the backend from its database (same compact format as the
+   * bundled file; raw bytes, not the JSON envelope). Revalidated with ETags by the browser.
+   */
+  async getCatalogueFile(path: CatalogueFile, options?: RequestOptions): Promise<ArrayBuffer> {
+    assertActive(options?.signal);
+    if (!CATALOGUE_FILES.includes(path)) throw new CelestialApiError("Unknown catalogue file.", 404);
+    let response: Response;
+    try {
+      response = await this.fetcher(`${this.baseUrl}/api/v1/datasets/files/${path}`, { method: "GET", signal: options?.signal });
+    } catch (error) {
+      if (options?.signal?.aborted || (error instanceof DOMException && error.name === "AbortError")) throw error;
+      throw new CelestialApiError("The celestial service could not be reached. Check the backend URL and connection.", null, { cause: error });
+    }
+    if (!response.ok) {
+      const detail = response.status === 404 ? " The catalogue has not been imported into the backend (npm run ingest -- dataset)." : "";
+      throw new CelestialApiError(`The celestial service returned HTTP ${response.status} for ${path}.${detail}`, response.status);
+    }
+    return response.arrayBuffer();
+  }
+
   private async loadCatalog(options?: RequestOptions): Promise<BackendCatalog> {
     assertActive(options?.signal);
     if (this.catalog) return this.catalog;
@@ -122,6 +147,17 @@ export class HttpCelestialService implements CelestialService {
     // Concurrent callers retain independent abort signals; only successful results are cached.
     const payload = await this.request("/systems/solar", options);
     const catalog = parseBackendCatalog(payload.data);
+    // Reference measurements arrive with each body in the same response; bodies without them
+    // (or with unexpected units) keep their bundled reference values.
+    const listed = record(payload.data, "Solar System").objects;
+    const measurements = new Map((Array.isArray(listed) ? listed : []).flatMap((entry) => {
+      const item = typeof entry === "object" && entry !== null ? (entry as { slug?: unknown; measurements?: unknown }) : {};
+      return typeof item.slug === "string" && item.measurements ? [[item.slug, parseBackendMeasurements({ measurements: item.measurements })] as const] : [];
+    }));
+    catalog.objects = catalog.objects.map((object) => {
+      const m = object.backendId ? measurements.get(object.id) : undefined;
+      return m ? applyBackendMeasurements(object, m) : object;
+    });
     assertActive(options?.signal);
     this.catalog = catalog;
     return catalog;
@@ -153,7 +189,7 @@ export class HttpCelestialService implements CelestialService {
         throw new CelestialApiError(
           "The celestial API returned a different object than requested.",
         );
-      return mapBackendIdentity(detail, catalog);
+      return applyBackendMeasurements(mapBackendIdentity(detail, catalog), parseBackendMeasurements(payload.data));
     } catch (error) {
       if (error instanceof CelestialApiError && error.status === 404)
         return null;
