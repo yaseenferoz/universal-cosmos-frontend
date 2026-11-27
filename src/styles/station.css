@@ -41,26 +41,36 @@
 .station-movement button { touch-action: none; min-width: 42px; }
 .station-movement span { font-size: 11px; padding: 0 8px; white-space: nowrap; color: #b3c4d5; }
 .station-caption { position: absolute; bottom: 20px; left: 28px; right: 28px; display: flex; justify-content: space-between; gap: 10px; font-size: 9px; letter-spacing: .13em; color: #b2c0cd; pointer-events: none; text-shadow: 0 1px 5px #000; }
-@media (max-width: 700px) {
-  .station-header { inset: 10px 10px auto; padding: 12px; gap: 8px; }
-  .station-header > div:first-child { flex-basis: 100%; }
-  .station-header { flex-wrap: wrap; }
-  .station-header .eyebrow { font-size: 7px; }
-  .station-header button { font-size: 11px; padding: 8px; }
-  .station-panel { left: 10px; top: 146px; width: 240px; max-height: calc(100% - 265px); padding: 12px; }
-  .station-panel h2 { font-size: 18px; margin-top: 14px; }
-  .station-movement { bottom: 47px; gap: 3px; padding: 7px; }
+/* Phones in either orientation: a one-row header with icon buttons, larger touch targets,
+   and controls that start closed (see StationExperience) so the station fills the screen. */
+@media (max-width: 700px), (max-height: 550px) {
+  .station-header { inset: max(8px, env(safe-area-inset-top)) 8px auto; flex-wrap: nowrap; gap: 6px; padding: 6px 6px 6px 14px; border-radius: 12px; }
+  .station-header .eyebrow { display: none; }
+  .station-header h1 { margin: 0; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .station-header button { min-width: 44px; padding: 8px 10px; }
+  .station-button-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .station-experience button, .station-experience select { min-height: 44px; }
+  .station-panel { padding: 14px; overscroll-behavior: contain; }
+  .station-panel h2 { font-size: 17px; margin: 14px 0 6px; }
+  .station-panel p { line-height: 1.55; }
+  .station-panel label { margin: 14px 0 6px; }
+  .station-presets button { flex: 1 1 auto; }
+  .station-orbit-actions { flex-wrap: wrap; }
+  .station-orbit-actions select { min-width: 120px; }
   .station-movement span { display: none; }
-  .station-caption { left: 12px; right: 12px; font-size: 7px; }
-  .station-caption span { display: none; }
+  .station-movement button { min-width: 48px; min-height: 48px; padding: 0; }
+  .station-caption { left: 14px; right: 14px; bottom: max(8px, env(safe-area-inset-bottom)); font-size: 7px; }
+  .station-caption span, .has-open-controls .station-caption { display: none; }
+  .station-status { bottom: 96px; }
 }
+/* Portrait phones: the controls are a bottom sheet, and the float pad waits until it closes. */
+@media (max-width: 700px) and (min-height: 551px) {
+  .station-panel { top: auto; left: 8px; right: 8px; bottom: max(8px, env(safe-area-inset-bottom)); width: auto; max-height: 48dvh; border-radius: 14px; }
+  .station-panel ~ .station-movement { display: none; }
+  .station-movement { bottom: max(28px, calc(env(safe-area-inset-bottom) + 20px)); gap: 4px; padding: 6px; }
+}
+/* Landscape phones: the controls are a side panel and the float pad sits at the right. */
 @media (max-height: 550px) {
-  .station-header { top: 8px; padding: 8px 14px; }
-  .station-header h1 { font-size: 16px; }
-  .station-panel { top: 82px; max-height: calc(100% - 150px); padding: 12px; width: 260px; }
-  .station-movement { left: auto; right: 20px; transform: none; bottom: 40px; }
-  .station-movement span { display: none; }
-}
-@media (max-width: 700px) and (max-height: 550px) {
-  .station-panel { top: 136px; max-height: calc(100% - 210px); }
+  .station-panel { top: 66px; left: 8px; bottom: 8px; width: min(290px, 42vw); max-height: none; }
+  .station-movement { left: auto; right: 12px; transform: none; bottom: 12px; gap: 4px; padding: 6px; }
 }

@@ -1,11 +1,38 @@
-import { ACESFilmicToneMapping, AmbientLight, DirectionalLight, Euler, Group, HemisphereLight, PerspectiveCamera, Quaternion, Scene, Vector3, WebGLRenderer } from "three";
+import { ACESFilmicToneMapping, AmbientLight, DirectionalLight, Euler, Group, HemisphereLight, PCFShadowMap, PerspectiveCamera, PMREMGenerator, PointLight, Quaternion, Scene, Vector3, WebGLRenderer, type WebGLRenderTarget } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import type { Quality } from "../../types/celestial";
 import { disposeStationObject, loadStationExterior, loadStationInterior } from "./StationAssets";
-import { moveInStation, stationModules, stationPoint, type StationModuleId } from "./StationLayout";
+import { moduleLampPositions, moveInStation, stationModules, stationPoint, type StationModuleId } from "./StationLayout";
 import { StationBackdrop } from "./StationBackdrop";
 import { nearestDaylightPass, STATION_ORBIT_PERIOD_SECONDS, StationOrbitModel } from "./StationOrbit";
+import { StationEnvironment } from "./StationEnvironment";
+import { STATION_SUNLIGHT_INTENSITY as SUNLIGHT_INTENSITY, stationSunlight } from "./StationSun";
+import { DEFAULT_STATION_ORBIT_SPEED, STATION_ORBIT_SPEEDS } from "./stationSpeeds";
 import { stationRegions } from "../../data/stationRegions";
+
+/**
+ * Cabin lighting (illustrative): LED lamps along each module's overhead give light that falls off
+ * toward the ends and corners; a dim fill stands in for light bounced off the white racks.
+ */
+const INTERIOR_EXPOSURE = 0.85;
+const INTERIOR_ENVIRONMENT_INTENSITY = 0.22;
+/** Module lamps, candela, with physical inverse-square falloff (decay 2) cut off at the range. */
+const MODULE_LAMP_INTENSITY = 2.4;
+const MODULE_LAMP_RANGE_M = 7;
+
+function interiorLights(quality: Quality): Group {
+  const lights = new Group();
+  // Low quality has no per-module lamps, so the fill carries the cabin alone.
+  lights.add(new HemisphereLight("#f3f6ff", "#62666e", quality === "low" ? 1.1 : 0.5));
+  if (quality === "low") return lights;
+  for (const position of moduleLampPositions()) {
+    const lamp = new PointLight("#fff3e6", MODULE_LAMP_INTENSITY, MODULE_LAMP_RANGE_M, 2);
+    lamp.position.copy(position);
+    lights.add(lamp);
+  }
+  return lights;
+}
 
 export type StationMode = "exterior" | "interior";
 export interface StationState {
@@ -36,10 +63,11 @@ export class StationEngine {
   private readonly backdrop: StationBackdrop;
   private readonly orbit = new StationOrbitModel();
   private orbitSeconds = 0;
-  private orbitSpeed = 60;
+  private orbitSpeed: number = DEFAULT_STATION_ORBIT_SPEED;
   private orbitPlaying = true;
   private orbitReportTime = 0;
-  private readonly stationSunlight = new DirectionalLight("#fff7e9", 3.5);
+  private readonly stationSunlight = new DirectionalLight("#fff2e7", SUNLIGHT_INTENSITY);
+  private readonly environment: StationEnvironment;
   private readonly abort = new AbortController();
   private readonly observer: ResizeObserver;
   private readonly exteriorLight = new Group();
@@ -50,8 +78,9 @@ export class StationEngine {
   private exterior: Group | null = null;
   private interior: Group | null = null;
   private interiorRequest: Promise<Group> | null = null;
+  private interiorEnvironment: WebGLRenderTarget | null = null;
   private state: StationState = { mode: "exterior", status: "loading", message: "Loading NASA station model…", moduleId: "node_1", orbit: {
-    playing: true, speed: 60, elapsedSeconds: 0, progress: 0, latitudeDeg: 0, longitudeDeg: 20, sunAltitudeDeg: 45,
+    playing: true, speed: DEFAULT_STATION_ORBIT_SPEED, elapsedSeconds: 0, progress: 0, latitudeDeg: 0, longitudeDeg: 20, sunAltitudeDeg: 45,
   } };
   private readonly held = new Set<StationMotion>();
   private readonly keyboard = new Set<StationMotion>();
@@ -70,6 +99,15 @@ export class StationEngine {
     this.renderer.toneMapping = ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1;
     this.renderer.autoClear = false;
+    // The truss, radiators and arrays shade the modules (self-shadowing from the Sun).
+    this.renderer.shadowMap.enabled = quality !== "low";
+    this.renderer.shadowMap.type = PCFShadowMap;
+    this.stationSunlight.castShadow = this.renderer.shadowMap.enabled;
+    const shadowSize = quality === "high" ? 4096 : 2048;
+    this.stationSunlight.shadow.mapSize.set(shadowSize, shadowSize);
+    Object.assign(this.stationSunlight.shadow.camera, { left: -62, right: 62, top: 62, bottom: -62, near: 60, far: 320 });
+    this.stationSunlight.shadow.bias = -0.0004;
+    this.stationSunlight.shadow.normalBias = 0.04;
     const canvas = this.renderer.domElement;
     canvas.tabIndex = 0;
     canvas.setAttribute("aria-label", "3D ISS viewport. Drag to look. Inside, use W A S D or arrows to float, Q and E to move down and up.");
@@ -84,8 +122,11 @@ export class StationEngine {
     this.controls.enablePan = false;
     this.controls.minDistance = 65;
     this.controls.maxDistance = 350;
-    this.exteriorLight.add(this.stationSunlight, new HemisphereLight("#c4d8f0", "#405f87", 1.7));
-    this.interiorLight.add(new AmbientLight("#ffffff", 1.8));
+    // In orbit there is no sky light: the Sun, and earthshine from below (the environment map).
+    // A faint fill keeps shadowed hardware from going fully black on screen.
+    this.exteriorLight.add(this.stationSunlight, new AmbientLight("#a9bad1", 0.06));
+    this.environment = new StationEnvironment(this.renderer);
+    this.interiorLight.add(interiorLights(quality));
     this.interiorLight.visible = false;
     this.scene.add(this.exteriorLight, this.interiorLight);
     this.backdrop = new StationBackdrop(quality, this.renderer.capabilities.maxTextureSize);
@@ -126,12 +167,28 @@ export class StationEngine {
     const sample = this.orbit.sample(this.orbitSeconds);
     this.backdrop.setOrbit(sample);
     this.stationSunlight.position.copy(sample.sunDirection).multiplyScalar(180);
-    // Earth occults the Sun below roughly -20° apparent altitude at 400 km.
-    this.stationSunlight.intensity = 3.5 * Math.max(0, Math.min(1, (sample.sunDirection.y + 0.34) / 0.06));
+    // Earth occults the Sun below its limb (19.8° below the horizontal at 400 km); grazing light reddens.
+    const sunlight = stationSunlight(sample.sunDirection);
+    this.stationSunlight.color.setRGB(...sunlight.color);
+    this.stationSunlight.intensity = SUNLIGHT_INTENSITY * sunlight.intensity;
+    if (this.environment.update(sample.sunDirection)) this.applyEnvironment();
+  }
+  /** Exterior: earthshine map that follows the Sun. Interior: a soft room map for cabin reflections. */
+  private applyEnvironment(): void {
+    const inside = this.interiorLight.visible;
+    if (inside && !this.interiorEnvironment) {
+      const generator = new PMREMGenerator(this.renderer);
+      const room = new RoomEnvironment();
+      this.interiorEnvironment = generator.fromScene(room, 0.04);
+      room.dispose(); generator.dispose();
+    }
+    this.scene.environment = inside ? this.interiorEnvironment?.texture ?? null : this.environment.texture;
+    this.scene.environmentIntensity = inside ? INTERIOR_ENVIRONMENT_INTENSITY : 1;
+    this.renderer.toneMappingExposure = inside ? INTERIOR_EXPOSURE : 1;
   }
   setOrbitPlaying(playing: boolean): void { this.orbitPlaying = playing; this.publish({ orbit: this.orbitTelemetry() }); }
   setOrbitSpeed(speed: number): void {
-    if (![1, 60, 300, 1200].includes(speed)) return;
+    if (!(STATION_ORBIT_SPEEDS as readonly number[]).includes(speed)) return;
     this.orbitSpeed = speed; this.publish({ orbit: this.orbitTelemetry() });
   }
   setOrbitProgress(progress: number): void {
@@ -159,7 +216,7 @@ export class StationEngine {
       if (!this.interior) {
         this.interiorRequest ??= loadStationInterior(this.abort.signal, (message) => {
           if (!this.disposed && this.state.mode === "interior") this.publish({ message });
-        });
+        }, Math.min(8, this.renderer.capabilities.getMaxAnisotropy()));
         const interior = await this.interiorRequest;
         if (this.disposed) { disposeStationObject(interior); return; }
         if (!this.interior) { this.interior = interior; interior.visible = false; this.scene.add(interior); }
@@ -168,6 +225,7 @@ export class StationEngine {
       this.interior.visible = true;
       if (this.exterior) this.exterior.visible = false;
       this.interiorLight.visible = true; this.exteriorLight.visible = false;
+      this.applyEnvironment();
       this.camera.fov = 68; this.camera.updateProjectionMatrix();
       this.visitModule(id);
       this.publish({ status: "ready", message: "NASA Astrobee interior · reconstructed configuration" });
@@ -181,6 +239,7 @@ export class StationEngine {
     if (this.interior) this.interior.visible = false;
     if (this.exterior) this.exterior.visible = true;
     this.interiorLight.visible = false; this.exteriorLight.visible = true;
+    this.applyEnvironment();
     this.controls.enabled = true;
     this.resetExterior();
     this.publish({ mode: "exterior", status: this.exterior ? "ready" : "loading", message: this.exterior ? "NASA exterior model · drag to orbit · scroll to approach" : "Loading NASA station model…" });
@@ -278,7 +337,7 @@ export class StationEngine {
     if (this.state.mode !== "exterior") { this.sunLabel.hidden = true; return; }
     this.inverseCamera.copy(this.camera.quaternion).invert();
     const sun = this.orbit.snapshot.sunDirection;
-    if (sun.y < -0.34) { this.sunLabel.hidden = true; return; }
+    if (stationSunlight(sun).intensity <= 0) { this.sunLabel.hidden = true; return; }
     this.skyDirection.copy(sun).applyQuaternion(this.inverseCamera);
     const direction = this.skyDirection;
     if (direction.z >= 0) { this.sunLabel.hidden = true; return; }
@@ -305,6 +364,6 @@ export class StationEngine {
     document.removeEventListener("visibilitychange", this.visibilityChanged);
     if (this.exterior) disposeStationObject(this.exterior);
     if (this.interior) disposeStationObject(this.interior);
-    this.backdrop.dispose(); this.renderer.dispose(); this.renderer.forceContextLoss(); canvas.remove(); this.sunLabel.remove();
+    this.backdrop.dispose(); this.environment.dispose(); this.interiorEnvironment?.dispose(); this.renderer.dispose(); this.renderer.forceContextLoss(); canvas.remove(); this.sunLabel.remove();
   }
 }

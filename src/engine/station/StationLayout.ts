@@ -24,6 +24,20 @@ export const stationModules: readonly StationModule[] = [
   { id: "cupola", name: "Cupola", role: "Earth observation windows", origin: [-4.4586144, -6.8356992, 6.8434244], rpy: [0, 0, 0], scale: 1, viewpoint: [-4.46, -6.84, 7.2], look: [0.05, 0, 1] },
 ] as const;
 
+/** Long modules get a lamp at each end of the visited span instead of one in the middle. */
+const LAMP_SPACING_M = 2.5;
+/** Lamps sit slightly toward the overhead (+Y), where the ISS mounts its light assemblies. */
+const LAMP_OVERHEAD_OFFSET_M = 0.35;
+
+/** Cabin lamp positions (render frame): each module's origin and viewpoint, or their midpoint when close. */
+export function moduleLampPositions(): Vector3[] {
+  return stationModules.flatMap((module) => {
+    const origin = stationPoint(...module.origin), viewpoint = stationPoint(...module.viewpoint);
+    const points = origin.distanceTo(viewpoint) > LAMP_SPACING_M ? [origin, viewpoint] : [origin.lerp(viewpoint, 0.5)];
+    return points.map((point) => point.setY(point.y + LAMP_OVERHEAD_OFFSET_M));
+  });
+}
+
 const volumes = keepins.sequence.map(([x0, y0, z0, x1, y1, z1]) => ({
   min: stationPoint(x0, y0, z1), max: stationPoint(x1, y1, z0),
 }));

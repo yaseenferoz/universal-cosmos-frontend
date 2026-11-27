@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowDown, ArrowUp, ArrowRight, ChevronUp, ChevronDown, DoorOpen, Pause, Play, RotateCcw, Satellite, SkipBack, SkipForward } from "lucide-react";
+import { ArrowLeft, ArrowDown, ArrowUp, ArrowRight, ChevronUp, ChevronDown, DoorOpen, Pause, Play, RotateCcw, Satellite, SkipBack, SkipForward, SlidersHorizontal, X } from "lucide-react";
+import { COMPACT_SCREEN_QUERY, useMediaQuery } from "../../hooks/useMediaQuery";
 import { useExplorationStore } from "../../stores/explorationStore";
 import { useStationStore } from "../../stores/stationStore";
 import { stationModules, type StationModuleId } from "../../engine/station/StationLayout";
 import { stationRegions } from "../../data/stationRegions";
 import type { StationEngine, StationMotion, StationState } from "../../engine/station/StationEngine";
+import { DEFAULT_STATION_ORBIT_SPEED, STATION_ORBIT_SPEEDS } from "../../engine/station/stationSpeeds";
 
 const initial: StationState = { mode: "exterior", status: "loading", message: "Preparing station visit…", moduleId: "node_1", orbit: {
-  playing: true, speed: 60, elapsedSeconds: 0, progress: 0, latitudeDeg: 0, longitudeDeg: 20, sunAltitudeDeg: 45,
+  playing: true, speed: DEFAULT_STATION_ORBIT_SPEED, elapsedSeconds: 0, progress: 0, latitudeDeg: 0, longitudeDeg: 20, sunAltitudeDeg: 45,
 } };
 const coordinate = (degrees: number, positive: string, negative: string) => `${Math.abs(degrees).toFixed(1)}° ${degrees >= 0 ? positive : negative}`;
 export function StationExperience() {
@@ -16,7 +18,11 @@ export function StationExperience() {
   const quality = useExplorationStore((state) => state.quality);
   const [state, setState] = useState(initial);
   const [retry, setRetry] = useState(0);
-  const [controlsOpen, setControlsOpen] = useState(true);
+  // On phones the controls start closed so the station fills the screen; they open as a sheet.
+  const compact = useMediaQuery(COMPACT_SCREEN_QUERY);
+  const [controlsOpen, setControlsOpen] = useState(() => !matchMedia(COMPACT_SCREEN_QUERY).matches);
+  /** After picking a view on a phone, close the sheet so the result is visible. */
+  const chosen = () => { if (compact) setControlsOpen(false); };
   const exit = () => {
     useExplorationStore.getState().selectObject("earth");
     useStationStore.getState().leave();
@@ -54,35 +60,38 @@ export function StationExperience() {
     onKeyUp={() => engine.current?.setMotion(motion, false)}
     onBlur={() => engine.current?.setMotion(motion, false)}
   >{icon}</button>;
-  return <main className="station-experience" aria-label="International Space Station visit">
+  return <main className={`station-experience${controlsOpen ? " has-open-controls" : ""}`} aria-label="International Space Station visit">
     <div ref={viewport} className="station-viewport" />
     <header className="station-header glass">
       <div><span className="eyebrow">UNIVERSAL COSMOS / ORBITAL LABORATORY</span><h1>International Space Station</h1></div>
-      <button aria-expanded={controlsOpen} aria-controls="station-controls" onClick={() => setControlsOpen((open) => !open)}>{controlsOpen ? "Hide controls" : "Show controls"}</button>
-      <button onClick={exit}><ArrowLeft size={16} /> Return to Earth</button>
+      <button aria-expanded={controlsOpen} aria-controls="station-controls" aria-label={controlsOpen ? "Hide controls" : "Show controls"} onClick={() => setControlsOpen((open) => !open)}>
+        {controlsOpen ? <X size={16} aria-hidden="true" /> : <SlidersHorizontal size={16} aria-hidden="true" />}
+        <span className="station-button-text">{controlsOpen ? "Hide controls" : "Show controls"}</span>
+      </button>
+      <button onClick={exit} aria-label="Return to Earth"><ArrowLeft size={16} aria-hidden="true" /> <span className="station-button-text">Return to Earth</span></button>
     </header>
     {controlsOpen && <section id="station-controls" className="station-panel glass" aria-label="Station exploration controls">
       <div className="station-tabs" role="group" aria-label="Visit mode">
-        <button aria-pressed={state.mode === "exterior"} onClick={() => engine.current?.showExterior()}><Satellite size={15} /> Exterior</button>
-        <button aria-pressed={state.mode === "interior"} disabled={state.status === "loading"} onClick={() => void engine.current?.showInterior()}><DoorOpen size={15} /> Enter station</button>
+        <button aria-pressed={state.mode === "exterior"} onClick={() => { engine.current?.showExterior(); chosen(); }}><Satellite size={15} /> Exterior</button>
+        <button aria-pressed={state.mode === "interior"} disabled={state.status === "loading"} onClick={() => { void engine.current?.showInterior(); chosen(); }}><DoorOpen size={15} /> Enter station</button>
       </div>
       {state.mode === "exterior" ? <>
         <h2>400 km above Earth</h2>
         <p>Explore NASA’s station model from every angle. Scroll or pinch to approach.</p>
         <div className="station-presets">
-          <button onClick={() => engine.current?.exteriorView("front")}>Front</button>
-          <button onClick={() => engine.current?.exteriorView("arrays")}>Solar arrays</button>
-          <button onClick={() => engine.current?.exteriorView("earth")}>Earth backdrop</button>
-          <button onClick={() => engine.current?.exteriorView("sun")}>Sunward view</button>
-          <button onClick={() => engine.current?.resetExterior()} aria-label="Reset exterior view"><RotateCcw size={14} /></button>
+          <button onClick={() => { engine.current?.exteriorView("front"); chosen(); }}>Front</button>
+          <button onClick={() => { engine.current?.exteriorView("arrays"); chosen(); }}>Solar arrays</button>
+          <button onClick={() => { engine.current?.exteriorView("earth"); chosen(); }}>Earth backdrop</button>
+          <button onClick={() => { engine.current?.exteriorView("sun"); chosen(); }}>Sunward view</button>
+          <button onClick={() => { engine.current?.resetExterior(); chosen(); }} aria-label="Reset exterior view"><RotateCcw size={14} /></button>
         </div>
       </> : <>
         <label htmlFor="station-module">EXPLORE A MODULE</label>
-        <select id="station-module" value={state.moduleId} disabled={state.status !== "ready"} onChange={(event) => engine.current?.visitModule(event.target.value as StationModuleId)}>
+        <select id="station-module" value={state.moduleId} disabled={state.status !== "ready"} onChange={(event) => { engine.current?.visitModule(event.target.value as StationModuleId); chosen(); }}>
           {stationModules.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.role}</option>)}
         </select>
         <h2>{module.name}</h2><p>{module.role}. Drag to look; float through the connected hatches.</p>
-        <button disabled={state.status !== "ready"} onClick={() => engine.current?.visitModule("cupola")}>Go to Cupola · Earth view</button>
+        <button disabled={state.status !== "ready"} onClick={() => { engine.current?.visitModule("cupola"); chosen(); }}>Go to Cupola · Earth view</button>
       </>}
       <div className="station-orbit-controls">
         <h2>Earth observation</h2>
@@ -93,7 +102,7 @@ export function StationExperience() {
           </button>
           <label htmlFor="station-orbit-speed">Speed</label>
           <select id="station-orbit-speed" value={state.orbit.speed} onChange={(event) => engine.current?.setOrbitSpeed(Number(event.target.value))}>
-            <option value={1}>1×</option><option value={60}>60×</option><option value={300}>300×</option><option value={1200}>1200×</option>
+            {STATION_ORBIT_SPEEDS.map((speed) => <option key={speed} value={speed}>{speed === 1 ? "1× real time" : `${speed}×`}</option>)}
           </select>
         </div>
         <label htmlFor="station-orbit-progress">Position in current orbit</label>
@@ -103,7 +112,7 @@ export function StationExperience() {
           <button onClick={() => engine.current?.skipOrbit(1)} aria-label="Next simulated orbit">Next orbit <SkipForward size={15} /></button>
         </div>
         <label htmlFor="station-region">Jump to next daylight pass near</label>
-        <select id="station-region" defaultValue="" onChange={(event) => { engine.current?.jumpToRegion(event.target.value); event.currentTarget.value = ""; }}>
+        <select id="station-region" defaultValue="" onChange={(event) => { engine.current?.jumpToRegion(event.target.value); event.currentTarget.value = ""; chosen(); }}>
           <option value="" disabled>Choose a region</option>
           {stationRegions.map((region) => <option key={region.id} value={region.id}>{region.name}</option>)}
         </select>

@@ -84,6 +84,7 @@ export function StellarHud() {
             </span>
           </label>
         )}
+        <div className="stellar-actions">
         <button aria-pressed={showHosts} className={showHosts ? "is-active" : undefined}
           title={`Ring the ${hostCount.toLocaleString("en-US")} stars with confirmed planets`}
           onClick={() => useStellarStore.getState().setShowPlanetHosts(!showHosts)}>
@@ -101,6 +102,7 @@ export function StellarHud() {
         <button onClick={() => useExplorationStore.getState().setViewMode("exploration")}>
           <Undo2 size={14} aria-hidden="true" /> <span className="control-text">Back to Solar System</span>
         </button>
+        </div>
       </div>
       <div className="interaction-hint">
         <span>Drag to look · Scroll to travel in/out · Click a star, galaxy or nebula · Double-click to fly</span>

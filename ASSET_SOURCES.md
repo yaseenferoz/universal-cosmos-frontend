@@ -14,6 +14,20 @@ Base imagery verified and downloaded on **2026-11-02**; additional moon maps dow
 
 The executable inventory is [`src/data/imagery.ts`](src/data/imagery.ts). It contains each exact download URL, source page, attribution, usage terms, source dimensions, local variants, color space, processing notes, and limitations. Static files live in `public/textures/`; runtime loading requires no third-party image server. Source downloads remain in ignored `.local/asset-source/`.
 
+### ISS lighting and sky (27 November 2026)
+
+- **The Sun:** a 0.53° disk in the white of a 5772 K blackbody, with limb darkening. The glare, halo and six diffraction spikes are a camera effect, not part of the Sun.
+- **Sunset and sunrise:** Earth hides the Sun below its limb, which is 19.8° below the station's horizontal at 400 km. The visible fraction of the disk sets both the glare and the sunlight. Within 2.5° of the limb, the light is reddened and dimmed as it grazes the atmosphere; this is an approximation of Rayleigh extinction.
+- **Lighting the station:** in daylight the Sun casts real-time shadows across the station. An environment map provides black space above and Earth below, each ground point lit by the Sun, with Earth's albedo of about 0.3. That supplies earthshine and reflections on metal. There is no sky light from above, and the station is dark in Earth's shadow.
+- **Earth:** Blue Marble clouds (a static composite, not live weather) sit about 9 km above the surface, with a contrast curve that drops the map's faint haze values. Black Marble city lights show on the night side only. The high-resolution Africa crop blends into the global map over a soft border.
+- **Atmosphere** (`StationAtmosphere.ts`): single scattering by air and aerosol in an exponential atmosphere, using analytic column depths with no ray marching.
+  - **Inputs:** Rayleigh optical depth from Hansen & Travis (1974) with an 8 km scale height. Aerosol optical depth is 0.12 at 550 nm, with Ångström exponent 1.3 and a 1.2 km scale height.
+  - **Limb:** the glow comes from each line of sight's tangent altitude. It is white near the surface, deep blue higher up and reddened where the sunlight grazes. Over the disk, the same model dims and reddens sunlight on the ground and adds path radiance (aerial perspective).
+  - **Approximations:** an empirical gain stands in for multiple scattering, and the sunlight on a path is evaluated at one effective height. There is no ozone absorption and the aerosol load is fixed. The result is a physically shaped illustration, not radiometry.
+  - **Airglow:** the green line near 95 km on the night limb is real (oxygen, 557.7 nm). It is drawn only in darkness, and its brightness is raised so a station-exposed view shows what long-exposure photographs record.
+- **Station interior:** physically based matte materials on the NASA/IGOAL textures. Lamps sit near each module's overhead, with inverse-square falloff, plus a dim fill and a soft generic room reflection map. Lamp positions and brightness are illustrative, not the ISS lighting layout.
+- **Orbit playback** starts at 1× (real time: one orbit in about 92 minutes).
+
 ## Installed inventory
 
 Dimensions below are pixels. Variant sizes are widths; heights retain the source aspect ratio except the one-row ring profile. A repeated size means the source supplies no additional detail; nothing is upscaled.

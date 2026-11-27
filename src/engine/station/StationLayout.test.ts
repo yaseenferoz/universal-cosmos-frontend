@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Vector3 } from "three";
-import { insideStation, moveInStation, stationModules, stationPoint } from "./StationLayout";
+import { insideStation, moduleLampPositions, moveInStation, stationModules, stationPoint } from "./StationLayout";
 import { ISS_ORBIT_RADIUS_KM, ISS_PERIOD_DAYS } from "../../data/spacecraft";
 import { LocalCelestialService } from "../../services/api/LocalCelestialService";
 import { modeledPositionsKm, modeledRelativePositionKm } from "../coordinates/CoordinateSystem";
@@ -10,6 +10,11 @@ describe("ISS navigation and scientific reference", () => {
   it("places every module viewpoint in NASA's navigable interior", () => {
     for (const module of stationModules) expect(insideStation(stationPoint(...module.viewpoint)), module.name).toBe(true);
     expect(insideStation(new Vector3(100, 100, 100))).toBe(false);
+  });
+  it("hangs every cabin lamp inside the modules, at least one per module", () => {
+    const lamps = moduleLampPositions();
+    expect(lamps.length).toBeGreaterThanOrEqual(stationModules.length);
+    for (const lamp of lamps) expect(insideStation(lamp), lamp.toArray().join(",")).toBe(true);
   });
   it("traverses connected hatches from Unity to Destiny and Harmony", () => {
     const position = stationPoint(-4.46, 0, 4.85);

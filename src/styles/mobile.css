@@ -113,3 +113,25 @@
   .bottom-controls .camera-mode,
   .bottom-controls .reset-view { height: 44px; min-height: 44px; }
 }
+
+/* Landscape phones: the Explore panel already names the body, so the caption would only hide behind it. */
+@media (max-height: 540px) {
+  .has-exploration-controls .scene-caption { display: none; }
+}
+
+/* Touch screens: fingers need targets of about 44px whatever the window size. */
+@media (pointer: coarse) {
+  .scene-switcher button { min-height: 40px; }
+  .search-trigger kbd { display: none; }
+  .bottom-controls .play-button,
+  .bottom-controls .time-reset,
+  .bottom-controls .reset-view { min-width: 44px; }
+}
+@media (pointer: coarse) and (max-height: 540px) {
+  .bottom-controls { height: 50px; }
+  .bottom-controls .play-button,
+  .bottom-controls .time-reset,
+  .bottom-controls .camera-mode,
+  .bottom-controls .reset-view { min-height: 42px; }
+  .bottom-controls .speed-control select { min-height: 30px; }
+}
