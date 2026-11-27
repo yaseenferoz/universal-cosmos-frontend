@@ -21,6 +21,24 @@ describe("measured cube-sphere mesh construction", () => {
     }
   });
 
+  it("carries reconstruction feature material per vertex, and zero for measured terrain", () => {
+    const measured = buildTerrainGeometry({ face: 0, level: 4, x: 3, y: 5 }, 8, testTerrainProvider());
+    const zeros = measured.geometry.getAttribute("terrainMaterial");
+    expect(zeros.count).toBe(measured.geometry.getAttribute("position").count);
+    for (let i = 0; i < zeros.count; i++) expect(zeros.getX(i)).toBe(0);
+    const base = testTerrainProvider();
+    const reconstruction = {
+      ...base,
+      manifest: { ...base.manifest, reconstruction: true },
+      sampleHeight: (lat: number, lon: number) => ({ ...base.sampleHeight(lat, lon), material: lon > 0 ? 1 : 0.25 }),
+    };
+    const tile = buildTerrainGeometry({ face: 0, level: 4, x: 3, y: 5 }, 8, reconstruction);
+    const materials = tile.geometry.getAttribute("terrainMaterial");
+    const values = new Set(Array.from({ length: materials.count }, (_, i) => materials.getX(i)));
+    expect([...values].every((value) => value === 1 || value === 0.25)).toBe(true);
+    measured.geometry.dispose(); tile.geometry.dispose();
+  });
+
   it("shares boundary elevations between independently centered tiles", () => {
     const provider = testTerrainProvider((latitude, longitude) => Math.sin(latitude) * 12 + Math.cos(longitude) * 7);
     const left = buildTerrainGeometry({ face: 0, level: 14, x: 8000, y: 9000 }, 16, provider);

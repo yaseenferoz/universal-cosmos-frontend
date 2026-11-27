@@ -118,3 +118,139 @@ Every solid moon, asteroid, comet and dwarf planet now offers a **demonstration*
 - **Airless worlds** (`src/data/planetaryEnvironments.ts`, synthesized per body): black sky, unfiltered sunlight, stars at night, and the parent planet and sibling moons drawn by the main scene at their ephemeris positions and true sizes (a "Look at <planet>" control turns toward the planet; from the far hemisphere of a tidally locked moon it never rises). Ground colour comes from the body's measured albedo and colour (or its installed map's mean colour). Terrain is `src/services/terrain/crateredRelief.ts`: seeded simple craters (depth/diameter ≈ 0.2, raised rims) at several size octaves over gentle undulation, with relief and landform scale growing with body size and a per-body crater density from imaged geology (saturated Callisto, Rhea, Mimas; resurfaced Europa, Triton; none on volcanic Io). It sits on a spherical datum, so small bodies' real irregular shapes are not represented at ground level.
 - **Titan:** an orange-haze environment informed by Huygens (no solar disk, dim diffuse light, dark pebble plains); lakes, dunes and weather are not modeled.
 - **Giant planets** (`src/engine/effects/GiantPlanetAtmosphere.ts`): cloud-level flight about 15 km (Jupiter, Saturn) or 20 km (Uranus, Neptune) above the visible deck. One full-sky shader ray-traces the deck sphere: band colours are the zonal mean of the installed global map at that latitude; finer cloud structure is procedural (tileable noise, zonally stretched); haze uses each planet's atmospheric scale height (NSSDCA: Jupiter 27 km, Saturn 59.5 km, Uranus 27.7 km, Neptune 19.7 km) with a Chapman-limited airmass, so nadir views stay clear and the horizon hazes out. The sky is a translucent single-scattering approximation (bluish H₂ Rayleigh light over Jupiter and Saturn, cyan where methane absorbs red over Uranus and Neptune); it dims, but does not hide, the Sun, moons and Saturn's rings behind it. Night sides show stars, faint moon/ring light and stochastic lightning glows (observed on Jupiter and Saturn; inferred from radio bursts on Uranus and Neptune). Colours and optical depths are illustrative choices informed by these regimes, not radiative-transfer results.
+
+### Surface classes at landing sites (26 November 2026)
+
+Synthesized landing sites no longer share one look. `src/data/surfaceProfiles.ts` assigns each body a surface class from its imaged geology, and the class drives three things: relief features (`src/services/terrain/surfaceRelief.ts`), ground material (`SurfaceDetailMaterial.ts`) and the rock population (`SurfaceScatter.ts`).
+
+| Class | Bodies | Reference observation | Landing view |
+|---|---|---|---|
+| Rubble pile | asteroids under 1.5 km (Bennu, Ryugu, Itokawa, Didymos, Apophis) | OSIRIS-REx, Hayabusa2, Hayabusa | dense boulders up to ~9 m, partly buried; smooth fine-gravel "seas" |
+| Rocky regolith | larger asteroids, Phobos, Deimos, Ceres, Vesta, captured irregular moons, red TNOs | NEAR at Eros, Dawn | dusty cratered plains, brighter fresh slopes, scattered blocks |
+| Comet | periodic comets | Rosetta at 67P | terraces and cliffs, active pits, dust ponds, rare bright ice glints |
+| Icy cratered | Saturn's, Uranus's and Pluto's mid-size moons | Cassini, Voyager 2, New Horizons | bright ice saturated with craters, angular ice blocks, glossier surface |
+| Ridged ice | Europa, Enceladus | Galileo, Cassini | double ridges with sparse reddish-brown lineae, chaos blocks |
+| Grooved ice | Ganymede | Galileo | swaths of ~3 km grooves beside dark, older terrain |
+| Dark lag | Callisto, Phoebe | Galileo, Cassini | dark lag deposit, frost-capped knobs, saturated craters |
+| Volcanic | Io | Galileo, Voyager | yellow sulphur plains, white SO2 frost, black lava in paterae; no impact craters |
+| Pebble plain | Titan | Huygens | flat dark plain with rounded 3–16 cm ice pebbles, damp channels |
+| Volatile ice | Pluto, Eris, Makemake | New Horizons at Pluto | convection cells, sublimation pits, tholin-stained troughs |
+| Cantaloupe | Triton | Voyager 2 | dimpled terrain, dark plume streaks |
+
+Landform sizes are compressed so each class's signature features fall inside the few-kilometre landing view. Landform heights scale with the body's landform size; Europa's ridges, for example, are 100–300 m high.
+
+Where the body has an installed global map, the ground colour at the landing site is sampled from that map: the site's colour relative to the map mean, at the measured-albedo level (`src/engine/terrain/siteColor.ts`). Landing on Pluto's bright plains or in its dark red region therefore differs. The map's kilometre-scale pixels set only the site colour. All landforms, patterns and rocks are seeded and procedural; they illustrate each class's observed geology and are not a map of the actual site.
+
+## Stars: 3D stellar neighbourhood (26 November 2026)
+
+**Catalogue.** `scripts/prepare-stars.py` converts the [HYG Database v4.1](https://codeberg.org/astronexus/hyg) (David Nash, astronexus.com) into `public/stars/`:
+- `hyg-v41.bin`: 109,401 stars with valid distances (2.2 MB);
+- `hyg-v41-names.json`: 6,767 named stars, with IAU proper names, Bayer/Flamsteed and Gliese designations, and multiple-system links;
+- `hyg-v41-spect.txt`: spectral types.
+
+HYG merges the Hipparcos (new reduction), Yale Bright Star and Gliese catalogues. **Licence: CC BY-SA 4.0.** The derived files are therefore also CC BY-SA 4.0 and must keep this attribution; this does not change the licence of the application code. The source checksum is recorded in `hyg-v41-names.json`.
+
+**Positions and distances.**
+- Positions are J2000 heliocentric Cartesian parsecs, rotated into the engine frame (equatorial → ecliptic → engine axes).
+- Distances come from parallaxes and carry their catalogue uncertainties, which grow quickly beyond a few hundred parsecs.
+- Proper motion is not applied (epoch J2000); for example, Barnard's Star has moved about 4′ since then.
+
+**Rendering.** Star mode (`src/engine/stars/`) is a separate parsec-scale engine with a floating origin, swapped in like the ISS visit.
+- **Brightness:** each star's brightness comes from its absolute magnitude and the camera's true distance: m = M + 5 log₁₀ d − 5, with a user-set limiting magnitude (6.5 = naked eye).
+- **Colour:** B−V gives effective temperature (Ballesteros 2012). That temperature's blackbody spectrum is integrated against the CIE 1931 observer (Wyman et al. 2013).
+- **Physical estimates:** luminosity uses the Torres 2010 bolometric correction and M_bol,☉ = 4.74; radius follows from the Stefan–Boltzmann law. The information panel labels these as estimates.
+- **Resolved disks:** linear limb darkening (u = 0.6) plus an eye/camera glare; there is no granulation, and no corona or stellar atmosphere model.
+- **Not modelled:** binary orbits (companions sit at catalogue positions); stars outside the catalogue (most stars beyond a few hundred parsecs are fainter than its limit); interstellar extinction.
+- **Milky Way:** the background stays the NASA SVS map at infinite distance, so the galaxy's own parallax is not modelled. That matters only over thousands of light-years.
+
+**Sky orientation correction.** The NASA SVS sky assets were built in three.js sphere coordinates, which map equatorial (x, y, z) to (x, z, y): a mirror image with the celestial pole on the ecliptic pole. Before this release the background sky was therefore mirror-reversed and tilted 23.44° relative to the planets: bright stars were 2.5–16° from their true directions as seen from any planet. `DeepSky` now mirrors the texture coordinate and rotates the dome by the obliquity, and `BrightStarField` converts its directions (`src/engine/effects/skyOrientation.ts`). Tests check Sirius, Canopus, Arcturus, Vega, Capella and Rigil Kentaurus against their J2000 RA/Dec, within 0.3° for the map peaks and 0.05° for the catalogue.
+
+## Exoplanet systems (26 November 2026)
+
+**Source.** `scripts/prepare-exoplanets.py` reads the NASA Exoplanet Archive's *Planetary Systems Composite Parameters* table (`pscomppars`: one row per confirmed planet) through its TAP service. It writes `public/stars/exoplanets.json`: 6,447 planets in 4,837 systems from the archive table retrieved on 26 November 2026, about 430 kB gzipped. The query, retrieval date and source checksum are recorded in the file. Run `python scripts/prepare-exoplanets.py --refresh` to update it. The archive asks for this acknowledgement:
+
+> This research has made use of the NASA Exoplanet Archive, which is operated by the California Institute of Technology, under contract with the National Aeronautics and Space Administration under the Exoplanet Exploration Program.
+
+**Hosts.**
+- **HYG hosts:** 909 archive host names match HYG stars, by Hipparcos number (802), HD number (53) or position (54). The position match uses HYG proper motion carried to epoch 2016, within 1.5′, with distance and magnitude agreement. Two pairs of host names are the same HYG star, so these give 907 systems, which keep their HYG position.
+- **Archive-only hosts:** the other 3,930 hosts are mostly faint Kepler, K2, TESS and M-dwarf hosts that are not in HYG. They are added after the HYG stars, placed from the archive's RA, Dec and distance. Their absolute magnitude is computed from V and distance, or from luminosity, radius and temperature, Gaia G, or (for 276 microlensing hosts with no photometry) a main-sequence mass relation; the star panel says which.
+- **Stellar parameters:** for every host, the star panel shows the archive's temperature, radius and mass instead of the B−V estimates.
+- **Not placed:** 26 hosts without a distance are left out.
+
+**What is measured and what is not.** The orbit model is in `src/engine/stars/keplerOrbit.ts`.
+- **Orbit size and shape:** semi-major axis, eccentricity and period come from the archive, with values the archive calculated flagged as such. Kepler's third law fills a missing semi-major axis or period.
+- **Inclination:** measured relative to the plane of the sky, so transiting systems appear edge-on from the Sun's direction. When it is unknown, the orbit is drawn at 60° and the panel says so.
+- **Rotation about the line of sight:** the longitude of the ascending node is almost never known. Orbits are drawn with the node toward celestial north, so this rotation is illustrative.
+- **Position along the orbit:** follows the published transit or conjunction time, or periastron time, where there is one. Otherwise it is illustrative, and the panel says which.
+- **Argument of periastron:** used as published. Host and planet conventions can differ by 180°, which can flip which end of an eccentric orbit faces us.
+- **Not modelled:** planet–planet interactions, including TRAPPIST-1's transit-timing variations.
+- **Planet size:** archive radius; otherwise Chen & Kipping 2017 from mass.
+- **Planet appearance is illustrative.** No exoplanet has been imaged as a disk. Colours follow broad classes: rocky planets below the 1.75 R⊕ radius valley, sub-Neptunes, Neptune-like planets and giants. Giants follow the Sudarsky, Burrows & Hubeny 2000 cloud classes by equilibrium temperature, and hot planets get a night-side thermal glow. Every planet is lit by its star's blackbody colour.
+
+**Navigation aids.** The optional rings around stars with planets, the orbit outlines and the planet markers are navigation overlays, not depictions of anything physical.
+
+### Exoplanet descents and the Sun's planets in star mode (26 November 2026)
+
+Every planet with a known orbit can be visited. The descent reuses the Solar System's exploration stack (terrain, rocks, sky domes, cloud-deck flight, navigation). The landing data comes from `src/engine/stars/exoplanetLanding.ts`, registered for the duration of the descent (`src/data/landingRegistry.ts`).
+
+**Measured, from the archive:**
+- size and mass, and so surface gravity (minimum or estimated masses are flagged);
+- orbit, and so where the star and sibling planets stand in the sky on the date shown;
+- the star's angular size;
+- the colour of its light, from the star's temperature.
+
+**Assumed, and stated in the descent panel:**
+- **Surface or atmosphere.** Rocky planets are those below the 1.75 R⊕ radius valley, or up to 2.5 R⊕ when a measured mass and radius give at least 70% of Earth-like rock density (Zeng et al. 2016). They get a bare, airless surface: regolith, dark basalt above 1,100 K, or frosted rock below 180 K. This is conservative: JWST finds no thick atmospheres on hot rocky M-dwarf planets, and for the rest it is unknown. Larger planets are flown above an illustrative cloud deck. The scale height is H = kT/(μ m_u g) with μ = 2.3, and deck colours follow the Sudarsky et al. (2000) temperature classes.
+- **Rotation.** Planets inside ≈ 0.4 AU × (M★/M☉)^⅓ are drawn tidally locked (Kasting et al. 1993), so the star stays fixed in their sky. Others get an illustrative 24-hour day (rocky) or 10-hour day (giants). The spin axis is drawn along the orbit normal, with zero obliquity.
+- **Brightness.** Lighting is eye-adapted, as in Solar System descents. The light keeps the star's hue at the luminance of sunlight, so a red dwarf's planet is lit orange. The starlight relative to Earth's is shown as a number.
+- **Siblings in the sky.** Sibling planets appear as disks when resolved. Otherwise they are points whose brightness is computed from reflected starlight: a Lambert sphere, with distances and phase angle from the orbits, on the stars' magnitude scale.
+
+**Our own planets in star mode.** The Sun's eight planets are placed with JPL's approximate Keplerian elements (Standish), the same analytic model the Solar System view falls back on. Their mean colours and sizes come from the bundled catalogue. Visiting one hands over to the Solar System view, which has the full ephemerides, global maps and surface descents.
+
+## Galaxies, nebulae and the Milky Way model (27 November 2026)
+
+`scripts/prepare-deep-sky.py` (with `scripts/deep_sky_sources.py`, standard library only) builds `public/deep/galaxies.bin` + `galaxies.json` (about 1.4 MB gzipped) and `public/deep/nebulae.json` (about 100 kB gzipped). Tables were retrieved on 27 November 2026 through the VizieR and SIMBAD mirrors at the Harvard-Smithsonian CfA, plus the OpenNGC repository. They are cached in the ignored `.local/asset-source/deep`; `--refresh` downloads them again. Positions are heliocentric parsecs in the stars' engine axes.
+
+**Galaxies (44,200).**
+- **Local Volume (859):** Karachentsev, Makarov & Kaisina 2013, *Updated Nearby Galaxy Catalog* (VizieR J/AJ/145/101). Each galaxy keeps its catalogued distance and method: TRGB, Cepheids, Tully–Fisher, surface-brightness fluctuations, group membership, and so on. It also keeps its Holmberg diameter, inclination and absolute B magnitude. Milky Way satellites closer than 20 kpc are left out; they lie inside our Galaxy's model.
+- **Beyond:** Huchra et al. 2012, *2MASS Redshift Survey* (VizieR J/ApJS/199/26, Ks ≤ 11.75). Galaxies matched within 20″ to Cosmicflows-4 (Tully et al. 2023, VizieR J/ApJ/944/94) get its distance. That is the group average when the group has at least two measured members (5,852 galaxies), otherwise the galaxy's own distance (5,681).
+  - **Redshift distances (31,808 galaxies):** the rest use the Hubble law with H₀ = 74.6 km/s/Mpc, Cosmicflows-4's own scale (Planck's 67.4 would place them about 10% farther). Velocities are taken in the CMB frame (Planck 2018 dipole), and distances are comoving, to first order with q₀ = −0.53. Each galaxy's own motion (a few hundred km/s) shifts these by several Mpc, and stretches clusters along the line of sight.
+  - **Left out:** 1,064 entries without a redshift and 33 too slow for the Hubble law. 161 duplicates of Local Volume galaxies only lend them their position angles.
+- **Shapes:**
+  - **Size, axis ratio and position angle:** from OpenNGC (M. Verga, CC BY-SA 4.0) where listed, otherwise from 2MASS (XSC position angles). The 2MASS K-band extent is scaled by 0.85, the median optical/K ratio of galaxies with both.
+  - **Inclination:** from the axis ratio with HyperLEDA's type-dependent edge-on thickness (log r₀ = 0.43 + 0.053 T). Bulge-dominated galaxies can come out less tilted than they are.
+  - **Orientation:** which side of a disk is nearer is not known, so one of the two orientations is drawn. Galaxies without a position angle are drawn at a stand-in angle, and the panel says so.
+- **Brightness:** an estimate. The visual absolute magnitude comes from B (Local Volume) or Ks, with typical colours by Hubble type.
+
+**Nebulae (1,671).**
+- **Planetary nebulae (669):** Chornay & Walton 2021 (VizieR J/A+A/656/A110), Gaia EDR3 central-star distances. Only reliable matches of confirmed planetary nebulae with a distance are used.
+- **HII regions (886):** Anderson et al. 2014, *WISE catalog of Galactic HII regions* (VizieR J/ApJS/212/1), known HII regions with maser-parallax or kinematic distances.
+- **Supernova remnants (110):** Green 2025 (VizieR VII/297) for positions and sizes. Distances come from SIMBAD's literature list, preferring the most recent parallax-based value.
+- **Named nebulae:** NGC, IC, Messier and Barnard objects from OpenNGC take the best available distance. The order of preference is a catalogue above, SIMBAD's most recent parallax, then OpenNGC's Gaia parallax, then WISE.
+- **Curated distances:** a few well-known objects missing from those lists use their parent cloud's published distance, with the reference shown in the panel:
+  - Orion B objects (Flame, IC 434, Horsehead): Kounkel et al. 2017;
+  - the California and Coalsack clouds: Zucker et al. 2020;
+  - the Pleiades nebulosity;
+  - the Cygnus Loop: Fesen et al. 2018;
+  - Vela: Dodson et al. 2003;
+  - Kepler: Sankrit et al. 2016;
+  - SN 1006: Winkler et al. 2003;
+  - nebulae in the Large and Small Magellanic Clouds: Pietrzyński et al. 2019 and Graczyk et al. 2020.
+- **Size:** the catalogued angular outline at the adopted distance.
+- **Left out:** nebulae with no published distance (most dark and reflection nebulae).
+
+**Milky Way model** (`src/data/deep/milkyWay.ts`).
+- **Measured inputs:**
+  - Sun–centre distance R₀ = 8.15 kpc and the log-periodic spiral arms with kinks: Reid et al. 2019, Table 2. Arms are drawn at full strength over their maser-measured azimuths, then extrapolated more faintly.
+  - Sun's height 20.8 pc: Bennett & Bovy 2019.
+  - Thin and thick disk scales, the 5 kpc bar at 27°, and the stellar mass: Bland-Hawthorn & Gerhard 2016.
+  - Frame: the IAU Galactic pole and centre, rotated into the engine axes with the Hipparcos matrix.
+- **Illustrative:** star clouds, dust filaments and HII knots.
+- **Photographic sky:** within about 300 pc of the Sun the NASA SVS sky is shown; it fades out by 1.5 kpc, and the model fades in between 0.6 and 2.5 kpc.
+
+**Rendering.**
+- **Appearance is illustrative.** No galaxy or nebula is drawn from an image.
+  - Galaxies use face-on archetype maps generated on the GPU (Sa–Sc, barred, irregular, S0) chosen by Hubble type, exponential disk heights, and closed-form truncated-isothermal bulges.
+  - Nebulae use procedural interiors in approximate emission-line colours: Hα + [N II] red, [O III] teal, scattered blue.
+- **Brightness:** galaxies and nebulae are drawn 5 magnitudes brighter than the eye sees them, like a long exposure. Far from every large galaxy, an automatic exposure brightens the view by up to 9 more magnitudes (shown in the caption). Surface brightness does not change with distance.
+- **Not exact:** nebula brightness is illustrative; the catalogues give no uniform integrated photometry.

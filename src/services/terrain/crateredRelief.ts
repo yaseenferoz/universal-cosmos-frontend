@@ -19,14 +19,14 @@ export interface CrateredReliefParameters {
   craterDensity: number;
 }
 
-function hash(x: number, y: number, z: number, seed: number): number {
+export function hash(x: number, y: number, z: number, seed: number): number {
   let h = Math.imul(x | 0, 0x8da6b343) ^ Math.imul(y | 0, 0xd8163841) ^ Math.imul(z | 0, 0xcb1ab31f) ^ seed;
   h = Math.imul(h ^ (h >>> 13), 0x5bd1e995);
   h ^= h >>> 15;
   return (h >>> 0) / 4294967296;
 }
 
-function valueNoise(x: number, y: number, z: number, seed: number): number {
+export function valueNoise(x: number, y: number, z: number, seed: number): number {
   const ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z);
   const fx = x - ix, fy = y - iy, fz = z - iz;
   const sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy), sz = fz * fz * (3 - 2 * fz);

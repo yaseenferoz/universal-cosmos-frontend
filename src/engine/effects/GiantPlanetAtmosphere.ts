@@ -17,6 +17,7 @@ import {
   Vector3,
 } from "three";
 import type { ObjectId } from "../../types/celestial";
+import { registeredLanding } from "../../data/landingRegistry";
 import { skySolarIllumination } from "./PlanetarySky";
 
 /**
@@ -63,6 +64,11 @@ export const GIANT_ATMOSPHERES: Partial<Record<ObjectId, GiantAtmosphereProfile>
   neptune: { deckAltitudeKm: 5, zenithOpticalDepth: 0.55, zenithColor: "#244f8c", horizonColor: "#9cc6dc",
     scaleHeightKm: 19.7, hazeDepth: 0.4, lightning: 0.15, deckColor: "#a8cde0", convection: 0.5 },
 };
+
+/** Cloud-deck profile for a body: a registered landing (exoplanets) or a Solar System giant. */
+export function giantAtmosphereFor(id: ObjectId): GiantAtmosphereProfile | undefined {
+  return registeredLanding(id)?.giant ?? GIANT_ATMOSPHERES[id];
+}
 
 /**
  * Distance (km) along a view ray to the cloud deck, or Infinity when the ray misses it.

@@ -92,7 +92,8 @@ export function UniverseViewport() {
         engine.setStarDensity(initial.starDensity);
         engine.setOrbitsVisible(initial.showOrbits);
         engine.setLabelsVisible(initial.showLabels);
-        engine.setViewMode(initial.viewMode);
+        // Star mode unmounts this engine; it never receives the "stars" mode.
+        engine.setViewMode(initial.viewMode === "stars" ? "exploration" : initial.viewMode);
         if (initial.viewMode === "exploration" && initial.selectedId)
           engine.focusObject(initial.selectedId, true);
         engine.setCameraMode(initial.cameraMode);
@@ -163,7 +164,7 @@ export function UniverseViewport() {
         });
         unsubscribe = useExplorationStore.subscribe((state, previous) => {
           if (!engine) return;
-          if (state.viewMode !== previous.viewMode)
+          if (state.viewMode !== previous.viewMode && state.viewMode !== "stars")
             engine.setViewMode(state.viewMode);
           if (
             state.playing !== previous.playing ||

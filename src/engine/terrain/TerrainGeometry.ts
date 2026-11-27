@@ -21,7 +21,7 @@ export function buildTerrainGeometry(key: TerrainTileKey, segments: number, prov
   const middleHeight = provider.sampleHeight(middleCoordinates.latDeg, middleCoordinates.lonDeg);
   const centerM = middle.multiplyScalar(datum + middleHeight.heightM);
   const positions: number[] = [], normals: number[] = [], uvs: number[] = [];
-  const elevations: number[] = [], slopes: number[] = [];
+  const elevations: number[] = [], slopes: number[] = [], materials: number[] = [];
   const direction = new Vector3(), point = new Vector3();
   let sourceResolutionM = 0;
   let sourceId = middleHeight.sourceId;
@@ -51,6 +51,7 @@ export function buildTerrainGeometry(key: TerrainTileKey, segments: number, prov
       point.copy(direction).multiplyScalar(datum + sample.heightM).sub(centerM);
       positions.push(point.x, point.y, point.z);
       elevations.push(sample.heightM);
+      materials.push(0);
       let longitude = coordinates.lonDeg;
       while (longitude - middleCoordinates.lonDeg > 180) longitude -= 360;
       while (longitude - middleCoordinates.lonDeg < -180) longitude += 360;
@@ -71,7 +72,7 @@ export function buildTerrainGeometry(key: TerrainTileKey, segments: number, prov
       normals.push(normal.x, normal.y, normal.z);
     }
   }
-  return assembleTile({ key, segments, centerM, skirtDepthM, sourceResolutionM, sourceId, positions, normals, uvs, elevations, slopes });
+  return assembleTile({ key, segments, centerM, skirtDepthM, sourceResolutionM, sourceId, positions, normals, uvs, elevations, slopes, materials });
 }
 
 interface TileArrays {
@@ -86,11 +87,13 @@ interface TileArrays {
   uvs: number[];
   elevations: number[];
   slopes: number[];
+  /** Surface-class feature material per vertex (0 for measured terrain). */
+  materials: number[];
 }
 
 /** Triangulates the grid, adds edge skirts and builds the BufferGeometry. */
 function assembleTile(tile: TileArrays): TerrainGeometry {
-  const { key, segments, centerM, skirtDepthM, sourceResolutionM, sourceId, positions, normals, uvs, elevations, slopes } = tile;
+  const { key, segments, centerM, skirtDepthM, sourceResolutionM, sourceId, positions, normals, uvs, elevations, slopes, materials } = tile;
   const count = (segments + 1) ** 2;
   const point = new Vector3();
   const indices: number[] = [];
@@ -116,6 +119,7 @@ function assembleTile(tile: TileArrays): TerrainGeometry {
       uvs.push(uvs[index * 2], uvs[index * 2 + 1]);
       elevations.push(elevations[index]);
       slopes.push(slopes[index]);
+      materials.push(materials[index]);
     }
     for (let i = 0; i < segments; i++) {
       const a = edge[i], b = edge[i + 1], c = start + i, d = c + 1;
@@ -128,12 +132,13 @@ function assembleTile(tile: TileArrays): TerrainGeometry {
   geometry.setAttribute("uv", new BufferAttribute(new Float32Array(uvs), 2));
   geometry.setAttribute("terrainElevationM", new BufferAttribute(new Float32Array(elevations), 1));
   geometry.setAttribute("terrainSlope", new BufferAttribute(new Float32Array(slopes), 1));
+  geometry.setAttribute("terrainMaterial", new BufferAttribute(new Float32Array(materials), 1));
   geometry.setIndex(indices);
   geometry.computeBoundingSphere();
   geometry.userData.surfaceVertexCount = count;
   return {
     geometry, centerM, key, segments, surfaceIndexCount: segments * segments * 6, sourceResolutionM, sourceId,
-    byteLength: positions.length * 4 + normals.length * 4 + uvs.length * 4 + (elevations.length + slopes.length) * 4 + indices.length * 2,
+    byteLength: positions.length * 4 + normals.length * 4 + uvs.length * 4 + (elevations.length + slopes.length + materials.length) * 4 + indices.length * 2,
   };
 }
 
@@ -150,6 +155,7 @@ function buildReconstructedTile(
   const side = segments + 3;
   const grid = new Float64Array(side * side * 3);
   const heights = new Float64Array(side * side);
+  const featureMaterial = new Float32Array(side * side);
   const direction = new Vector3();
   let sourceResolutionM = 0;
   const sourceId = middleHeight.sourceId;
@@ -162,6 +168,7 @@ function buildReconstructedTile(
       sourceResolutionM = Math.max(sourceResolutionM, sample.resolutionM);
       const index = j * side + i;
       heights[index] = sample.heightM;
+      featureMaterial[index] = sample.material ?? 0;
       const radius = datum + sample.heightM;
       grid[index * 3] = direction.x * radius;
       grid[index * 3 + 1] = direction.y * radius;
@@ -169,7 +176,7 @@ function buildReconstructedTile(
     }
   }
   const positions: number[] = [], normals: number[] = [], uvs: number[] = [];
-  const elevations: number[] = [], slopes: number[] = [];
+  const elevations: number[] = [], slopes: number[] = [], materials: number[] = [];
   const du = new Vector3(), dv = new Vector3(), normal = new Vector3(), up = new Vector3();
   const at = (i: number, j: number, target: Vector3) => {
     const k = (j * side + i) * 3;
@@ -182,6 +189,7 @@ function buildReconstructedTile(
       const center = at(i, j, new Vector3());
       positions.push(center.x - centerM.x, center.y - centerM.y, center.z - centerM.z);
       elevations.push(heights[j * side + i]);
+      materials.push(featureMaterial[j * side + i]);
       up.copy(center).normalize();
       const coordinates = cartesianToGeodetic(up, 1);
       let longitude = coordinates.lonDeg;
@@ -197,5 +205,5 @@ function buildReconstructedTile(
       slopes.push(Math.sqrt(1 - cosine * cosine) / cosine);
     }
   }
-  return assembleTile({ key, segments, centerM, skirtDepthM, sourceResolutionM, sourceId, positions, normals, uvs, elevations, slopes });
+  return assembleTile({ key, segments, centerM, skirtDepthM, sourceResolutionM, sourceId, positions, normals, uvs, elevations, slopes, materials });
 }

@@ -54,6 +54,13 @@ export function TopBar() {
         >
           Overview
         </button>
+        <button
+          aria-label="Nearby stars"
+          aria-pressed={viewMode === "stars"}
+          onClick={() => setViewMode("stars")}
+        >
+          Stars
+        </button>
       </div>
       <div className="top-actions">
         <div className="simulation-date">

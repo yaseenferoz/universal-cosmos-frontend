@@ -1,4 +1,5 @@
 import type { ObjectId } from "../types/celestial";
+import { registeredLanding } from "./landingRegistry";
 
 export interface LocalAtmosphereModel {
   /** Display optical depths and extinction, not measured aerosol/pressure retrievals. */
@@ -22,5 +23,5 @@ const models: Partial<Record<ObjectId, LocalAtmosphereModel>> = {
   titan: { directOpticalDepth: 6, diffuseStrength: 0.9, extinctionPerM: 0.00003, asymmetry: 0.6 },
 };
 export function localAtmosphereModel(bodyId: ObjectId): LocalAtmosphereModel {
-  return models[bodyId] ?? airless;
+  return registeredLanding(bodyId)?.optics ?? models[bodyId] ?? airless;
 }

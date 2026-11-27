@@ -10,6 +10,7 @@ import {
 } from "three";
 import type { Quality } from "../../types/celestial";
 import { skyExposureCompensation } from "./skyExposure";
+import { J2000_OBLIQUITY } from "./skyOrientation";
 
 const SKY_TEXTURES = {
   compact: "/textures/deep-sky-2048.webp?v=2020ha2",
@@ -39,7 +40,9 @@ export class DeepSky {
       },
       vertexShader: `varying vec2 skyUv;
         void main() {
-          skyUv = uv;
+          // The SVS map has RA increasing leftward; mirroring u makes the dome a proper
+          // rotation of the equatorial sky (see skyOrientation.ts).
+          skyUv = vec2(1.0 - uv.x, uv.y);
           vec4 projected = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
           gl_Position = projected.xyww;
         }`,
@@ -72,6 +75,8 @@ export class DeepSky {
     });
     this.mesh = new Mesh(new SphereGeometry(1, 32, 16), material);
     this.mesh.renderOrder = -2000;
+    // Celestial pole → ecliptic frame: rotate about the equinox (+X) by the obliquity.
+    this.mesh.rotation.x = -J2000_OBLIQUITY;
     this.mesh.frustumCulled = false;
     this.mesh.visible = false;
   }

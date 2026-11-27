@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import { environmentFor } from "../../data/planetaryEnvironments";
+import { surfaceProfileFor } from "../../data/surfaceProfiles";
 import { useExplorationStore } from "../../stores/explorationStore";
 import { useLunarStore } from "../../stores/lunarStore";
 import { MovementButton } from "./LunarSurfaceControls";
@@ -34,6 +35,7 @@ export function PlanetaryDescentControls() {
       </button>
       <div hidden={collapsed} id="planetary-descent-details">
         <p>{environment.description}</p>
+        {selected && surfaceProfileFor(selected) && <p>Surface type: {surfaceProfileFor(selected)?.summary} Landing-site colour comes from the global map where one is installed; landforms and rocks are procedural.</p>}
         {active && <dl className="lunar-readouts">
           <div><dt>Latitude / longitude</dt><dd>{t.latDeg.toFixed(3)}° / {t.lonDeg.toFixed(3)}° E</dd></div>
           <div><dt>{atmospheric ? "Above reference radius" : "Height above terrain"}</dt><dd>{t.altitudeM >= 1000 ? `${(t.altitudeM / 1000).toFixed(1)} km` : `${t.altitudeM.toFixed(1)} m`}</dd></div>

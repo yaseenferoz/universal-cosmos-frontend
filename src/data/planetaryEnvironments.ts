@@ -2,6 +2,7 @@ import type { CelestialObject, CoreObjectId, ObjectId } from "../types/celestial
 import { objectById } from "./catalog";
 import { bodyAppearance } from "./bodyAppearance";
 import { generatedOrbits } from "./generatedBodies";
+import { registeredLanding } from "./landingRegistry";
 
 export interface PlanetaryEnvironment {
   mode: "surface" | "atmosphere";
@@ -121,6 +122,8 @@ function synthesizedEnvironment(id: ObjectId): PlanetaryEnvironment | undefined 
 }
 
 export function environmentFor(id: ObjectId): PlanetaryEnvironment | undefined {
+  const registered = registeredLanding(id);
+  if (registered) return registered.environment;
   if (id === "titan") return titan;
   return (planetaryEnvironments as Partial<Record<ObjectId, PlanetaryEnvironment>>)[id] ?? synthesizedEnvironment(id);
 }

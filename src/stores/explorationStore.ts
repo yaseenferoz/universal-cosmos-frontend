@@ -5,8 +5,9 @@ import { daysSinceModelEpoch, REAL_TIME_DAYS_PER_SECOND } from "../utils/simulat
 
 export const TIME_SPEEDS = [REAL_TIME_DAYS_PER_SECOND, 0.01, 0.1, 1, 10, 100] as const;
 export type CameraMode = "orbit" | "free";
-export type ViewMode = "exploration" | "overview";
-export type DialogName = "search" | "settings" | "help" | "collection" | null;
+/** "stars" swaps in the interstellar engine (parsec scale), like the ISS visit. */
+export type ViewMode = "exploration" | "overview" | "stars";
+export type DialogName = "search" | "settings" | "help" | null;
 
 interface ExplorationState {
   objects: CelestialObject[];
@@ -132,8 +133,9 @@ export const useExplorationStore = create<ExplorationState>((set) => ({
           : state.resetViewRequest,
     })),
   openDialog: (dialog) => set({ dialog, mobileNavigationOpen: false }),
+  // Collections (galaxies, nebulae) open the star map's search on that collection.
   openCollection: (collection) =>
-    set({ collection, dialog: "collection", mobileNavigationOpen: false }),
+    set({ collection, viewMode: "stars", dialog: "search", informationOpen: false, mobileNavigationOpen: false, cameraMode: "orbit" }),
   resetView: () =>
     set((state) => ({
       resetViewRequest: state.resetViewRequest + 1,

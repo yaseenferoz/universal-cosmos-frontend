@@ -14,7 +14,9 @@ import {
 import { buildTerrainGeometry, type TerrainGeometry } from "./TerrainGeometry";
 import { TerrainImageryLayers } from "./TerrainImageryLayers";
 import type { SurfaceAtmosphere } from "../effects/SurfaceAtmosphere";
-import { configureSurfaceDetail, SurfaceDetailMaps, wrappedDetailOrigin } from "./SurfaceDetailMaterial";
+import { configureSurfaceDetail, SurfaceDetailMaps, updateSurfaceGround, wrappedDetailOrigin, type SurfaceGroundUniforms } from "./SurfaceDetailMaterial";
+import { surfaceProfileFor } from "../../data/surfaceProfiles";
+import type { Linear } from "./siteColor";
 import { selectTerrainTiles, terrainBudget, type TerrainBudget, type TerrainSelection } from "./TerrainSelection";
 
 interface ResidentTile extends TerrainGeometry {
@@ -68,6 +70,8 @@ export class PlanetTerrainRenderer {
   private quality: Quality;
   private mobile: boolean;
   private autoReduced = false;
+  /** Class palette of a synthesized landing site (undefined for dedicated terrain). */
+  private readonly ground: SurfaceGroundUniforms | undefined;
 
   constructor(readonly provider: TerrainDataProvider, quality: Quality = "auto", mobile = false, atmosphere?: SurfaceAtmosphere) {
     this.quality = quality;
@@ -78,9 +82,15 @@ export class PlanetTerrainRenderer {
       this.material.color.set(environmentFor(provider.manifest.bodyId)?.groundColor ?? "#999999");
     this.imageryLayers.configure(this.material);
     this.imageryLayers.setAnisotropy(quality === "low" || mobile ? 2 : 4);
-    configureSurfaceDetail(this.material, this.detailMaps, this.materialOriginM,
+    this.ground = configureSurfaceDetail(this.material, this.detailMaps, this.materialOriginM,
       provider.manifest.bodyId, false, !provider.manifest.reconstruction);
     atmosphere?.configure(this.material);
+  }
+
+  /** Landing-site ground colour sampled from the body's global map. */
+  setGroundColor(linear: Linear): void {
+    const profile = surfaceProfileFor(this.provider.manifest.bodyId);
+    if (profile && this.ground && !this.disposed) updateSurfaceGround(this.ground, profile, linear);
   }
 
   prepare(): Promise<void> {

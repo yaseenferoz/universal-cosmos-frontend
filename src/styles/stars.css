@@ -1,0 +1,104 @@
+/* Interstellar view (star mode). */
+.view-stars .scene-caption > p + p { margin-top: 4px; color: #5f6c7c; }
+.stellar-controls {
+  position: absolute;
+  z-index: 12;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px 14px;
+  padding: 10px 16px;
+  border-radius: 9px;
+  background: #080c13e6;
+  max-width: calc(100% - 32px);
+  font-size: 11px;
+  color: #aab6c6;
+}
+.stellar-controls label { display: flex; flex-direction: column; gap: 4px; min-width: 170px; }
+.stellar-controls input[type="range"] { width: 100%; accent-color: #9fb4d6; }
+.stellar-controls button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  color: #dfe6ef;
+  background: #ffffff0f;
+  min-height: 32px;
+}
+.stellar-controls button:hover, .stellar-controls button:focus-visible { background: #ffffff1f; }
+.star-label { font-size: 10px; color: #b8c4d6; white-space: nowrap; }
+.star-label.is-selected { color: #fff; font-weight: 600; }
+.star-information h2 { margin: 6px 0 2px; font-size: 22px; font-weight: 300; color: #e5eaf1; }
+.star-designations { margin: 0 0 6px; font-size: 11px; color: #7f8ea2; }
+.star-facts { display: grid; grid-template-columns: 1fr 1fr; }
+.star-facts dt { font-size: 9px; letter-spacing: 0.8px; text-transform: uppercase; color: #6d7b8e; }
+.star-facts dd { margin: 3px 0 0; font-size: 12px; color: #d5dde8; }
+.star-system { font-size: 11px; color: #9aa7b8; }
+.text-link { color: #a9c3ec; text-decoration: underline; padding: 0; background: none; }
+.star-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.star-actions .lunar-primary { flex: 1 1 140px; justify-content: center; }
+.star-provenance { font-size: 9.5px; line-height: 1.45; color: #6b788a; margin: 0; }
+.stellar-controls button.is-active { background: #2c5f5866; color: #c9f3ea; box-shadow: inset 0 0 0 1px #5fc9b366; }
+.stellar-controls .time-control { min-width: 0; }
+.stellar-controls .time-control > span:first-child { display: inline-flex; align-items: center; gap: 5px; }
+.stellar-controls .time-row { display: flex; gap: 6px; }
+.stellar-controls select {
+  min-height: 32px; padding: 0 8px; border-radius: 6px; color: #dfe6ef; background: #ffffff0f;
+  border: 1px solid #ffffff1a; font: inherit;
+}
+.stellar-controls select option { background: #0b1019; }
+.star-label.has-planets::before {
+  content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 4px; border-radius: 50%;
+  box-shadow: inset 0 0 0 1.2px #5fc9b3; vertical-align: 0;
+}
+.planet-label { color: #b9cdea; font-size: 10px; }
+.planet-label.is-selected { color: #fff; }
+/* Galaxies warm, nebulae rose: distinguishable from star names at a glance. */
+.galaxy-label { color: #e3cfa8; }
+.nebula-label { color: #e9b4c4; }
+.milky-way-label { color: #f2e6cc; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.galaxy-label.is-selected, .nebula-label.is-selected { color: #fff; }
+.deep-information .text-link { display: inline-flex; align-items: center; gap: 3px; }
+.planet-list h3 { margin: 12px 0 6px; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #7f8ea2; font-weight: 500; }
+.planet-list ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; max-height: 210px; overflow-y: auto; }
+.planet-list button {
+  display: flex; align-items: center; gap: 9px; width: 100%; padding: 6px 8px; border-radius: 6px;
+  text-align: left; color: #d5dde8; background: #ffffff08;
+}
+.planet-list button:hover, .planet-list button:focus-visible { background: #ffffff17; }
+.planet-list strong { display: block; font-size: 12px; font-weight: 500; }
+.planet-list small { display: block; font-size: 10px; color: #8392a6; }
+.planet-swatch { flex: none; width: 12px; height: 12px; border-radius: 50%; background: #8a7a6a; }
+.planet-swatch.kind-hot-rocky { background: radial-gradient(circle at 35% 35%, #ff7a2a, #2a1a14 70%); }
+.planet-swatch.kind-cold-rocky { background: #b9bcc4; }
+.planet-swatch.kind-rocky { background: #8b7461; }
+.planet-swatch.kind-sub-neptune { background: #9fb2c2; }
+.planet-swatch.kind-neptune { background: #4f86c0; }
+.planet-swatch.kind-giant { background: repeating-linear-gradient(0deg, #c9b08a 0 2px, #8f6f50 2px 4px); }
+.planet-warning { margin: 0 0 6px; padding: 6px 8px; border-radius: 6px; font-size: 11px; color: #f1d39a; background: #5a43142e; }
+.star-actions .lunar-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+@media (max-width: 720px) {
+  .stellar-controls { bottom: 16px; gap: 6px; padding: 8px 10px; width: calc(100% - 32px); }
+  .stellar-controls label { min-width: 140px; }
+  /* Compact: slider on its own row, then icon buttons (names stay available to assistive tech). */
+  .stellar-controls > label:first-child { flex: 1 1 100%; }
+  .stellar-controls button { padding: 7px 9px; min-width: 36px; justify-content: center; }
+  .stellar-controls .control-text {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  }
+  .stellar-controls .time-control { flex-direction: row; min-width: 0; }
+  .stellar-controls .time-date { display: none !important; }
+  .view-stars .object-information.star-information {
+    top: auto; bottom: 120px; left: 16px; right: 16px; width: auto; max-height: 45dvh; overflow-y: auto;
+  }
+  .view-stars .interaction-hint { display: none; }
+}
+
+/* Exoplanet descents (star mode). */
+.exoplanet-descent .face-star { margin-top: 8px; }
+.exoplanet-descent ul { margin: 6px 0; padding-left: 16px; font-size: 10px; line-height: 1.6; color: #95a2b4; }

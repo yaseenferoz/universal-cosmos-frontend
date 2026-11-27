@@ -9,7 +9,6 @@ import { LoadingScreen } from "../components/layout/LoadingScreen";
 import { SearchDialog } from "../components/search/SearchDialog";
 import { SettingsDialog } from "../components/panels/SettingsDialog";
 import { HelpDialog } from "../components/panels/HelpDialog";
-import { CollectionDialog } from "../components/panels/CollectionDialog";
 import { useExplorationShortcuts } from "../hooks/useExplorationShortcuts";
 import { LunarSurfaceControls } from "../components/controls/LunarSurfaceControls";
 import { PlanetaryDescentControls } from "../components/controls/PlanetaryDescentControls";
@@ -22,6 +21,12 @@ import { RenderingDiagnostics } from "../components/panels/RenderingDiagnostics"
 import { environmentFor } from "../data/planetaryEnvironments";
 import { useStationStore } from "../stores/stationStore";
 import { StationExperience } from "../features/station/StationExperience";
+import { StellarViewport } from "../features/stars/StellarViewport";
+import { StellarHud } from "../components/stars/StellarHud";
+import { StarInformation } from "../components/stars/StarInformation";
+import { useStellarStore } from "../stores/stellarStore";
+import { ExoplanetDescentControls } from "../components/stars/ExoplanetDescentControls";
+import { StarSearchDialog } from "../components/stars/StarSearchDialog";
 
 export function App() {
   const stationActive = useStationStore((s) => s.active);
@@ -34,7 +39,24 @@ export function App() {
   const hasExplorationControls = viewMode === "exploration" && selectedId !== null &&
     (selectedId === "moon" || environmentFor(selectedId) !== undefined);
   useExplorationShortcuts(!stationActive);
+  const starDescent = useStellarStore((state) => !!state.telemetry?.descending);
   if (stationActive) return <StationExperience />;
+  // Star mode hands the screen to the descent panel while exploring an exoplanet.
+  if (viewMode === "stars")
+    return (
+      <main className={`universe-app view-stars ${starDescent ? "is-lunar-active" : ""} ${diagnostics ? "has-diagnostics" : ""}`}>
+        <StellarViewport />
+        <div className="viewport-vignette" />
+        <TopBar />
+        <ExplorationRail />
+        {!starDescent && <StellarHud />}
+        {!starDescent && <StarInformation />}
+        <ExoplanetDescentControls />
+        {dialog === "search" && <StarSearchDialog />}
+        {dialog === "settings" && <SettingsDialog />}
+        {dialog === "help" && <HelpDialog />}
+      </main>
+    );
   return (
     <main
       className={`universe-app view-${viewMode} ${lunarActive ? "is-lunar-active" : ""} ${hasExplorationControls ? "has-exploration-controls" : ""} ${selectedId === "sun" && viewMode === "exploration" ? "is-solar-observation" : ""} ${diagnostics ? "has-diagnostics" : ""}`}
@@ -56,7 +78,6 @@ export function App() {
       {dialog === "search" && <SearchDialog />}
       {dialog === "settings" && <SettingsDialog />}
       {dialog === "help" && <HelpDialog />}
-      {dialog === "collection" && <CollectionDialog />}
     </main>
   );
 }

@@ -6,6 +6,8 @@ export interface HeightSample {
   available: boolean;
   resolutionM: number;
   sourceId: string;
+  /** Reconstructions only: surface-class feature material in [0, 1] (shader accent). */
+  material?: number;
 }
 
 export interface TerrainRegion {

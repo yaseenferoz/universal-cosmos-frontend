@@ -6,6 +6,7 @@ import {
   Vector3,
 } from "three";
 import { skyExposureCompensation } from "./skyExposure";
+import { skyAssetDirectionToEngine } from "./skyOrientation";
 
 const RECORD_FLOATS = 7;
 const MAX_STARS = 24000;
@@ -80,16 +81,20 @@ export class BrightStarField {
         const positions = new Float32Array(count * 3);
         const colors = new Float32Array(count * 3);
         const sizes = new Float32Array(count);
+        const direction = new Vector3();
         for (let i = 0; i < count; i++) {
           const offset = i * RECORD_FLOATS;
           for (let axis = 0; axis < 3; axis++) {
-            const direction = records[offset + axis];
+            const component = records[offset + axis];
             const color = records[offset + axis + 3];
-            if (!Number.isFinite(direction) || !Number.isFinite(color))
+            if (!Number.isFinite(component) || !Number.isFinite(color))
               throw new Error("Invalid bright-star record");
-            positions[i * 3 + axis] = direction * 700;
             colors[i * 3 + axis] = color;
           }
+          // Asset directions are mirrored sphere coordinates; place stars on the true sky.
+          skyAssetDirectionToEngine(direction.set(records[offset], records[offset + 1], records[offset + 2]), direction)
+            .multiplyScalar(700);
+          positions.set([direction.x, direction.y, direction.z], i * 3);
           const size = records[offset + 6];
           if (!Number.isFinite(size) || size <= 0 || size > 3)
             throw new Error("Invalid bright-star size");

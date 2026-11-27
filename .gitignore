@@ -11,3 +11,6 @@ coverage/
 .DS_Store
 .vscode/
 .idea/
+
+# Python bytecode from the data scripts
+__pycache__/

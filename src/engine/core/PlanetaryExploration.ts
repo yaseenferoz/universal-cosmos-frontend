@@ -14,7 +14,7 @@ import { cartesianToGeodetic } from "../terrain/coordinates";
 import { PlanetarySky, localStarVisibility } from "../effects/PlanetarySky";
 import { SurfaceAtmosphere } from "../effects/SurfaceAtmosphere";
 import { ScatteringSky } from "../effects/ScatteringSky";
-import { GIANT_ATMOSPHERES, GiantPlanetAtmosphere } from "../effects/GiantPlanetAtmosphere";
+import { giantAtmosphereFor, GiantPlanetAtmosphere } from "../effects/GiantPlanetAtmosphere";
 import { scientificTextures, type TextureLease } from "../loaders/ScientificTextureLoader";
 import { imageryFor } from "../../data/imagery";
 import { initialLunarTelemetry, type LunarTelemetry } from "../../types/lunar";
@@ -29,6 +29,8 @@ import { relativeSolarIrradiance } from "../coordinates/LunarFrame";
 import { qualityConfig } from "./quality";
 import { localAtmosphereModel } from "../../data/localAtmosphereModels";
 import { localIllumination } from "../effects/localIllumination";
+import { hexToLinear, surfaceProfileFor } from "../../data/surfaceProfiles";
+import { sampleSiteGroundColor } from "../terrain/siteColor";
 
 interface LunarOptions {
   body?: CelestialObject;
@@ -36,6 +38,8 @@ interface LunarOptions {
   quality: Quality;
   mobile: boolean;
   eyeHeightM: number;
+  /** Colour of the illuminating star's light (linear RGB, luminance 1); white sunlight by default. */
+  starlightColor?: readonly [number, number, number];
   onTelemetry: (telemetry: LunarTelemetry) => void;
 }
 
@@ -87,7 +91,7 @@ export class PlanetaryExploration {
     const optics = localAtmosphereModel(this.bodyId);
     // Earth uses physically based scattering and NASA cloud coverage; others keep the
     // illustrative haze model until their optical properties are qualified.
-    const giant = this.atmospheric ? GIANT_ATMOSPHERES[this.bodyId] : undefined;
+    const giant = this.atmospheric ? giantAtmosphereFor(this.bodyId) : undefined;
     this.sky = this.bodyId === "earth"
       ? new ScatteringSky(imageryFor("earth").clouds?.variants[options.mobile ? "low" : "medium"] ?? null, options.quality, options.mobile, this.provider.manifest.radiusM)
       : giant ? new GiantPlanetAtmosphere(giant, this.provider.manifest.radiusM / 1000)
@@ -113,6 +117,7 @@ export class PlanetaryExploration {
       this.sunlight.target,
       this.ambient,
     );
+    if (options.starlightColor) this.sunlight.color.setRGB(...options.starlightColor);
     this.sunlight.shadow.bias = -0.000002;
     this.sunlight.shadow.normalBias = 0.02;
     this.setQuality(options.quality);
@@ -153,6 +158,7 @@ export class PlanetaryExploration {
         if (!this.disposed) {
           this.scatter = new SurfaceScatter(this.provider, this.quality, this.options.mobile, this.surfaceAtmosphere);
           this.scene.add(this.scatter.group);
+          void this.loadSiteColor();
         }
       }
       if (this.disposed) return;
@@ -179,6 +185,19 @@ export class PlanetaryExploration {
     } catch {
       // The profile's fallback deck colour remains.
     }
+  }
+
+  /** Ground colour at the landing site from the global map, at the measured-albedo level. */
+  private async loadSiteColor(): Promise<void> {
+    const profile = surfaceProfileFor(this.bodyId);
+    const asset = imageryFor(this.bodyId).surface;
+    if (!profile || !asset) return;
+    const site = this.provider.manifest.landingRegion;
+    const color = await sampleSiteGroundColor(asset.variants.low, site.latDeg, site.lonDeg,
+      hexToLinear(profile.groundColor), this.abort.signal);
+    if (!color || this.disposed) return;
+    this.terrain?.setGroundColor(color);
+    this.scatter?.setGroundColor(color);
   }
 
   get error(): string | null {

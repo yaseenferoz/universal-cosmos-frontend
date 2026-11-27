@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Vector3 } from "three";
 import { BrightStarField } from "./BrightStarField";
+import { skyAssetDirectionToEngine } from "./skyOrientation";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -16,7 +17,10 @@ describe("source-map bright stars", () => {
     expect(fetchMock).toHaveBeenCalledOnce();
     field.update(new Vector3(5, 6, 7), 0.6, 1.5, 64);
     expect(field.points.position.toArray()).toEqual([5, 6, 7]);
-    expect(field.points.geometry.getAttribute("position").array).toEqual(new Float32Array([0, 0, 700]));
+    // Asset direction (0, 0, 1) is equatorial RA 90°, Dec 0° in mirrored sphere coordinates.
+    const expected = skyAssetDirectionToEngine(new Vector3(0, 0, 1)).multiplyScalar(700);
+    expect(Array.from(field.points.geometry.getAttribute("position").array)).toEqual(
+      Array.from(new Float32Array([expected.x, expected.y, expected.z])));
     expect(field.points.geometry.drawRange.count).toBe(1);
     expect(field.points.material.depthTest).toBe(true);
     expect(field.points.material.uniforms.pixelRatio.value).toBe(1.5);

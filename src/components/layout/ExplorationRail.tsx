@@ -1,22 +1,24 @@
 import {
   ArrowRight,
-  ArrowUpRight,
   BookOpen,
+  Cloud,
   CircleDot,
   Compass,
-  Eclipse,
   Galaxy,
   HelpCircle,
   Orbit,
   Sparkles,
 } from "lucide-react";
+import { MILKY_WAY_REF } from "../../data/deep/deepSky";
 import { useExplorationStore } from "../../stores/explorationStore";
+import { useStellarStore } from "../../stores/stellarStore";
+
+/** The 2MASS galaxies reach about 300 Mpc; from 700 Mpc the whole survey fits the view. */
+const COSMIC_WEB_DISTANCE_PC = 7e8;
 
 const collections = [
-  { name: "Stars", icon: Sparkles },
-  { name: "Galaxies", icon: Galaxy },
-  { name: "Nebulae", icon: Eclipse },
-  { name: "Deep space", icon: Compass },
+  { name: "Galaxies", label: "Galaxies", icon: Galaxy },
+  { name: "Nebulae", label: "Nebulae", icon: Cloud },
 ];
 
 export function ExplorationRail() {
@@ -41,17 +43,30 @@ export function ExplorationRail() {
           <span>Solar System overview</span>
           <span className="nav-indicator" />
         </button>
-        {collections.map(({ name, icon: Icon }) => (
+        <button className="rail-link" onClick={() => setViewMode("stars")}>
+          <Sparkles size={18} />
+          <span>Nearby stars</span>
+        </button>
+        {collections.map(({ name, label, icon: Icon }) => (
           <button
             className="rail-link"
             key={name}
             onClick={() => openCollection(name)}
           >
             <Icon size={18} />
-            <span>{name} · planned</span>
-            <ArrowUpRight size={12} className="future-arrow" />
+            <span>{label}</span>
           </button>
         ))}
+        <button
+          className="rail-link"
+          onClick={() => {
+            setViewMode("stars");
+            useStellarStore.getState().flyToDeep(MILKY_WAY_REF, COSMIC_WEB_DISTANCE_PC);
+          }}
+        >
+          <Compass size={18} />
+          <span>Deep space · cosmic web</span>
+        </button>
         <a className="rail-link" href="/solar-system.html">
           <BookOpen size={18} aria-hidden="true" />
           <span>Exploration guides</span>
