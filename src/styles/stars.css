@@ -43,6 +43,63 @@
 .star-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
 .star-actions .lunar-primary { flex: 1 1 140px; justify-content: center; }
 .star-provenance { font-size: 9.5px; line-height: 1.45; color: #6b788a; margin: 0; }
+/* Star-mode search rows: type icon, name, one-line description, distance from the Sun. */
+.star-search-result {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  grid-template-areas: "icon name distance" "icon detail distance";
+  align-items: center;
+  column-gap: 14px;
+  row-gap: 3px;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  text-align: left;
+}
+.star-search-result:hover, .star-search-result:focus-visible { background: #aacbfb0f; }
+.star-search-result .result-icon {
+  grid-area: icon;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #ffffff0a;
+  color: #b8c4d6;
+}
+.star-search-result[data-kind="planet"] .result-icon { color: #5fc9b3; }
+.star-search-result[data-kind="galaxy"] .result-icon { color: #e3cfa8; }
+.star-search-result[data-kind="nebula"] .result-icon { color: #e9b4c4; }
+.star-search-result[data-kind="cluster"] .result-icon { color: #b8d8ef; }
+.star-search-result strong {
+  grid-area: name;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 450;
+  color: #e5eaf1;
+}
+.star-search-result .result-detail {
+  grid-area: detail;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10.5px;
+  color: #6f829b;
+}
+.star-search-result .result-distance {
+  grid-area: distance;
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: #9fb0c4;
+}
+/* Narrow screens: the distance moves under the description instead of squeezing the name. */
+@media (max-width: 520px) {
+  .star-search-result { grid-template-columns: 30px minmax(0, 1fr); grid-template-areas: "icon name" "icon detail" "icon distance"; }
+}
 /* Grouped only for compact layouts (see below); on wide screens the buttons flow with the rest. */
 .stellar-actions { display: contents; }
 .stellar-controls button.is-active { background: #2c5f5866; color: #c9f3ea; box-shadow: inset 0 0 0 1px #5fc9b366; }

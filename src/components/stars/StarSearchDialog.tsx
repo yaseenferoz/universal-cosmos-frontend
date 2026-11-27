@@ -1,11 +1,10 @@
-import { Search } from "lucide-react";
+import { Cloud, Galaxy, Orbit, Search, Sparkles, Sun, type LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { deepDisplayName, MILKY_WAY_REF, searchDeepSky, type DeepRef, type DeepSkyCatalog } from "../../data/deep/deepSky";
 import { galaxyDistancePc, morphologyLabel } from "../../data/deep/galaxies";
 import { NEBULA_KIND_LABEL } from "../../data/deep/nebulae";
 import { searchPlanets } from "../../data/stars/exoplanets";
 import { searchStars, starDesignations, starDisplayName, starDistancePc, type StarCatalog } from "../../data/stars/starCatalog";
-import { LY_PER_PC } from "../../engine/stars/stellarPhysics";
 import { useExplorationStore } from "../../stores/explorationStore";
 import { useStellarStore } from "../../stores/stellarStore";
 import { Modal } from "../panels/Modal";
@@ -22,6 +21,12 @@ const NEBULA_SUGGESTIONS = ["Orion Nebula", "Crab Nebula", "Ring Nebula", "Helix
 export type SearchFocus = "stars" | "galaxies" | "nebulae" | "clusters";
 
 type Result = { kind: "star"; star: number; planet: number | null } | { kind: "deep"; ref: DeepRef };
+type RowKind = "star" | "planet" | "galaxy" | "nebula" | "cluster";
+/** One display row: what it is, its name, a one-line description and its distance from the Sun. */
+interface Row { key: string; kind: RowKind; name: string; detail: string; distance: string }
+
+const KIND_ICON: Record<RowKind, LucideIcon> = { star: Sun, planet: Orbit, galaxy: Galaxy, nebula: Cloud, cluster: Sparkles };
+const KIND_LABEL: Record<RowKind, string> = { star: "Star", planet: "Planet", galaxy: "Galaxy", nebula: "Nebula", cluster: "Star cluster" };
 
 function suggestions(stars: StarCatalog | null, deep: DeepSkyCatalog | null, focus: SearchFocus): Result[] {
   const starResults: Result[] = stars ? STAR_SUGGESTIONS.flatMap((name) => searchStars(stars, name, 1)).map((star) => ({ kind: "star", star, planet: null })) : [];
@@ -51,6 +56,24 @@ function deepDetails(catalog: DeepSkyCatalog | null, ref: DeepRef): { subtitle: 
   }
   const nebula = catalog.nebulae.nebulae[ref.index];
   return { subtitle: [NEBULA_KIND_LABEL[nebula.kind], ...nebula.names.slice(1, 2)].join(" · "), distance: distanceText(nebula.distancePc) };
+}
+
+function describe(result: Result, catalog: StarCatalog | null, deep: DeepSkyCatalog | null): Row {
+  if (result.kind === "deep") {
+    const { subtitle, distance } = deepDetails(deep, result.ref);
+    const kind: RowKind = result.ref.kind === "milky-way" ? "galaxy" : result.ref.kind;
+    return { key: `deep:${result.ref.kind}:${result.ref.index}`, kind, name: deepDisplayName(deep, result.ref), detail: subtitle, distance };
+  }
+  const key = `${result.star}:${result.planet ?? ""}`;
+  if (!catalog) return { key, kind: "star", name: "", detail: "", distance: "" };
+  const system = catalog.systems.get(result.star);
+  const planet = result.planet !== null ? system?.planets[result.planet] : undefined;
+  const host = starDisplayName(catalog, result.star);
+  const distance = result.star === 0 ? "Our star" : distanceText(starDistancePc(catalog, result.star));
+  if (planet) return { key, kind: "planet", name: planet.name, detail: `Planet of ${host}`, distance };
+  const planets = system ? `${system.planets.length} planet${system.planets.length === 1 ? "" : "s"}` : null;
+  const detail = [...starDesignations(catalog, result.star).slice(1, 3), planets].filter(Boolean).join(" · ");
+  return { key, kind: "star", name: host, detail, distance };
 }
 
 export function StarSearchDialog() {
@@ -94,36 +117,29 @@ export function StarSearchDialog() {
             placeholder="Sirius, TRAPPIST-1 e, Andromeda, M 42, Pleiades…" aria-label="Search stars, planets, galaxies, nebulae and clusters" />
         </label>
       </form>
+      <div className="search-result-heading">
+        <span>{query.trim().length < 2 ? "SUGGESTIONS" : "SEARCH RESULTS"}</span>
+        <span>{results.length} {results.length === 1 ? "OBJECT" : "OBJECTS"}</span>
+      </div>
       <div className="search-results" aria-label="Search results" role="listbox">
-        {!catalog && !deep ? <p>Loading the catalogues…</p> : results.length === 0 ? <p>No catalogued star, planet, galaxy or nebula matches.</p> : results.map((result) => {
-          if (result.kind === "deep") {
-            const { subtitle, distance } = deepDetails(deep, result.ref);
+        {!catalog && !deep ? <p className="empty-state">Loading the catalogues…</p> : results.length === 0
+          ? <div className="empty-state"><Search size={28} aria-hidden="true" /><h3>Nothing found</h3><p>No catalogued star, planet, galaxy, nebula or cluster matches.</p></div>
+          : results.map((result) => {
+            const row = describe(result, catalog, deep);
+            const Icon = KIND_ICON[row.kind];
             return (
-              <button key={`deep:${result.ref.kind}:${result.ref.index}`} role="option" aria-selected={false} onClick={() => choose(result)}>
-                <span>
-                  <strong>{deepDisplayName(deep, result.ref)}</strong>
-                  <small>{subtitle}</small>
-                </span>
-                <small>{distance}</small>
+              <button key={row.key} className="star-search-result" data-kind={row.kind} role="option" aria-selected={false} onClick={() => choose(result)}>
+                <span className="result-icon" title={KIND_LABEL[row.kind]}><Icon size={15} aria-hidden="true" /></span>
+                <strong>{row.name}</strong>
+                <small className="result-detail">{row.detail || KIND_LABEL[row.kind]}</small>
+                <small className="result-distance">{row.distance}</small>
               </button>
             );
-          }
-          const system = catalog?.systems.get(result.star);
-          const planet = result.planet !== null ? system?.planets[result.planet] : undefined;
-          const distance = result.star === 0 ? "Our star" : catalog ? `${(starDistancePc(catalog, result.star) * LY_PER_PC).toFixed(1)} ly` : "";
-          return (
-            <button key={`${result.star}:${result.planet ?? ""}`} role="option" aria-selected={false} onClick={() => choose(result)}>
-              <span>
-                <strong>{planet ? planet.name : catalog ? starDisplayName(catalog, result.star) : ""}</strong>
-                <small>
-                  {planet && catalog ? `Planet of ${starDisplayName(catalog, result.star)}` : catalog ? starDesignations(catalog, result.star).slice(1, 3).join(" · ") : ""}
-                  {!planet && system && ` · ${system.planets.length} planet${system.planets.length === 1 ? "" : "s"}`}
-                </small>
-              </span>
-              <small>{distance}</small>
-            </button>
-          );
-        })}
+          })}
+      </div>
+      <div className="modal-footer">
+        <span>Real catalogue objects · distances from the Sun</span>
+        <span>↵ to travel</span>
       </div>
     </Modal>
   );
