@@ -7,6 +7,7 @@ import {
 import type { BackendObjectSummary } from "../../types/celestial";
 import { HttpCelestialService } from "./HttpCelestialService";
 import { parseBackendCatalog } from "./backendCatalog";
+import { bundledFallbacks } from "./catalogueOrigin";
 
 // Explicit test identities, not provider records or scientific measurements.
 const backendObjects = celestialObjects.filter((object) =>
@@ -313,13 +314,32 @@ describe("catalogue files over HTTP", () => {
     expect(fetcher).toHaveBeenCalledWith("http://localhost:4000/api/v1/datasets/files/stars/hyg-v41.bin", expect.objectContaining({ method: "GET" }));
   });
 
-  it("explains a catalogue that was never imported and refuses unknown paths", async () => {
-    const fetcher = vi.fn(async () => new Response("{}", { status: 404 }));
-    const service = new HttpCelestialService("/", fetcher);
-    await expect(service.getCatalogueFile("deep/nebulae.json")).rejects.toThrow(/not been imported/);
+  it("falls back to the site's bundled copy when the backend has not imported a catalogue", async () => {
+    const bundled = new Uint8Array([1, 2, 3]);
+    const fetcher = vi.fn(async (url: string | URL | Request) => String(url).includes("/api/v1/")
+      ? new Response("{}", { status: 404, headers: { "content-type": "application/json" } })
+      : new Response(bundled, { status: 200, headers: { "content-type": "application/octet-stream" } }));
+    const service = new HttpCelestialService("/", fetcher, "/");
+    expect(new Uint8Array(await service.getCatalogueFile("deep/nebulae.json"))).toEqual(bundled);
+    expect(fetcher.mock.calls.map(([url]) => String(url))).toEqual(["/api/v1/datasets/files/deep/nebulae.json", "/deep/nebulae.json"]);
+    expect(bundledFallbacks()).toContain("deep/nebulae.json");
+  });
+
+  it("treats a CDN's index.html answer (status 200) as a missing catalogue", async () => {
+    const fetcher = vi.fn(async (url: string | URL | Request) => String(url).includes("/api/v1/")
+      ? new Response("<!doctype html>", { status: 200, headers: { "content-type": "text/html" } })
+      : new Response(new Uint8Array([9]), { status: 200, headers: { "content-type": "application/json" } }));
+    expect(new Uint8Array(await new HttpCelestialService("/", fetcher, "/").getCatalogueFile("deep/clusters.json"))).toEqual(new Uint8Array([9]));
+  });
+
+  it("reports catalogues that are in neither place, other failures, and unknown paths", async () => {
+    const html = vi.fn(async () => new Response("<!doctype html>", { status: 200, headers: { "content-type": "text/html" } }));
+    await expect(new HttpCelestialService("/", html, "/").getCatalogueFile("deep/galaxies.bin")).rejects.toThrow(/neither imported/);
+    const broken = vi.fn(async () => new Response("{}", { status: 500 }));
+    await expect(new HttpCelestialService("/", broken, "/").getCatalogueFile("deep/galaxies.bin")).rejects.toThrow(/HTTP 500/);
     // @ts-expect-error: only the published catalogue files can be requested.
-    await expect(service.getCatalogueFile("../.env")).rejects.toThrow(/Unknown catalogue file/);
-    expect(fetcher).toHaveBeenCalledTimes(1);
+    await expect(new HttpCelestialService("/", broken, "/").getCatalogueFile("../.env")).rejects.toThrow(/Unknown catalogue file/);
+    expect(broken).toHaveBeenCalledTimes(1);
   });
 });
 

@@ -11,6 +11,7 @@ import {
 } from "../../types/celestial";
 import { assertActive, CelestialApiError, normalizeEpoch } from "./errors";
 import { searchCatalog } from "./searchCatalog";
+import { recordCatalogueOrigin } from "./catalogueOrigin";
 import {
   analyticParentOf,
   eclipticRelativeKm,
@@ -32,6 +33,7 @@ export class LocalCelestialService implements CelestialService {
     const base = this.baseUrl.endsWith("/") ? this.baseUrl : `${this.baseUrl}/`;
     const response = await fetch(`${base}${path}`, { signal: options?.signal });
     if (!response.ok) throw new CelestialApiError(`The bundled catalogue ${path} is unavailable (HTTP ${response.status}).`, response.status);
+    recordCatalogueOrigin(path, "bundled");
     return response.arrayBuffer();
   }
 

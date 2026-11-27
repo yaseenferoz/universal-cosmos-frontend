@@ -4,6 +4,8 @@ import { starDisplayName } from "../../data/stars/starCatalog";
 import { useExplorationStore } from "../../stores/explorationStore";
 import { TIME_RATES, useStellarStore } from "../../stores/stellarStore";
 import { dateText, distanceText } from "./format";
+import { bundledFallbacks } from "../../services/api/catalogueOrigin";
+import { catalogueSourceMode } from "../../services/api";
 import { useDeepSkyCatalog } from "./useDeepSkyCatalog";
 import { useStarCatalog } from "./useStarCatalog";
 
@@ -60,6 +62,7 @@ export function StellarHud() {
                     : "Real catalogue positions (HYG v4.1) · true 3D distances"}
           {exposure > 0.3 && ` · exposure +${exposure.toFixed(1)} mag`}
           {deepStatus === "error" && " · galaxies and nebulae unavailable"}
+          {catalogueSourceMode() === "http" && bundledFallbacks().length > 0 && " · catalogues from bundled files (not yet imported into the backend)"}
         </p>
       </div>
       <div className="stellar-controls glass" role="group" aria-label="Star view controls">

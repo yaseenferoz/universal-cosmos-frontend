@@ -22,6 +22,7 @@ import {
 import { record } from "./validation";
 import { celestialObjects } from "../../data/catalog";
 import { searchCatalog } from "./searchCatalog";
+import { recordCatalogueOrigin } from "./catalogueOrigin";
 
 interface ApiPayload {
   data: unknown;
@@ -38,6 +39,8 @@ export class HttpCelestialService implements CelestialService {
   constructor(
     baseUrl: string,
     fetcher: typeof fetch = globalThis.fetch.bind(globalThis),
+    /** Where this site serves its bundled catalogue copies (used when the backend has none). */
+    private readonly bundledBase: string = import.meta.env?.BASE_URL ?? "/",
   ) {
     const rawBase = baseUrl.trim();
     const base = rawBase.replace(/\/+$/, "");
@@ -133,11 +136,23 @@ export class HttpCelestialService implements CelestialService {
       if (options?.signal?.aborted || (error instanceof DOMException && error.name === "AbortError")) throw error;
       throw new CelestialApiError("The celestial service could not be reached. Check the backend URL and connection.", null, { cause: error });
     }
-    if (!response.ok) {
-      const detail = response.status === 404 ? " The catalogue has not been imported into the backend (npm run ingest -- dataset)." : "";
-      throw new CelestialApiError(`The celestial service returned HTTP ${response.status} for ${path}.${detail}`, response.status);
+    // A catalogue the backend has not imported answers 404; behind a single-page-app CDN that
+    // 404 can arrive as the site's index.html with status 200. Either way, use the copy bundled
+    // with this site (real data, same format) and record it, so the interface can say so.
+    const html = (response.headers.get("content-type") ?? "").includes("text/html");
+    if (response.ok && !html) {
+      recordCatalogueOrigin(path, "backend");
+      return response.arrayBuffer();
     }
-    return response.arrayBuffer();
+    if (response.status !== 404 && !html)
+      throw new CelestialApiError(`The celestial service returned HTTP ${response.status} for ${path}.`, response.status);
+    const base = this.bundledBase.endsWith("/") ? this.bundledBase : `${this.bundledBase}/`;
+    const bundled = await this.fetcher(`${base}${path}`, { method: "GET", signal: options?.signal });
+    if (!bundled.ok || (bundled.headers.get("content-type") ?? "").includes("text/html"))
+      throw new CelestialApiError(`The catalogue ${path} is neither imported into the backend (npm run ingest -- dataset) nor bundled with this site.`, 404);
+    console.warn(`Catalogue ${path} is not imported into the backend; using the copy bundled with this site.`);
+    recordCatalogueOrigin(path, "bundled");
+    return bundled.arrayBuffer();
   }
 
   private async loadCatalog(options?: RequestOptions): Promise<BackendCatalog> {
